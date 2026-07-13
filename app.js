@@ -236,11 +236,16 @@ function cardHTML(r,i){
 
 function fmtUSD(v){ return 'US$ ' + Math.round(v).toLocaleString('es-AR'); }
 
+function cashTipoTxt(c){
+  const t = c.tipo==='ida_vuelta' ? 'ida y vuelta' : 'solo ida';
+  return c.exacto ? t : `${t}, ref.`;
+}
 // Línea de precio cash + veredicto millas vs plata en la tarjeta
 function cashLine(r){
   const c = r.cash;
   if(!c || !c.precio) return '';
-  return `<p class="card__cash">💵 en plata: <b>${fmtUSD(c.precio)}</b>${c.escalas===0?' · <span class="esc-dir">directo</span>':(c.escalas!=null?` · ${escTxt(c.escalas)}`:'')}</p>`;
+  const esc = c.escalas===0?' · <span class="esc-dir">directo</span>':(c.escalas!=null?` · ${escTxt(c.escalas)}`:'');
+  return `<p class="card__cash">💵 en plata: <b>${fmtUSD(c.precio)}</b> <span class="cash__t">${cashTipoTxt(c)}</span>${esc}</p>`;
 }
 
 // Bloque grande de comparación para la ficha del destino
@@ -257,11 +262,11 @@ function comparaBlock(r){
       <div class="vs__x">vs</div>
       <div class="vs__side">
         <div class="vs__k">${fmtUSD(c.precio)}</div>
-        <div class="vs__u">en efectivo${c.escalas===0?' · directo':''}</div>
+        <div class="vs__u">en efectivo · ${cashTipoTxt(c)}${c.escalas===0?' · directo':''}</div>
       </div>
     </div>
     ${c.link?`<a class="btn btn--ghost" style="display:inline-block;margin-top:10px;padding:8px 14px" href="${c.link}" target="_blank" rel="noopener">Ver vuelo en efectivo ↗</a>`:''}
-    <p class="hint" style="margin-top:8px">El precio en efectivo es la mejor tarifa cash encontrada para esa ruta y mes (referencia para decidir si conviene usar millas o pagar).</p>
+    <p class="hint" style="margin-top:8px">Mejor tarifa cash encontrada para esta ruta${c.exacto?' en ese mes':' (referencia general, no de ese mes puntual)'}. ${c.tipo==='ida_vuelta'?'Es precio de ida y vuelta.':'Es precio de solo ida.'} Sirve para decidir si conviene usar millas o pagar.</p>
   </div>`;
 }
 

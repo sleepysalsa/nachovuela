@@ -58,51 +58,64 @@ def hay_token(config=None):
 
 
 def precio_cash_mes(origen, destino, anio, mes, tok, currency="usd",
-                    directos_solo=False, reintentos=3, pausa=(0.5, 1.0)):
+                    reintentos=3, pausa=(0.5, 1.0)):
     """
-    Precio cash más barato para una ruta en un mes dado.
+    Precio cash más barato para una ruta, en cascada de precisión.
+
+    La Data API devuelve precios que otros usuarios ya buscaron; para meses
+    lejanos o rutas de solo-ida a veces no hay datos. Por eso probamos, de más
+    a menos preciso, y devolvemos el primero que traiga algo, etiquetando qué
+    es (para no confundir al comparar):
+      1. solo ida, ese mes            -> tipo "ida", exacto=True
+      2. ida y vuelta, ese mes        -> tipo "ida_vuelta", exacto=True
+      3. solo ida, cualquier fecha    -> tipo "ida", exacto=False (referencia)
+      4. ida y vuelta, cualquier fecha-> tipo "ida_vuelta", exacto=False
 
     Returns dict o None:
         {
-          "precio": 812.0,            # en `currency`
-          "moneda": "usd",
-          "fecha": "2026-11-18",      # día del vuelo más barato hallado
-          "aerolinea": "AA",          # código IATA de la aerolínea
-          "escalas": 0,               # cantidad de escalas del tramo de ida
-          "duracion_min": 585,        # duración total en minutos (si viene)
-          "link": "https://www.aviasales.com/search/..."  # link para reservar
+          "precio": 812.0, "moneda": "usd", "fecha": "2026-11-18",
+          "aerolinea": "AA", "escalas": 0, "duracion_min": 585,
+          "link": "https://www.aviasales.com/search/...",
+          "tipo": "ida" | "ida_vuelta",
+          "exacto": True | False,   # False = referencia general de la ruta
         }
     """
-    params = {
-        "origin": origen,
-        "destination": destino,
-        "departure_at": f"{anio:04d}-{mes:02d}",
-        "currency": currency,
-        "unique": "false",
-        "sorting": "price",
-        "direct": "true" if directos_solo else "false",
-        "limit": 30,
-        "page": 1,
-        "one_way": "true",
-        "token": tok,
-    }
-    headers = {"accept": "application/json", "user-agent": UA,
-               "x-access-token": tok}
-
+    intentos = [
+        {"one_way": "true",  "mes": True,  "tipo": "ida",        "exacto": True},
+        {"one_way": "false", "mes": True,  "tipo": "ida_vuelta", "exacto": True},
+        {"one_way": "true",  "mes": False, "tipo": "ida",        "exacto": False},
+        {"one_way": "false", "mes": False, "tipo": "ida_vuelta", "exacto": False},
+    ]
     ultimo = None
-    for intento in range(reintentos):
+    for cfg in intentos:
+        params = {
+            "origin": origen, "destination": destino,
+            "currency": currency, "unique": "false", "sorting": "price",
+            "direct": "false", "limit": 30, "page": 1,
+            "one_way": cfg["one_way"], "token": tok,
+        }
+        if cfg["mes"]:
+            params["departure_at"] = f"{anio:04d}-{mes:02d}"
+        headers = {"accept": "application/json", "user-agent": UA,
+                   "x-access-token": tok}
         try:
             r = requests.get(BASE, params=params, headers=headers, timeout=30)
-            if r.status_code == 200:
-                data = r.json()
-                return _mejor(data.get("data") or [], currency)
             if r.status_code in (401, 403):
                 raise CashError(f"token rechazado ({r.status_code}) — revisá tu token de Travelpayouts")
-            ultimo = f"HTTP {r.status_code}"
+            if r.status_code == 200:
+                mejor = _mejor((r.json().get("data") or []), currency)
+                if mejor:
+                    mejor["tipo"] = cfg["tipo"]
+                    mejor["exacto"] = cfg["exacto"]
+                    return mejor
+            else:
+                ultimo = f"HTTP {r.status_code}"
         except requests.RequestException as e:
             ultimo = str(e)
-        time.sleep(2 * (intento + 1))
-    raise CashError(f"{origen}->{destino} {anio}-{mes:02d}: {ultimo}")
+        _dormir(pausa)
+    if ultimo:
+        raise CashError(f"{origen}->{destino} {anio}-{mes:02d}: {ultimo}")
+    return None  # sin error, simplemente no hay datos cash para esta ruta
 
 
 def _mejor(filas, currency):
@@ -122,3 +135,9 @@ def _mejor(filas, currency):
         "duracion_min": int(dur) if isinstance(dur, (int, float)) else None,
         "link": ("https://www.aviasales.com" + f["link"]) if f.get("link") else None,
     }
+
+
+def _dormir(pausa):
+    import random
+    lo, hi = pausa
+    time.sleep(random.uniform(lo, hi))
