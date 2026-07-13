@@ -1,0 +1,401 @@
+/* ================= NachoVuela · app ================= */
+const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MONTHS_LONG = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DOW = ['L','M','M','J','V','S','D'];
+
+const state = { latest:null, clima:null, destinos:null, config:null, filtro:'todos' };
+
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+
+async function loadJSON(path){
+  try{ const r = await fetch(path,{cache:'no-cache'}); if(!r.ok) throw 0; return await r.json(); }
+  catch(e){ return null; }
+}
+
+function fmtMiles(n){ return n==null ? '—' : n.toLocaleString('es-AR'); }
+
+function ymLabel(ym){ const [y,m]=ym.split('-'); return `${MONTHS[+m-1]} ${y}`; }
+
+function dateLabel(iso){
+  const [y,m,d]=iso.split('-').map(Number);
+  return `${d} ${MONTHS[m-1]} ${y}`;
+}
+
+function haceCuanto(iso){
+  if(!iso) return '';
+  const diff = (Date.now() - new Date(iso).getTime())/1000;
+  if(diff<90) return 'recién';
+  if(diff<3600) return `hace ${Math.round(diff/60)} min`;
+  if(diff<86400) return `hace ${Math.round(diff/3600)} h`;
+  return `hace ${Math.round(diff/86400)} días`;
+}
+
+/* Deep link a la búsqueda de Smiles para esa ruta/fecha */
+function smilesURL(r){
+  const [y,m,d] = r.mejor_fecha.split('-').map(Number);
+  const ms = new Date(y, m-1, d, 12, 0, 0).getTime();
+  const p = new URLSearchParams({
+    originAirportCode:r.origen, destinationAirportCode:r.aeropuerto,
+    departureDate:String(ms), adults:'1', children:'0', infants:'0',
+    tripType:'2', cabinType:'all', currencyCode:r.moneda||'USD',
+    isFlexibleDateChecked:'false'
+  });
+  return `https://www.smiles.com.ar/emission?${p.toString()}`;
+}
+
+/* ---------- init ---------- */
+async function init(){
+  [state.latest, state.clima, state.destinos, state.config] = await Promise.all([
+    loadJSON('data/latest.json'),
+    loadJSON('data/clima.json'),
+    loadJSON('data/destinos.json'),
+    loadJSON('engine/config.json'),
+  ]);
+
+  setupTabs();
+  setupFilters();
+  setupSheet();
+  renderStatus();
+  renderHero();
+  renderStats();
+  renderRadar();
+  renderViajes();
+  renderDestinos();
+  registerSW();
+}
+
+function setupTabs(){
+  $$('#tabs .tab').forEach(t=>t.addEventListener('click',()=>{
+    $$('#tabs .tab').forEach(x=>x.classList.remove('is-active'));
+    t.classList.add('is-active');
+    $$('.view').forEach(v=>v.classList.remove('is-active'));
+    $('#view-'+t.dataset.view).classList.add('is-active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+}
+
+function setupFilters(){
+  $$('#radarFilters .chip-filter').forEach(c=>c.addEventListener('click',()=>{
+    $$('#radarFilters .chip-filter').forEach(x=>x.classList.remove('is-active'));
+    c.classList.add('is-active');
+    state.filtro = c.dataset.flt;
+    renderRadar();
+  }));
+}
+
+function renderStatus(){
+  const el = $('#scanStatusText'); const foot = $('#footScan');
+  if(!state.latest){ el.textContent='sin datos aún'; return; }
+  const t = haceCuanto(state.latest.generado);
+  el.textContent = `rastrillado ${t}`;
+  foot.textContent = `último rastrillaje · ${state.latest.generado?.slice(0,16).replace('T',' ')}`;
+}
+
+/* ---------- HERO ---------- */
+function renderHero(){
+  const host = $('#heroTop');
+  if(!state.latest || !state.latest.resultados.length){
+    host.innerHTML = `<p class="hero__kicker">radar en espera</p>
+      <div class="hero__route">Todavía no hay vuelos cargados</div>
+      <p class="hero__sub">Corré el motor con <code>python3 engine/rastrillar.py</code> para empezar a cazar.</p>`;
+    return;
+  }
+  const r = state.latest.resultados[0];
+  const isOp = r.nivel==='oportunidad';
+  host.innerHTML = `
+    <p class="hero__kicker">${isOp?'🟢 oportunidad detectada':'mejor precio ahora'}</p>
+    <div class="hero__route"><span class="emoji">${r.destino_emoji}</span> ${r.destino_nombre}</div>
+    <p class="hero__sub">${r.origen_ciudad} → ${r.aeropuerto_ciudad} · ${dateLabel(r.mejor_fecha)}</p>
+    <div class="hero__price">
+      <span class="hero__miles">${fmtMiles(r.mejor_precio_millas)} <small>millas</small></span>
+    </div>
+    <a class="hero__cta" href="${smilesURL(r)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>`;
+}
+
+/* ---------- STATS ---------- */
+function renderStats(){
+  const host = $('#statStrip');
+  if(!state.latest){ host.innerHTML=''; return; }
+  const R = state.latest.resultados;
+  const ops = R.filter(r=>r.nivel==='oportunidad').length;
+  const rutas = R.length;
+  const destinos = new Set(R.map(r=>r.destino_key)).size;
+  const min = R.length ? Math.min(...R.map(r=>r.mejor_precio_millas)) : null;
+  host.innerHTML = `
+    <div class="stat op"><b>${ops}</b><span>oportunidades</span></div>
+    <div class="stat"><b>${rutas}</b><span>rutas activas</span></div>
+    <div class="stat"><b>${destinos}</b><span>destinos</span></div>
+    <div class="stat"><b>${min?fmtMiles(min):'—'}</b><span>millas · mínimo</span></div>`;
+}
+
+/* ---------- RADAR CARDS ---------- */
+function filtraResultados(){
+  let R = state.latest ? [...state.latest.resultados] : [];
+  const f = state.filtro;
+  if(f==='oportunidad') R = R.filter(r=>r.nivel==='oportunidad'||r.nivel==='bueno');
+  else if(f==='eeuu') R = R.filter(r=>r.region==='eeuu');
+  else if(f==='europa') R = R.filter(r=>r.region==='europa');
+  return R;
+}
+
+function nivelLabel(n){
+  return {oportunidad:'🟢 Oportunidad',bueno:'🟢 Buen precio',normal:'⚪ Precio normal',caro:'🔴 Caro'}[n]||n;
+}
+
+function renderRadar(){
+  const host = $('#radarCards');
+  const R = filtraResultados();
+  if(!R.length){ host.innerHTML = `<p class="empty">No hay rutas para este filtro todavía.</p>`; return; }
+  host.innerHTML = R.map((r,i)=>cardHTML(r,i)).join('');
+  // toggles + expand
+  $$('.card').forEach(c=>{
+    const btn = c.querySelector('[data-toggle]');
+    if(btn) btn.addEventListener('click',()=>{
+      c.querySelector('.monthcal').classList.toggle('open');
+      btn.textContent = c.querySelector('.monthcal').classList.contains('open') ? 'Ocultar mes' : 'Ver el mes';
+    });
+  });
+}
+
+function meterHTML(range){
+  let segs='';
+  for(let i=1;i<=4;i++){
+    const on = range && i<=range ? `on${range}` : '';
+    // colorear solo el segmento activo del nivel
+    segs += `<div class="meter__seg ${range===i?`on${i}`:''}"></div>`;
+  }
+  return `<div class="meter"><div class="meter__bar">${segs}</div>
+    <div class="meter__lbl"><span>+ barato</span><span>+ caro</span></div></div>`;
+}
+
+function cardHTML(r,i){
+  const op = r.nivel==='oportunidad';
+  const motivo = r.motivos && r.motivos.length ? `<p class="card__motivo">✦ ${r.motivos[0]}</p>` : '';
+  return `
+  <article class="card lvl-${r.nivel}" style="animation-delay:${i*40}ms">
+    <div class="card__top">
+      <div>
+        <div class="card__dest"><span class="emoji">${r.destino_emoji}</span> ${r.destino_nombre}</div>
+        <div class="card__air">${r.origen}<span class="arw">→</span>${r.aeropuerto} · ${r.aeropuerto_ciudad}</div>
+      </div>
+      <span class="semaforo ${r.nivel}">${nivelLabel(r.nivel).replace(/^..\s/,'')}</span>
+    </div>
+    <div class="card__price">
+      <span class="card__miles ${op?'op':''}">${fmtMiles(r.mejor_precio_millas)}</span>
+      <span class="card__unit">millas</span>
+    </div>
+    <p class="card__when">mejor día: <b>${dateLabel(r.mejor_fecha)}</b> · ${ymLabel(r.ym)}${r.promedio_historico?` · prom. ${fmtMiles(r.promedio_historico)}`:''}</p>
+    ${motivo}
+    ${meterHTML(r.price_range)}
+    <div class="card__actions">
+      <button class="btn" data-toggle>Ver el mes</button>
+      <a class="btn btn--go" href="${smilesURL(r)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>
+    </div>
+    <div class="monthcal">${monthCalHTML(r)}</div>
+  </article>`;
+}
+
+function monthCalHTML(r){
+  const [y,m] = r.ym.split('-').map(Number);
+  const byDate = {}; r.dias.forEach(d=>byDate[d.date]=d);
+  const first = new Date(y,m-1,1);
+  const startDow = (first.getDay()+6)%7; // lunes=0
+  const days = new Date(y,m,0).getDate();
+  let cells = DOW.map(d=>`<div class="dow">${d}</div>`).join('');
+  for(let i=0;i<startDow;i++) cells+=`<div></div>`;
+  for(let d=1; d<=days; d++){
+    const iso = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const info = byDate[iso];
+    if(info){
+      const q = info.price_range?`q${info.price_range}`:'';
+      const km = Math.round(info.miles/1000);
+      cells += `<div class="dcell has ${q}"><span>${d}</span><span class="dm">${km}k</span></div>`;
+    } else {
+      cells += `<div class="dcell"><span>${d}</span></div>`;
+    }
+  }
+  return `<div class="monthcal__grid">${cells}</div>`;
+}
+
+/* ---------- VIAJES ---------- */
+function renderViajes(){
+  const host = $('#viajesWrap');
+  const viajes = state.config?.viajes?.filter(v=>v.activo) || [];
+  if(!viajes.length){ host.innerHTML=`<p class="empty">No hay viajes activos en la configuración.</p>`; return; }
+  const R = state.latest?.resultados || [];
+  host.innerHTML = viajes.map(v=>{
+    // mejor precio por destino dentro del viaje
+    const porDest = {};
+    R.filter(r=>v.destinos.includes(r.destino_key) && v.origenes.includes(r.origen))
+     .forEach(r=>{ if(!porDest[r.destino_key] || r.mejor_precio_millas<porDest[r.destino_key].mejor_precio_millas) porDest[r.destino_key]=r; });
+    const cells = Object.values(porDest)
+      .sort((a,b)=>a.mejor_precio_millas-b.mejor_precio_millas)
+      .map(r=>{
+        const op = r.nivel==='oportunidad';
+        return `<div class="bestcell ${op?'op':''}" data-ruta="${r.ruta}">
+          <div class="bestcell__d">${r.destino_emoji} ${r.destino_nombre}</div>
+          <div class="bestcell__m ${op?'op':''}">${fmtMiles(r.mejor_precio_millas)}</div>
+          <div class="bestcell__w">millas · ${dateLabel(r.mejor_fecha)}</div>
+        </div>`;
+      }).join('') || `<p class="empty">Sin datos rastreados aún para este viaje.</p>`;
+    return `<div class="viaje">
+      <div class="viaje__head">
+        <div class="viaje__name">${v.nombre}</div>
+        <div class="viaje__meta">${v.origenes.join('/')} · ${v.meses.map(ymLabel).join(' · ')}</div>
+      </div>
+      ${v.notas?`<p class="viaje__notas">“${v.notas}”</p>`:''}
+      <div class="viaje__best">${cells}</div>
+    </div>`;
+  }).join('');
+  $$('.bestcell[data-ruta]').forEach(c=>c.addEventListener('click',()=>{
+    const r = R.find(x=>x.ruta===c.dataset.ruta);
+    if(r) openDestino(r.destino_key);
+  }));
+}
+
+/* ---------- DESTINOS ---------- */
+function renderDestinos(){
+  const host = $('#destGrid');
+  const D = state.destinos?.destinos || {};
+  const R = state.latest?.resultados || [];
+  const minPorDest = {};
+  R.forEach(r=>{ if(!minPorDest[r.destino_key]||r.mejor_precio_millas<minPorDest[r.destino_key]) minPorDest[r.destino_key]=r.mejor_precio_millas; });
+  const opsPorDest = {};
+  R.forEach(r=>{ if(r.nivel==='oportunidad') opsPorDest[r.destino_key]=true; });
+
+  host.innerHTML = Object.entries(D).map(([k,d])=>{
+    const badge = opsPorDest[k]?`<span class="destcard__badge">🟢 oferta</span>`
+      : (minPorDest[k]?`<span class="destcard__badge" style="color:var(--amber-lt);background:rgba(245,166,35,.1);border-color:rgba(245,166,35,.3)">${fmtMiles(minPorDest[k])}</span>`:'');
+    return `<div class="destcard" data-dest="${k}">
+      ${badge}
+      <div class="destcard__emoji">${d.emoji}</div>
+      <div>
+        <div class="destcard__name">${d.nombre}</div>
+        <div class="destcard__pais">${d.pais}</div>
+      </div>
+    </div>`;
+  }).join('');
+  $$('.destcard[data-dest]').forEach(c=>c.addEventListener('click',()=>openDestino(c.dataset.dest)));
+}
+
+/* ---------- SHEET (destino detail) ---------- */
+function setupSheet(){
+  const sheet = $('#sheet');
+  $$('[data-close]',sheet).forEach(el=>el.addEventListener('click',closeSheet));
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheet(); });
+}
+function closeSheet(){ $('#sheet').classList.remove('open'); $('#sheet').setAttribute('aria-hidden','true'); }
+
+function openDestino(key){
+  const d = state.destinos?.destinos?.[key];
+  if(!d) return;
+  const clima = state.clima?.destinos?.[key];
+  const R = (state.latest?.resultados||[]).filter(r=>r.destino_key===key);
+
+  // precios por mes (de lo rastreado)
+  const porMes = {};
+  R.forEach(r=>{ const mi=+r.ym.slice(5,7); if(!porMes[mi]||r.mejor_precio_millas<porMes[mi]) porMes[mi]=r.mejor_precio_millas; });
+
+  const body = $('#sheetBody');
+  body.innerHTML = `
+    <div class="destcard__emoji" style="font-size:2.4rem">${d.emoji}</div>
+    <h2 class="sheet__title">${d.nombre}</h2>
+    <p class="sheet__pais">${d.pais} · ${d.aeropuertos.map(a=>a.code).join(' / ')}</p>
+    ${bestFound(R)}
+    ${pricesByMonthBlock(porMes,R)}
+    ${climateBlock(clima)}
+    ${seasonHint(porMes, clima)}
+  `;
+  $('#sheet').classList.add('open');
+  $('#sheet').setAttribute('aria-hidden','false');
+}
+
+function bestFound(R){
+  if(!R.length) return `<div class="block"><p class="hint">Todavía no rastreamos precios para este destino. Agregalo a un viaje o a los destinos vigilados en la config y corré el motor.</p></div>`;
+  const best = R.reduce((a,b)=>a.mejor_precio_millas<b.mejor_precio_millas?a:b);
+  const op = best.nivel==='oportunidad';
+  return `<div class="block">
+    <h3>Mejor precio detectado</h3>
+    <div class="card__price"><span class="card__miles ${op?'op':''}">${fmtMiles(best.mejor_precio_millas)}</span><span class="card__unit">millas</span></div>
+    <p class="card__when">${best.origen} → ${best.aeropuerto} · <b>${dateLabel(best.mejor_fecha)}</b></p>
+    <a class="btn btn--go" style="display:inline-block;margin-top:8px;padding:9px 16px" href="${smilesURL(best)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>
+  </div>`;
+}
+
+function pricesByMonthBlock(porMes,R){
+  if(!Object.keys(porMes).length) return '';
+  const vals = Object.values(porMes);
+  const max = Math.max(...vals), min = Math.min(...vals);
+  let cols='';
+  for(let m=1;m<=12;m++){
+    const v = porMes[m];
+    if(v){
+      const h = 20 + ((max-v)/(max-min||1))*80; // más barato = más alto invertido? -> queremos barato = barra corta/verde
+      const height = 15 + (v/max)*85;
+      const op = v===min;
+      cols += `<div class="pbm__col" title="${MONTHS_LONG[m-1]}: ${fmtMiles(v)} millas">
+        <span class="pbm__v">${Math.round(v/1000)}k</span>
+        <div class="pbm__bar ${op?'op':''}" style="height:${height}%"></div>
+        <span class="pbm__m">${MONTHS[m-1]}</span></div>`;
+    } else {
+      cols += `<div class="pbm__col"><span class="pbm__v"></span><div class="pbm__bar none" style="height:10%"></div><span class="pbm__m">${MONTHS[m-1]}</span></div>`;
+    }
+  }
+  return `<div class="block"><h3>Precio por mes (millas · lo rastreado)</h3>
+    <div class="pbm">${cols}</div>
+    <p class="hint" style="margin-top:10px">Barra <b>verde</b> = el mes más barato que registramos. Las grises aún no se rastrearon.</p></div>`;
+}
+
+function climateBlock(clima){
+  if(!clima) return '';
+  const meses = clima.meses;
+  const W=520,H=150,pad=24;
+  const maxs = meses.map(x=>x.t_max).filter(v=>v!=null);
+  const mins = meses.map(x=>x.t_min).filter(v=>v!=null);
+  const hi = Math.max(...maxs), lo = Math.min(...mins);
+  const x = i => pad + i*((W-2*pad)/11);
+  const y = t => H-pad - ((t-lo)/((hi-lo)||1))*(H-2*pad);
+  const line = (key,) => meses.map((mm,i)=> (mm[key]==null?'':`${i===0?'M':'L'}${x(i).toFixed(1)},${y(mm[key]).toFixed(1)}`)).join(' ');
+  const areaMax = line('t_max'); const areaMin = line('t_min');
+  const dots = meses.map((mm,i)=> mm.t_media==null?'':`<circle cx="${x(i).toFixed(1)}" cy="${y(mm.t_media).toFixed(1)}" r="2.4" fill="var(--amber-lt)"/>`).join('');
+  const labels = meses.map((mm,i)=>`<text x="${x(i).toFixed(1)}" y="${H-6}" font-size="8" fill="var(--ink-faint)" text-anchor="middle" font-family="var(--mono)">${MONTHS[i]}</text>`).join('');
+  return `<div class="block"><h3>Clima — promedio histórico</h3>
+    <svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <path d="${areaMax}" fill="none" stroke="var(--red)" stroke-width="2" opacity=".85"/>
+      <path d="${areaMin}" fill="none" stroke="var(--blue)" stroke-width="2" opacity=".85"/>
+      <path d="${line('t_media')}" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="3 3" opacity=".9"/>
+      ${dots}${labels}
+    </svg>
+    <div class="chart-legend"><span><i style="background:var(--red)"></i>máx</span>
+      <span><i style="background:var(--amber)"></i>media</span>
+      <span><i style="background:var(--blue)"></i>mín</span></div></div>`;
+}
+
+function seasonHint(porMes, clima){
+  const bits=[];
+  if(Object.keys(porMes).length>=2){
+    const entries=Object.entries(porMes).map(([m,v])=>[+m,v]);
+    const cheapest=entries.reduce((a,b)=>a[1]<b[1]?a:b);
+    const dearest=entries.reduce((a,b)=>a[1]>b[1]?a:b);
+    bits.push(`El mes más barato rastreado es <b>${MONTHS_LONG[cheapest[0]-1]}</b> (${fmtMiles(cheapest[1])} millas); el más caro, <b>${MONTHS_LONG[dearest[0]-1]}</b>. Ahí se ve la temporada alta.`);
+  }
+  if(clima){
+    const m=clima.meses.filter(x=>x.t_media!=null);
+    if(m.length){
+      const nice=m.filter(x=>x.t_media>=15&&x.t_media<=26).map(x=>MONTHS_LONG[x.mes-1]);
+      if(nice.length) bits.push(`Temperatura más agradable (15–26°) en: <b>${nice.slice(0,6).join(', ')}</b>.`);
+    }
+  }
+  if(!bits.length) return '';
+  return `<div class="block"><h3>Para decidir la fecha</h3><p class="hint">${bits.join(' ')}</p></div>`;
+}
+
+/* ---------- Service worker ---------- */
+function registerSW(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+}
+
+init();

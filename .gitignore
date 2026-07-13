@@ -1,0 +1,13 @@
+# Sistema
+.DS_Store
+*.log
+data/rastrillaje.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# NO ignorar data/*.json — el historial de precios es lo más valioso y
+# tiene que viajar al repo para que la app lo muestre.
