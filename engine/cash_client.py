@@ -141,3 +141,38 @@ def _dormir(pausa):
     import random
     lo, hi = pausa
     time.sleep(random.uniform(lo, hi))
+
+
+def cash_por_dia(origen, destino, anio, mes, tok, currency="usd"):
+    """
+    Precio cash MÍNIMO por día para una ruta en un mes (solo ida).
+    Una sola llamada trae los vuelos con fecha del mes; nos quedamos con el
+    mínimo de cada fecha. Devuelve dict {"YYYY-MM-DD": {"p": 123.0, "e": escalas}}.
+    Si no hay datos, dict vacío (no es error).
+    """
+    params = {
+        "origin": origen, "destination": destino,
+        "departure_at": f"{anio:04d}-{mes:02d}",
+        "currency": currency, "unique": "false", "sorting": "price",
+        "direct": "false", "limit": 300, "page": 1,
+        "one_way": "true", "token": tok,
+    }
+    headers = {"accept": "application/json", "user-agent": UA,
+               "x-access-token": tok}
+    try:
+        r = requests.get(BASE, params=params, headers=headers, timeout=30)
+        if r.status_code != 200:
+            return {}
+        filas = r.json().get("data") or []
+    except requests.RequestException:
+        return {}
+    por_dia = {}
+    for f in filas:
+        precio = f.get("price")
+        fecha = (f.get("departure_at") or "")[:10]
+        if not precio or not fecha:
+            continue
+        if fecha not in por_dia or precio < por_dia[fecha]["p"]:
+            por_dia[fecha] = {"p": round(float(precio), 2),
+                              "e": f.get("transfers")}
+    return por_dia

@@ -212,6 +212,51 @@ function renderDiasIda(){
 
 function diasEntre(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
 
+/* ---- Valor de la milla y estrategia por pierna ---- */
+function valorMilla(){ return state.busqueda?.valor_milla_usd || 0.012; } // US$ por milla
+
+// Cash de una pierna: precio del día exacto si existe; si no, referencia del mes.
+// Si la referencia es de ida y vuelta, se estima la pierna como la mitad (≈½).
+function cashLeg(bloque, tipo, code, fecha){
+  const porDia = bloque['cash_'+tipo]?.[code];
+  if(porDia && porDia[fecha]) return {p:porDia[fecha].p, e:porDia[fecha].e, nivel:'dia'};
+  const ref = bloque.cash_ref?.[code]?.[tipo];
+  if(ref && ref.p!=null){
+    if(ref.t==='ida_vuelta') return {p:Math.round(ref.p/2), e:ref.e, nivel:'mitad_iv'};
+    return {p:ref.p, e:ref.e, nivel:ref.x?'mes':'ruta'};
+  }
+  return null;
+}
+function cashNivelTxt(n){
+  return {dia:'precio de ese día', mes:'ref. del mes', ruta:'ref. de la ruta', mitad_iv:'≈ mitad de un ida y vuelta'}[n]||'';
+}
+function cpp(cashUSD, millas){ return millas ? (cashUSD/millas)*100 : null; } // ¢ por milla
+
+// Decide el mejor armado del viaje (qué pierna pagar con millas y cuál en plata)
+function mejorArmado(c){
+  const V = valorMilla();
+  const opciones = [];
+  const mi = {tipo:'millas', ida:c.ida.mi, vuelta:c.vuelta.mi};
+  const ci = c.cashIda, cv = c.cashVuelta;
+  const eq = (leg, modo)=> modo==='millas' ? leg.mi*V : leg.cash.p;
+  const push=(mIda,mVta)=>{
+    if(mIda==='plata'&&!ci) return; if(mVta==='plata'&&!cv) return;
+    const totalEq = (mIda==='millas'? c.ida.mi*V : ci.p) + (mVta==='millas'? c.vuelta.mi*V : cv.p);
+    opciones.push({mIda, mVta, totalEq});
+  };
+  push('millas','millas'); push('millas','plata'); push('plata','millas'); push('plata','plata');
+  if(!opciones.length) return null;
+  opciones.sort((a,b)=>a.totalEq-b.totalEq);
+  return opciones[0];
+}
+function armadoTxt(a){
+  if(!a) return '';
+  const w = m=> m==='millas'?'millas':'plata';
+  if(a.mIda==='millas'&&a.mVta==='millas') return 'todo en millas';
+  if(a.mIda==='plata'&&a.mVta==='plata') return 'todo en plata';
+  return `ida en ${w(a.mIda)} + vuelta en ${w(a.mVta)}`;
+}
+
 // Deep link a Smiles: viaje redondo (ida+vuelta) para un aeropuerto y fechas
 function smilesRoundURL(orig, code, idaISO, vueltaISO, moneda){
   const ms = iso=>{ const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d,12,0,0).getTime(); };
@@ -261,6 +306,8 @@ function calcularCombos(){
           code, ciudad:(d.aeropuertos.find(a=>a.code===code)||{}).ciudad||code,
           ida, vuelta:mejor.vuelta, noches:mejor.noches, total:mejor.total,
           viaGol: (!esBrasil && (ida.f==='gol'||mejor.vuelta.f==='gol')),
+          cashIda: cashLeg(bloque,'ida',code,ida.d),
+          cashVuelta: cashLeg(bloque,'vuelta',code,mejor.vuelta.d),
         });
       }
     }
@@ -316,15 +363,17 @@ function runFinder(){
           <span class="combo__nights">${c.noches} noches</span>
           ${c.viaGol?`<span class="combo__gol" title="Alguna pierna solo sale conectando por Brasil (GOL)">vía Brasil</span>`:''}
         </div>
+        ${armadoLine(c)}
       </div>
       <div class="combo__side">
         <div class="combo__total">${fmtMiles(c.total)}</div>
         <div class="combo__totu">millas ida+vuelta</div>
         <a class="btn btn--go combo__cta" href="${smilesRoundURL(orig,c.code,c.ida.d,c.vuelta.d,d.moneda)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>
-        <button class="combo__detail" data-code="${c.code}" data-ida="${c.ida.d}" data-vuelta="${c.vuelta.d}">ver opciones del día</button>
+        <button class="combo__detail" data-idx="${i}">armar este viaje →</button>
       </div>
     </article>`;
   }).join('');
+  state.lastCombos = combos;
 
   host.innerHTML = `
     <div class="res__head">
@@ -333,35 +382,84 @@ function runFinder(){
     </div>
     ${cashHTML}
     <div class="combos">${rows}</div>
-    <p class="hint" style="margin-top:12px">El total es la suma de millas de ida + vuelta (el mejor regreso dentro de tu rango de noches). Tocá <b>“ver opciones del día”</b> para abrir ese día puntual en Smiles y ver aerolíneas, horarios y escalas reales.</p>`;
-  $$('.combo__detail',host).forEach(b=>b.addEventListener('click',()=>openDiaSheet(b.dataset.code,b.dataset.ida,b.dataset.vuelta)));
+    <p class="hint" style="margin-top:12px">El total es la suma de millas de ida + vuelta (el mejor regreso dentro de tu rango de noches). Tocá <b>“armar este viaje”</b> para comparar pierna por pierna si conviene millas o plata, con los links a Smiles, Despegar y Aviasales de ese día exacto.</p>`;
+  $$('.combo__detail',host).forEach(b=>b.addEventListener('click',()=>openArmadoSheet(+b.dataset.idx)));
   host.scrollIntoView({behavior:'smooth'});
 }
 
-// Hoja de detalle de un día: precio + accesos directos a Smiles (ida y vuelta)
-function openDiaSheet(code, idaISO, vueltaISO){
+// Línea "mejor armado" en la tarjeta de combo
+function armadoLine(c){
+  const a = mejorArmado(c);
+  if(!a || (a.mIda==='millas'&&a.mVta==='millas')) return '';
+  return `<p class="combo__armado">💡 conviene: <b>${armadoTxt(a)}</b> · total ≈ ${fmtUSD(a.totalEq)}</p>`;
+}
+
+// Links de un día puntual en las 3 fuentes
+function aviasalesDayURL(og, de, iso){
+  const [,m,d] = iso.split('-');
+  return `https://www.aviasales.com/search/${og}${d}${m}${de}1`;
+}
+function despegarDayURL(og, de, iso){
+  return `https://www.despegar.com.ar/shop/flights/results/oneway/${og}/${de}/${iso}/1/0/0`;
+}
+
+// Hoja "armar este viaje": comparación millas vs plata pierna por pierna
+function openArmadoSheet(idx){
+  const c = state.lastCombos?.[idx]; if(!c) return;
   const {dest, orig} = state.finder;
   const d = bDestinos()[dest];
+  const V = valorMilla();
+  const a = mejorArmado(c);
+
+  const legRow = (tag, legAward, cash, ogL, deL, iso)=>{
+    const eqMillas = legAward.mi*V;
+    const c_pp = cash ? cpp(cash.p, legAward.mi) : null;
+    const veredicto = !cash ? '' :
+      (c_pp >= 1.2 ? `<span class="cpp good">millas rinden: ${c_pp.toFixed(1)}¢/milla</span>`
+       : c_pp <= 0.8 ? `<span class="cpp bad">conviene plata: la milla rendiría ${c_pp.toFixed(1)}¢</span>`
+       : `<span class="cpp mid">parejo: ${c_pp.toFixed(1)}¢/milla</span>`);
+    return `<div class="legcmp">
+      <div class="legcmp__head"><span class="leg__tag">${tag}</span>
+        <b>${dateLabel(iso)}</b> · ${ogL} → ${deL} ${veredicto}</div>
+      <div class="legcmp__opts">
+        <div class="legopt">
+          <div class="legopt__k">${fmtMiles(legAward.mi)} <small>millas</small></div>
+          <div class="legopt__eq">≈ ${fmtUSD(eqMillas)} eq.</div>
+          <a href="${smilesOneWayURL(ogL,deL,iso,d.moneda)}" target="_blank" rel="noopener">Smiles ↗</a>
+        </div>
+        <div class="legopt">
+          ${cash?`
+          <div class="legopt__k">${fmtUSD(cash.p)} <small>plata</small></div>
+          <div class="legopt__eq">${cashNivelTxt(cash.nivel)}${cash.e===0?' · directo':''}</div>
+          <span class="legopt__links">
+            <a href="${despegarDayURL(ogL,deL,iso)}" target="_blank" rel="noopener">Despegar ↗</a>
+            <a href="${aviasalesDayURL(ogL,deL,iso)}" target="_blank" rel="noopener">Aviasales ↗</a>
+          </span>`:`
+          <div class="legopt__k">—</div>
+          <div class="legopt__eq">sin precio cash aún</div>
+          <span class="legopt__links">
+            <a href="${despegarDayURL(ogL,deL,iso)}" target="_blank" rel="noopener">mirar en Despegar ↗</a>
+          </span>`}
+        </div>
+      </div>
+    </div>`;
+  };
+
   const body = $('#sheetBody');
-  const linkIda = smilesOneWayURL(orig, code, idaISO, d.moneda);
-  const linkVta = smilesOneWayURL(code, orig, vueltaISO, d.moneda);
-  const linkRound = smilesRoundURL(orig, code, idaISO, vueltaISO, d.moneda);
   body.innerHTML = `
     <div class="destcard__emoji" style="font-size:2.2rem">${d.emoji}</div>
-    <h2 class="sheet__title">${d.nombre}</h2>
-    <p class="sheet__pais">${orig} ⇄ ${code} · ${(d.aeropuertos.find(a=>a.code===code)||{}).ciudad||code}</p>
+    <h2 class="sheet__title">Armar este viaje</h2>
+    <p class="sheet__pais">${d.nombre} · ${orig} ⇄ ${c.code} · ${c.noches} noches</p>
+    ${a?`<div class="res__cash">💡 Armado sugerido: <b>${armadoTxt(a)}</b> — total equivalente ≈ <b>${fmtUSD(a.totalEq)}</b> <span class="cash__t">(milla valuada a ${(V*100).toFixed(1)}¢)</span></div>`:''}
+    ${legRow('IDA', c.ida, c.cashIda, orig, c.code, c.ida.d)}
+    ${legRow('VUELTA', c.vuelta, c.cashVuelta, c.code, orig, c.vuelta.d)}
     <div class="block">
-      <h3>Ver las opciones reales del día</h3>
-      <p class="hint">Las aerolíneas, horarios y escalas de cada vuelo se ven en Smiles ya filtrado a ese día. Abrí el que quieras:</p>
+      <h3>Todo en millas, de una</h3>
       <div class="diaslinks">
-        <a class="btn btn--go" href="${linkRound}" target="_blank" rel="noopener">✈ Ida y vuelta en Smiles ↗</a>
-        <a class="btn" href="${linkIda}" target="_blank" rel="noopener">Solo la ida · ${dateLabel(idaISO)} ↗</a>
-        <a class="btn" href="${linkVta}" target="_blank" rel="noopener">Solo la vuelta · ${dateLabel(vueltaISO)} ↗</a>
+        <a class="btn btn--go" href="${smilesRoundURL(orig,c.code,c.ida.d,c.vuelta.d,d.moneda)}" target="_blank" rel="noopener">✈ Ida y vuelta en Smiles ↗</a>
+        <a class="btn" href="${despegarDayURL(orig,c.code,c.ida.d).replace('/oneway/','/roundtrip/').replace(`/${c.ida.d}/`,`/${c.ida.d}/${c.vuelta.d}/`)}" target="_blank" rel="noopener">Ida y vuelta en Despegar ↗</a>
       </div>
-    </div>
-    <div class="block">
-      <h3>Detalle por vuelo (aerolínea · horarios · escalas)</h3>
-      <p class="hint">Esto lo vas a ver dentro de la app cuando activemos tu sesión de Smiles guardada. Por ahora, el botón de arriba te lleva directo a ese día para verlo en la web oficial.</p>
+      <p class="hint" style="margin-top:10px">El “equivalente” valúa tus millas a ${(V*100).toFixed(1)}¢ cada una (lo que cuesta comprarlas/reponerlas). Ojo: a las millas hay que sumarles las tasas que cobra Smiles — confirmalas al abrir el link. Regla de cazador: milla que rinde menos de 1¢, mejor guardarla y pagar en plata.</p>
     </div>`;
   $('#sheet').classList.add('open');
   $('#sheet').setAttribute('aria-hidden','false');

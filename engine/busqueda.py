@@ -14,6 +14,7 @@ Salida: data/busqueda.json
 """
 
 import smiles_client as sc
+import cash_client as cc
 import destinos as cat
 
 
@@ -34,6 +35,14 @@ def _mes_siguiente(anio, mes):
     return (anio + 1, 1) if mes == 12 else (anio, mes + 1)
 
 
+def _cash_ref_compacto(ref):
+    """Reduce la referencia cash de la cascada a lo que la app necesita."""
+    if not ref:
+        return None
+    return {"p": ref["precio"], "t": ref["tipo"], "x": ref["exacto"],
+            "e": ref.get("escalas"), "f": ref.get("fecha")}
+
+
 def construir(config, log=print, demo=False):
     """
     Devuelve el dict de búsqueda listo para guardar como data/busqueda.json.
@@ -51,9 +60,12 @@ def construir(config, log=print, demo=False):
             destinos_meses.setdefault(dk, set()).update(viaje.get("meses", []))
             origen_por_destino.setdefault(dk, ogs[0])
 
+    cash_tok = cc.token(config)
+
     salida = {
         "generado": None,  # lo pone rastrillar
         "origen_default": origen_default,
+        "valor_milla_usd": config.get("valor_milla_usd", 0.012),
         "destinos": {},
     }
 
@@ -122,9 +134,34 @@ def construir(config, log=print, demo=False):
                     bloque["vuelta"][code] = _dias_compactos(
                         sorted(porf.values(), key=lambda z: z["date"]))
 
+                # CASH por pierna: referencia del mes (cascada) + por día si existe
+                if cash_tok:
+                    ref_i = ref_v = None
+                    try:
+                        ref_i = cc.precio_cash_mes(og, code, anio, mes, cash_tok,
+                                                   pausa=(0.3, 0.6))
+                        ref_v = cc.precio_cash_mes(code, og, anio, mes, cash_tok,
+                                                   pausa=(0.3, 0.6))
+                    except cc.CashError as e:
+                        log(f"    cash ref {code}: {e}")
+                    if ref_i or ref_v:
+                        bloque.setdefault("cash_ref", {})[code] = {
+                            "ida": _cash_ref_compacto(ref_i),
+                            "vuelta": _cash_ref_compacto(ref_v),
+                        }
+                    dia_i = cc.cash_por_dia(og, code, anio, mes, cash_tok)
+                    dia_v = dict(cc.cash_por_dia(code, og, anio, mes, cash_tok))
+                    dia_v.update(cc.cash_por_dia(code, og, a2, m2, cash_tok))
+                    if dia_i:
+                        bloque.setdefault("cash_ida", {})[code] = dia_i
+                    if dia_v:
+                        bloque.setdefault("cash_vuelta", {})[code] = dia_v
+
                 n_i = len(bloque["ida"].get(code, []))
                 n_v = len(bloque["vuelta"].get(code, []))
-                log(f"    {dk} {ym} {code}: ida {n_i}d · vuelta {n_v}d")
+                nc = len((bloque.get("cash_ida") or {}).get(code, {})) + \
+                     len((bloque.get("cash_vuelta") or {}).get(code, {}))
+                log(f"    {dk} {ym} {code}: ida {n_i}d · vuelta {n_v}d · cash {nc}d")
 
             dest_out["meses"][ym] = bloque
 

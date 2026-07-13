@@ -417,3 +417,21 @@ select.fld__in{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
   .combo__side{ align-items:stretch; min-width:100%; margin-top:6px; }
   .combo__total{ font-size:1.3rem; }
 }
+
+/* Armado del viaje: comparación por pierna */
+.combo__armado{ margin-top:8px; font-size:.82rem; color:var(--amber-lt); }
+.combo__armado b{ color:var(--amber-lt); }
+.legcmp{ background:rgba(16,22,42,.5); border:1px solid var(--line); border-radius:14px; padding:13px 14px; margin-top:12px; }
+.legcmp__head{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; font-size:.92rem; }
+.cpp{ font-size:.7rem; padding:2px 9px; border-radius:999px; margin-left:auto; }
+.cpp.good{ background:rgba(46,180,120,.15); color:var(--green); border:1px solid rgba(46,180,120,.35); }
+.cpp.bad{ background:rgba(226,90,90,.12); color:#e88; border:1px solid rgba(226,90,90,.3); }
+.cpp.mid{ background:rgba(120,140,190,.12); color:var(--ink-dim); border:1px solid var(--line); }
+.legcmp__opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+.legopt{ background:rgba(10,14,28,.5); border:1px solid var(--line); border-radius:11px; padding:10px 12px; display:flex; flex-direction:column; gap:3px; }
+.legopt__k{ font-family:var(--mono); font-size:1.08rem; font-weight:800; }
+.legopt__k small{ font-size:.62rem; color:var(--ink-faint); font-weight:500; }
+.legopt__eq{ font-size:.7rem; color:var(--ink-dim); }
+.legopt a{ color:var(--amber-lt); font-size:.78rem; margin-top:4px; display:inline-block; }
+.legopt__links{ display:flex; gap:12px; }
+@media(max-width:520px){ .legcmp__opts{ grid-template-columns:1fr; } }
