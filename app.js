@@ -11,7 +11,8 @@ const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov
 const MONTHS_LONG = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DOW = ['L','M','M','J','V','S','D'];
 
-const state = { latest:null, clima:null, destinos:null, config:null, filtro:'todos' };
+const state = { latest:null, clima:null, destinos:null, config:null, busqueda:null, filtro:'todos',
+  finder:{ dest:null, orig:'EZE', mes:null, nMin:10, nMax:20, esc:'todos', diaIda:null } };
 
 const $ = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
@@ -81,22 +82,23 @@ function setupLock(){
 /* ---------- init ---------- */
 async function init(){
   setupLock();
-  [state.latest, state.clima, state.destinos, state.config] = await Promise.all([
+  [state.latest, state.clima, state.destinos, state.config, state.busqueda] = await Promise.all([
     loadJSON('data/latest.json'),
     loadJSON('data/clima.json'),
     loadJSON('data/destinos.json'),
     loadJSON('engine/config.json'),
+    loadJSON('data/busqueda.json'),
   ]);
 
   setupTabs();
   setupFilters();
   setupSheet();
   $('#editTripsBtn')?.addEventListener('click', openEditor);
+  setupFinder();
   renderStatus();
   renderHero();
   renderStats();
   renderRadar();
-  renderViajes();
   renderDestinos();
   registerSW();
 }
@@ -118,6 +120,251 @@ function setupFilters(){
     state.filtro = c.dataset.flt;
     renderRadar();
   }));
+}
+
+/* ================= BUSCADOR ida+vuelta ================= */
+function bDestinos(){ return state.busqueda?.destinos || {}; }
+
+function setupFinder(){
+  const B = bDestinos();
+  const dSel = $('#fDest'), oSel = $('#fOrig'), mSel = $('#fMes');
+  const keys = Object.keys(B);
+  if(!keys.length){
+    $('#finderForm').innerHTML = `<p class="empty">Todavía no hay datos del buscador. Configurá un viaje (destinos + meses) con “Configurar qué rastrillar” y esperá el próximo rastrillaje.</p>`;
+    return;
+  }
+  // Destinos
+  dSel.innerHTML = keys.map(k=>`<option value="${k}">${B[k].emoji} ${B[k].nombre}</option>`).join('');
+  state.finder.dest = keys[0];
+
+  // Orígenes (los que aparezcan en los destinos)
+  const origs = [...new Set(keys.map(k=>B[k].origen))];
+  const O = state.destinos?.origenes || {};
+  oSel.innerHTML = origs.map(o=>`<option value="${o}">${o} · ${O[o]?.ciudad||o}</option>`).join('');
+  state.finder.orig = origs[0];
+
+  const refreshMeses = ()=>{
+    const d = B[state.finder.dest];
+    const meses = Object.keys(d?.meses||{}).sort();
+    mSel.innerHTML = meses.map(m=>`<option value="${m}">${ymLabel(m)}</option>`).join('');
+    state.finder.mes = meses[0] || null;
+    renderDiasIda();
+  };
+  refreshMeses();
+
+  dSel.addEventListener('change', ()=>{ state.finder.dest=dSel.value; refreshMeses(); });
+  mSel.addEventListener('change', ()=>{ state.finder.mes=mSel.value; renderDiasIda(); });
+  oSel.addEventListener('change', ()=>{ state.finder.orig=oSel.value; });
+  $('#fNochesMin').addEventListener('input', e=>state.finder.nMin=+e.target.value||1);
+  $('#fNochesMax').addEventListener('input', e=>state.finder.nMax=+e.target.value||1);
+  $$('#fEscalas .segbtn').forEach(b=>b.addEventListener('click',()=>{
+    $$('#fEscalas .segbtn').forEach(x=>x.classList.remove('is-active'));
+    b.classList.add('is-active'); state.finder.esc=b.dataset.esc;
+  }));
+  $('#finderForm').addEventListener('submit', e=>{ e.preventDefault(); runFinder(); });
+}
+
+// Días de ida disponibles (unión de aeropuertos) para elegir uno puntual
+function idaDaysUnion(dest, mes){
+  const d = bDestinos()[dest]; if(!d) return {};
+  const bloque = d.meses?.[mes]?.ida || {};
+  const byDate = {};
+  Object.values(bloque).forEach(arr=>arr.forEach(x=>{
+    if(!byDate[x.d] || x.mi<byDate[x.d].mi) byDate[x.d]={...x};
+  }));
+  return byDate;
+}
+
+function renderDiasIda(){
+  const host = $('#fDiasIda');
+  const {dest, mes} = state.finder;
+  const byDate = idaDaysUnion(dest, mes);
+  const fechas = Object.keys(byDate).sort();
+  state.finder.diaIda = null;
+  if(!fechas.length){ host.innerHTML = `<p class="fld__hint">Sin días de ida rastreados para ese mes todavía.</p>`; return; }
+  const [y,m] = mes.split('-').map(Number);
+  const first = new Date(y,m-1,1); const startDow=(first.getDay()+6)%7;
+  const ndays = new Date(y,m,0).getDate();
+  const min = Math.min(...fechas.map(f=>byDate[f].mi));
+  let cells = DOW.map(d=>`<div class="dow">${d}</div>`).join('');
+  cells += `<button type="button" class="daychip any is-active" data-d="">Cualquiera</button>`;
+  // relleno para alinear el "cualquiera" ocupa 1; ajustamos grilla con inicio
+  for(let i=0;i<startDow;i++) cells+=`<div></div>`;
+  for(let dd=1; dd<=ndays; dd++){
+    const iso=`${y}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+    const info=byDate[iso];
+    if(info){
+      const km=Math.round(info.mi/1000);
+      const best=info.mi===min?' best':'';
+      const gol=info.f==='gol'?' gol':'';
+      cells+=`<button type="button" class="daychip has${best}${gol}" data-d="${iso}" title="${dateLabel(iso)} · ${fmtMiles(info.mi)} millas"><span>${dd}</span><span class="dm">${km}k</span></button>`;
+    } else {
+      cells+=`<div class="daycell-empty">${dd}</div>`;
+    }
+  }
+  host.innerHTML = `<div class="daygrid">${cells}</div>`;
+  $$('.daychip',host).forEach(c=>c.addEventListener('click',()=>{
+    $$('.daychip',host).forEach(x=>x.classList.remove('is-active'));
+    c.classList.add('is-active');
+    state.finder.diaIda = c.dataset.d || null;
+  }));
+}
+
+function diasEntre(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
+
+// Deep link a Smiles: viaje redondo (ida+vuelta) para un aeropuerto y fechas
+function smilesRoundURL(orig, code, idaISO, vueltaISO, moneda){
+  const ms = iso=>{ const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d,12,0,0).getTime(); };
+  const p = new URLSearchParams({
+    originAirportCode:orig, destinationAirportCode:code,
+    departureDate:String(ms(idaISO)), returnDate:String(ms(vueltaISO)),
+    adults:'1', children:'0', infants:'0', tripType:'1', cabinType:'all',
+    currencyCode:moneda||'USD', isFlexibleDateChecked:'false'
+  });
+  return `https://www.smiles.com.ar/emission?${p.toString()}`;
+}
+function smilesOneWayURL(orig, code, idaISO, moneda){
+  const [y,m,d]=idaISO.split('-').map(Number);
+  const ms=new Date(y,m-1,d,12,0,0).getTime();
+  const p=new URLSearchParams({originAirportCode:orig,destinationAirportCode:code,
+    departureDate:String(ms),adults:'1',children:'0',infants:'0',tripType:'2',
+    cabinType:'all',currencyCode:moneda||'USD',isFlexibleDateChecked:'false'});
+  return `https://www.smiles.com.ar/emission?${p.toString()}`;
+}
+
+// Núcleo: mejores combinaciones ida+vuelta
+function calcularCombos(){
+  const {dest, orig, mes, nMin, nMax, esc, diaIda} = state.finder;
+  const d = bDestinos()[dest]; if(!d) return [];
+  const bloque = d.meses?.[mes]; if(!bloque) return [];
+  const soloDirecto = esc==='directo';
+  const esBrasil = d.pais==='Brasil';
+  const combos = [];
+  for(const code of Object.keys(bloque.ida||{})){
+    let idas = bloque.ida[code]||[];
+    const vueltas = bloque.vuelta?.[code]||[];
+    if(!vueltas.length) continue;
+    if(diaIda) idas = idas.filter(x=>x.d===diaIda);
+    if(soloDirecto && !esBrasil){ idas=idas.filter(x=>x.f!=='gol'); }
+    for(const ida of idas){
+      let mejor=null;
+      for(const v of vueltas){
+        const n = diasEntre(ida.d, v.d);
+        if(n<nMin || n>nMax) continue;
+        if(soloDirecto && !esBrasil && v.f==='gol') continue;
+        if(!mejor || (ida.mi+v.mi)<mejor.total){
+          mejor={total:ida.mi+v.mi, vuelta:v, noches:n};
+        }
+      }
+      if(mejor){
+        combos.push({
+          code, ciudad:(d.aeropuertos.find(a=>a.code===code)||{}).ciudad||code,
+          ida, vuelta:mejor.vuelta, noches:mejor.noches, total:mejor.total,
+          viaGol: (!esBrasil && (ida.f==='gol'||mejor.vuelta.f==='gol')),
+        });
+      }
+    }
+  }
+  // dedupe: una combinación por (aeropuerto, día de ida), quedándonos con el mejor total
+  const best={};
+  combos.forEach(c=>{ const k=c.code+'|'+c.ida.d; if(!best[k]||c.total<best[k].total) best[k]=c; });
+  return Object.values(best).sort((a,b)=>a.total-b.total).slice(0,15);
+}
+
+// Referencia cash del destino/mes (de lo que ya rastreamos en el radar)
+function cashRefDestino(dest, mes){
+  const R = (state.latest?.resultados||[]).filter(r=>r.destino_key===dest && r.ym===mes && r.cash);
+  if(!R.length) return null;
+  return R.reduce((a,b)=> (a.cash.precio<=b.cash.precio? a : b)).cash;
+}
+
+function runFinder(){
+  const host = $('#finderResults');
+  const {dest, orig, mes, nMin, nMax} = state.finder;
+  const d = bDestinos()[dest];
+  const combos = calcularCombos();
+  const cashRef = cashRefDestino(dest, mes);
+  const cashHTML = cashRef ? `<div class="res__cash">💵 Referencia en plata para ${d.nombre}: <b>${fmtUSD(cashRef.precio)}</b> <span class="cash__t">${cashTipoTxt(cashRef)}</span>${cashRef.link?` · <a href="${cashRef.link}" target="_blank" rel="noopener">ver en Aviasales ↗</a>`:''}</div>` : '';
+
+  if(!combos.length){
+    host.innerHTML = `<div class="res__head"><h2>${d.emoji} ${d.nombre} · ${ymLabel(mes)}</h2></div>
+      ${cashHTML}
+      <p class="empty">No encontré combinaciones ida+vuelta con ${nMin}–${nMax} noches para ese mes. Probá ampliar el rango de noches, cambiar el mes, o sacar “Cualquiera” en el día de salida.</p>`;
+    host.scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  const minTotal = combos[0].total;
+  const rows = combos.map((c,i)=>{
+    const esMin = c.total===minTotal;
+    return `<article class="combo${esMin?' combo--best':''}" style="animation-delay:${i*35}ms">
+      <div class="combo__rank">${i+1}</div>
+      <div class="combo__body">
+        <div class="combo__legs">
+          <div class="leg">
+            <span class="leg__tag">IDA</span>
+            <span class="leg__date">${dateLabel(c.ida.d)}</span>
+            <span class="leg__mi">${fmtMiles(c.ida.mi)} mi</span>
+          </div>
+          <div class="leg">
+            <span class="leg__tag">VUELTA</span>
+            <span class="leg__date">${dateLabel(c.vuelta.d)}</span>
+            <span class="leg__mi">${fmtMiles(c.vuelta.mi)} mi</span>
+          </div>
+        </div>
+        <div class="combo__meta">
+          <span class="combo__air">${orig} <span class="arw">⇄</span> ${c.code} · ${c.ciudad}</span>
+          <span class="combo__nights">${c.noches} noches</span>
+          ${c.viaGol?`<span class="combo__gol" title="Alguna pierna solo sale conectando por Brasil (GOL)">vía Brasil</span>`:''}
+        </div>
+      </div>
+      <div class="combo__side">
+        <div class="combo__total">${fmtMiles(c.total)}</div>
+        <div class="combo__totu">millas ida+vuelta</div>
+        <a class="btn btn--go combo__cta" href="${smilesRoundURL(orig,c.code,c.ida.d,c.vuelta.d,d.moneda)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>
+        <button class="combo__detail" data-code="${c.code}" data-ida="${c.ida.d}" data-vuelta="${c.vuelta.d}">ver opciones del día</button>
+      </div>
+    </article>`;
+  }).join('');
+
+  host.innerHTML = `
+    <div class="res__head">
+      <h2>${d.emoji} ${d.nombre} · ${ymLabel(mes)}</h2>
+      <p class="res__sub">${combos.length} mejores combinaciones · ${nMin}–${nMax} noches · saliendo desde ${orig}</p>
+    </div>
+    ${cashHTML}
+    <div class="combos">${rows}</div>
+    <p class="hint" style="margin-top:12px">El total es la suma de millas de ida + vuelta (el mejor regreso dentro de tu rango de noches). Tocá <b>“ver opciones del día”</b> para abrir ese día puntual en Smiles y ver aerolíneas, horarios y escalas reales.</p>`;
+  $$('.combo__detail',host).forEach(b=>b.addEventListener('click',()=>openDiaSheet(b.dataset.code,b.dataset.ida,b.dataset.vuelta)));
+  host.scrollIntoView({behavior:'smooth'});
+}
+
+// Hoja de detalle de un día: precio + accesos directos a Smiles (ida y vuelta)
+function openDiaSheet(code, idaISO, vueltaISO){
+  const {dest, orig} = state.finder;
+  const d = bDestinos()[dest];
+  const body = $('#sheetBody');
+  const linkIda = smilesOneWayURL(orig, code, idaISO, d.moneda);
+  const linkVta = smilesOneWayURL(code, orig, vueltaISO, d.moneda);
+  const linkRound = smilesRoundURL(orig, code, idaISO, vueltaISO, d.moneda);
+  body.innerHTML = `
+    <div class="destcard__emoji" style="font-size:2.2rem">${d.emoji}</div>
+    <h2 class="sheet__title">${d.nombre}</h2>
+    <p class="sheet__pais">${orig} ⇄ ${code} · ${(d.aeropuertos.find(a=>a.code===code)||{}).ciudad||code}</p>
+    <div class="block">
+      <h3>Ver las opciones reales del día</h3>
+      <p class="hint">Las aerolíneas, horarios y escalas de cada vuelo se ven en Smiles ya filtrado a ese día. Abrí el que quieras:</p>
+      <div class="diaslinks">
+        <a class="btn btn--go" href="${linkRound}" target="_blank" rel="noopener">✈ Ida y vuelta en Smiles ↗</a>
+        <a class="btn" href="${linkIda}" target="_blank" rel="noopener">Solo la ida · ${dateLabel(idaISO)} ↗</a>
+        <a class="btn" href="${linkVta}" target="_blank" rel="noopener">Solo la vuelta · ${dateLabel(vueltaISO)} ↗</a>
+      </div>
+    </div>
+    <div class="block">
+      <h3>Detalle por vuelo (aerolínea · horarios · escalas)</h3>
+      <p class="hint">Esto lo vas a ver dentro de la app cuando activemos tu sesión de Smiles guardada. Por ahora, el botón de arriba te lleva directo a ese día para verlo en la web oficial.</p>
+    </div>`;
+  $('#sheet').classList.add('open');
+  $('#sheet').setAttribute('aria-hidden','false');
 }
 
 function renderStatus(){

@@ -48,14 +48,69 @@
 </header>
 
 <nav class="tabs" id="tabs">
-  <button class="tab is-active" data-view="radar">Radar</button>
-  <button class="tab" data-view="viajes">Viajes</button>
+  <button class="tab is-active" data-view="buscar">Buscar</button>
+  <button class="tab" data-view="radar">Radar</button>
   <button class="tab" data-view="destinos">Destinos</button>
 </nav>
 
 <main id="app">
+  <!-- BUSCAR (inicio) -->
+  <section class="view is-active" id="view-buscar">
+    <div class="finder">
+      <div class="finder__head">
+        <h1 class="finder__title">¿A dónde cazamos?</h1>
+        <p class="finder__sub">Armá tu viaje: elegí destino, cuándo salir y cuántas noches. Te muestro las mejores combinaciones ida + vuelta en millas.</p>
+        <button class="finder__edit" id="editTripsBtn" type="button">✏️ Configurar qué rastrillar</button>
+      </div>
+      <form class="finder__form" id="finderForm" autocomplete="off">
+        <label class="fld">
+          <span class="fld__lbl">Destino</span>
+          <select class="fld__in" id="fDest"></select>
+        </label>
+
+        <label class="fld">
+          <span class="fld__lbl">Salir desde</span>
+          <select class="fld__in" id="fOrig"></select>
+        </label>
+
+        <label class="fld">
+          <span class="fld__lbl">Mes de salida</span>
+          <select class="fld__in" id="fMes"></select>
+        </label>
+
+        <div class="fld fld--range">
+          <span class="fld__lbl">Días de viaje (noches)</span>
+          <div class="rangebox">
+            <input type="number" class="fld__in fld__num" id="fNochesMin" min="1" max="120" value="10" inputmode="numeric">
+            <span class="rangebox__to">a</span>
+            <input type="number" class="fld__in fld__num" id="fNochesMax" min="1" max="120" value="20" inputmode="numeric">
+            <span class="rangebox__u">noches</span>
+          </div>
+        </div>
+
+        <div class="fld fld--full">
+          <span class="fld__lbl">Salida: ¿algún día en particular?</span>
+          <div class="daypick" id="fDiasIda"></div>
+        </div>
+
+        <div class="fld fld--full">
+          <span class="fld__lbl">Preferencia de escalas</span>
+          <div class="segbtns" id="fEscalas">
+            <button type="button" class="segbtn is-active" data-esc="todos">Cualquiera</button>
+            <button type="button" class="segbtn" data-esc="directo">Evitar conexión por Brasil</button>
+          </div>
+          <p class="fld__hint">Las escalas exactas de cada vuelo las confirmás al abrir el día en Smiles. Acá puedo evitar los días que solo salen conectando por Brasil (GOL).</p>
+        </div>
+
+        <button type="submit" class="finder__go" id="fGo">Buscar combinaciones ✈</button>
+      </form>
+    </div>
+
+    <div class="results" id="finderResults"></div>
+  </section>
+
   <!-- RADAR -->
-  <section class="view is-active" id="view-radar">
+  <section class="view" id="view-radar">
     <div class="hero">
       <div class="hero__radar" aria-hidden="true">
         <div class="radar-ring r1"></div>
@@ -83,14 +138,6 @@
       </div>
     </div>
     <div class="cards" id="radarCards"></div>
-  </section>
-
-  <!-- VIAJES -->
-  <section class="view" id="view-viajes">
-    <div class="section-head"><h2>Tus viajes</h2>
-      <button class="chip-filter" id="editTripsBtn">✏️ Editar viajes</button>
-    </div>
-    <div id="viajesWrap"></div>
   </section>
 
   <!-- DESTINOS -->

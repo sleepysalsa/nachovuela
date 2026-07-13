@@ -35,6 +35,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import destinos as cat
 import smiles_client
 import clima_client
+import busqueda as busq
 import detalle_client
 import cash_client
 
@@ -48,6 +49,7 @@ HIST_PATH = os.path.join(DATA, "historial.json")
 LATEST_PATH = os.path.join(DATA, "latest.json")
 DESTINOS_PATH = os.path.join(DATA, "destinos.json")
 CLIMA_PATH = os.path.join(DATA, "clima.json")
+BUSQUEDA_PATH = os.path.join(DATA, "busqueda.json")
 
 
 def ahora_iso():
@@ -300,6 +302,9 @@ def correr(demo=False, refrescar_clima=False):
     if refrescar_clima or not os.path.exists(CLIMA_PATH):
         escribir_clima()
 
+    # Datos del BUSCADOR ida+vuelta (piernas de ida y de regreso por día)
+    escribir_busqueda(config, demo=demo)
+
     n_op = sum(1 for r in resultados if r["nivel"] == "oportunidad")
     print(f"[{ahora_iso()}] Listo. {len(resultados)} rutas, {n_op} oportunidades 🔥, "
           f"{len(errores)} errores.")
@@ -346,6 +351,20 @@ def agregar_detalles(resultados, config, demo=False):
                 time.sleep(random.uniform(2.0, 4.0))
     except Exception as e:
         print(f"  Detalle no disponible en esta corrida: {e}")
+
+
+def escribir_busqueda(config, demo=False):
+    """Construye y guarda data/busqueda.json (piernas ida+vuelta por día)."""
+    print("Armando datos del buscador ida+vuelta...")
+    try:
+        data = busq.construir(config, log=print, demo=demo)
+    except Exception as e:
+        print(f"  Buscador no generado en esta corrida: {e}")
+        return
+    data["generado"] = ahora_iso()
+    guardar_json(BUSQUEDA_PATH, data)
+    n = sum(len(d.get("meses", {})) for d in data.get("destinos", {}).values())
+    print(f"  Buscador: {len(data.get('destinos', {}))} destinos, {n} meses cargados.")
 
 
 def escribir_destinos():
