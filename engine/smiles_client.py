@@ -44,19 +44,25 @@ class SmilesError(Exception):
 
 
 def calendario_mes(origen, destino, anio, mes, currency="USD",
-                   pausa=(2.5, 5.0), reintentos=3):
+                   pausa=(2.5, 5.0), reintentos=3, preferir_socias=False):
     """
     Trae el calendario de precios award de un mes para una ruta, consultando
     DOS veces: la búsqueda normal (GOL + socias según la ruta) y la forzada a
     aerolíneas socias (forceCongener=true). Smiles a veces solo muestra las
-    opciones de socias en la segunda, así que fusionamos ambas tomando el
-    precio mínimo de cada día. Verificado el 13-jul-2026: en EZE->GRU la
-    normal daba 0 días y la de socias 2 días.
+    opciones de socias en la segunda, así que fusionamos ambas. Verificado el
+    13-jul-2026: en EZE->GRU la normal daba 0 días y la de socias 2 días.
+
+    preferir_socias (para destinos fuera de Brasil): el precio del día es el
+    de aerolíneas socias; el de la consulta normal (GOL, usualmente con
+    conexión por Brasil) solo se usa si las socias no tienen ese día, y el
+    día queda etiquetado fuente="gol". Para Brasil (preferir_socias=False)
+    GOL compite de igual a igual y gana el más barato.
 
     Returns:
         (dias, quartil_bands)
-        dias: lista de dicts {date, miles, price_range, is_lowest, fare_type},
-              solo días con precio, con el mínimo entre ambas consultas.
+        dias: lista de dicts {date, miles, price_range, is_lowest, fare_type,
+              fuente ("gol"|"socias"|"ambas"), gol_alt (millas GOL si además
+              existe opción GOL más barata que la elegida)}.
     """
     dias_a, bandas_a = _consulta(origen, destino, anio, mes, currency,
                                  force_congener="false", reintentos=reintentos)
@@ -65,14 +71,31 @@ def calendario_mes(origen, destino, anio, mes, currency="USD",
                                  force_congener="true", reintentos=reintentos)
     _dormir(pausa)
 
-    # Fusionar por fecha, quedándonos con el precio más bajo de cada día
+    mapa_a = {d["date"]: d for d in dias_a}   # consulta normal (incluye GOL)
+    mapa_b = {d["date"]: d for d in dias_b}   # solo aerolíneas socias
+
     por_fecha = {}
-    for d in dias_a + dias_b:
-        f = d["date"]
-        if f not in por_fecha or d["miles"] < por_fecha[f]["miles"]:
-            por_fecha[f] = d
+    for f in set(mapa_a) | set(mapa_b):
+        a, b = mapa_a.get(f), mapa_b.get(f)
+        if a and b:
+            if preferir_socias:
+                elegido = dict(b)
+                elegido["fuente"] = "ambas"
+                if a["miles"] < b["miles"]:
+                    elegido["gol_alt"] = a["miles"]
+            else:
+                elegido = dict(a if a["miles"] <= b["miles"] else b)
+                elegido["fuente"] = "ambas"
+        elif b:
+            elegido = dict(b)
+            elegido["fuente"] = "socias"
+        else:
+            elegido = dict(a)
+            elegido["fuente"] = "gol"
+        por_fecha[f] = elegido
+
     dias = sorted(por_fecha.values(), key=lambda x: x["date"])
-    return dias, (bandas_a or bandas_b)
+    return dias, (bandas_b or bandas_a)
 
 
 def _consulta(origen, destino, anio, mes, currency, force_congener, reintentos=3):

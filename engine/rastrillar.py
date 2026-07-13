@@ -25,7 +25,9 @@ Es respetuoso con Smiles: pausas aleatorias entre llamadas.
 import argparse
 import json
 import os
+import random
 import sys
+import time
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -33,6 +35,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import destinos as cat
 import smiles_client
 import clima_client
+import detalle_client
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENGINE = os.path.join(ROOT, "engine")
@@ -192,10 +195,12 @@ def correr(demo=False, refrescar_clima=False):
         og, code = t["origen"], t["aeropuerto"]["code"]
         moneda = t["destino"].get("moneda", config.get("moneda_default", "USD"))
         etiqueta = f"{og}->{code} {t['ym']}"
+        es_brasil = t["destino"]["pais"] == "Brasil"
         try:
             dias, bandas = smiles_client.calendario_mes(
                 og, code, t["anio"], t["mes"], currency=moneda,
                 pausa=(0.4, 0.9) if demo else (2.5, 5.0),
+                preferir_socias=not es_brasil,
             )
         except smiles_client.SmilesError as e:
             print(f"  [{i}/{len(tareas)}] {etiqueta}: ERROR {e}")
@@ -258,6 +263,10 @@ def correr(demo=False, refrescar_clima=False):
     orden_nivel = {"oportunidad": 0, "bueno": 1, "normal": 2, "caro": 3}
     resultados.sort(key=lambda r: (orden_nivel[r["nivel"]], r["mejor_precio_millas"]))
 
+    # Detalle de vuelos (aerolínea / duración / escalas) para los mejores días.
+    # Requiere sesión de Smiles iniciada (python3 engine/login_smiles.py).
+    agregar_detalles(resultados, config, demo=demo)
+
     latest = {
         "generado": ahora_iso(),
         "total_rutas": len(resultados),
@@ -274,6 +283,48 @@ def correr(demo=False, refrescar_clima=False):
     print(f"[{ahora_iso()}] Listo. {len(resultados)} rutas, {n_op} oportunidades 🔥, "
           f"{len(errores)} errores.")
     return latest
+
+
+def agregar_detalles(resultados, config, demo=False):
+    """
+    Enriquece los mejores resultados con el detalle del mejor día:
+    aerolínea, horarios, duración y escalas. Solo si hay sesión de Smiles.
+    """
+    cfg = config.get("detalle", {})
+    if not cfg.get("activado", True):
+        return
+    if not detalle_client.hay_sesion():
+        print("  (sin sesión de Smiles: corré `python3 engine/login_smiles.py` "
+              "para ver aerolíneas y escalas)")
+        return
+
+    niveles = set(cfg.get("solo_niveles", ["oportunidad", "bueno"]))
+    maximo = 1 if demo else int(cfg.get("max_por_corrida", 10))
+    candidatos = [r for r in resultados if r["nivel"] in niveles][:maximo]
+    if not candidatos:
+        return
+
+    print(f"Trayendo detalle de vuelos para {len(candidatos)} mejores días...")
+    try:
+        with detalle_client.DetalleBrowser() as db:
+            for r in candidatos:
+                try:
+                    det = db.detalle_dia(r["origen"], r["aeropuerto"],
+                                         r["mejor_fecha"], currency=r["moneda"])
+                except Exception as e:
+                    print(f"  {r['ruta']}: detalle falló ({e})")
+                    det = None
+                if det and det.get("vuelos"):
+                    r["detalle"] = det
+                    v = det["vuelos"][0]
+                    esc = "directo" if v["escalas"] == 0 else f"{v['escalas']} escala(s)"
+                    print(f"  {r['ruta']} {r['mejor_fecha']}: {v['aerolinea']} "
+                          f"{esc}, {len(det['vuelos'])} vuelos")
+                else:
+                    print(f"  {r['ruta']} {r['mejor_fecha']}: sin detalle")
+                time.sleep(random.uniform(2.0, 4.0))
+    except Exception as e:
+        print(f"  Detalle no disponible en esta corrida: {e}")
 
 
 def escribir_destinos():

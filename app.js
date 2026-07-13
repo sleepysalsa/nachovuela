@@ -222,6 +222,7 @@ function cardHTML(r,i){
       <span class="card__unit">millas</span>
     </div>
     <p class="card__when">mejor día: <b>${dateLabel(r.mejor_fecha)}</b> · ${ymLabel(r.ym)}${r.promedio_historico?` · prom. ${fmtMiles(r.promedio_historico)}`:''}</p>
+    ${vueloLine(r)}
     ${motivo}
     ${meterHTML(r.price_range)}
     <div class="card__actions">
@@ -230,6 +231,41 @@ function cardHTML(r,i){
     </div>
     <div class="monthcal">${monthCalHTML(r)}</div>
   </article>`;
+}
+
+function durTxt(min){
+  if(min==null) return '';
+  return `${Math.floor(min/60)} h ${String(min%60).padStart(2,'0')}`;
+}
+function escTxt(n){
+  return n===0 ? 'directo' : (n===1 ? '1 escala' : `${n} escalas`);
+}
+function vueloLine(r){
+  const v = r.detalle?.vuelos?.[0];
+  if(!v) return '';
+  const dir = v.escalas===0;
+  const partes = [
+    `<b>${v.aerolinea||v.codigo||'—'}</b>`,
+    `<span class="${dir?'esc-dir':'esc-con'}">${escTxt(v.escalas)}</span>`,
+    v.duracion_min!=null?durTxt(v.duracion_min):null,
+    v.salida?`sale ${v.salida}`:null,
+  ].filter(Boolean);
+  const extra = r.detalle.directos>0 && !dir
+    ? ` · <span class="esc-dir">hay ${r.detalle.directos} directo${r.detalle.directos>1?'s':''}</span>` : '';
+  return `<p class="card__vuelo">✈ ${partes.join(' · ')}${extra}</p>`;
+}
+function vuelosBlock(det){
+  if(!det?.vuelos?.length) return '';
+  const rows = det.vuelos.slice(0,6).map(v=>`
+    <div class="vrow">
+      <div class="vrow__air"><b>${v.aerolinea||v.codigo||'—'}</b></div>
+      <div class="vrow__time">${v.salida||'—'} → ${v.llegada||'—'}${v.duracion_min!=null?` · ${durTxt(v.duracion_min)}`:''}</div>
+      <div class="vrow__tags"><span class="${v.escalas===0?'esc-dir':'esc-con'}">${escTxt(v.escalas)}</span>
+        <span class="vrow__miles">${fmtMiles(v.millas)} mi</span></div>
+    </div>`).join('');
+  return `<div class="block"><h3>Vuelos del mejor día · ${dateLabel(det.fecha)}</h3>
+    <div class="vlist">${rows}</div>
+    <p class="hint" style="margin-top:8px">Del más barato al más caro. Verde = directo.</p></div>`;
 }
 
 function monthCalHTML(r){
@@ -246,7 +282,10 @@ function monthCalHTML(r){
     if(info){
       const q = info.price_range?`q${info.price_range}`:'';
       const km = Math.round(info.miles/1000);
-      cells += `<div class="dcell has ${q}"><span>${d}</span><span class="dm">${km}k</span></div>`;
+      const esBrasil = r.destino_pais==='Brasil';
+      const gol = !esBrasil && info.fuente==='gol' ? ' gol' : '';
+      const golTip = gol ? ' · solo vía GOL (conexión por Brasil)' : '';
+      cells += `<div class="dcell has ${q}${gol}" title="${dateLabel(iso)}: ${fmtMiles(info.miles)} millas${golTip}"><span>${d}</span><span class="dm">${km}k</span></div>`;
     } else {
       cells += `<div class="dcell"><span>${d}</span></div>`;
     }
@@ -339,6 +378,7 @@ function openDestino(key){
     <h2 class="sheet__title">${d.nombre}</h2>
     <p class="sheet__pais">${d.pais} · ${d.aeropuertos.map(a=>a.code).join(' / ')}</p>
     ${bestFound(R)}
+    ${vuelosBlock(R.length ? ((R.reduce((a,b)=>a.mejor_precio_millas<=b.mejor_precio_millas?a:b).detalle) || (R.find(x=>x.detalle)?.detalle) || null) : null)}
     ${pricesByMonthBlock(porMes,R)}
     ${climateBlock(clima)}
     ${seasonHint(porMes, clima)}

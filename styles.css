@@ -279,3 +279,29 @@ main{position:relative;z-index:2;max-width:940px;margin:0 auto;padding:6px 18px 
   .hero__miles{font-size:2rem}
   .cards{grid-template-columns:1fr}
 }
+
+/* ---------- vuelos (detalle con aerolínea/duración/escalas) ---------- */
+.card__vuelo{
+  font-size:.78rem; color:var(--ink-mid); margin:2px 0 4px;
+  font-family:var(--mono);
+}
+.esc-dir{ color:var(--green); font-weight:700; }
+.esc-con{ color:var(--amber-lt); }
+.vlist{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.vrow{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:var(--panel-2); border:1px solid var(--line);
+  border-radius:10px; padding:9px 12px; flex-wrap:wrap;
+}
+.vrow__air{ font-size:.82rem; min-width:120px; }
+.vrow__time{ font-family:var(--mono); font-size:.75rem; color:var(--ink-mid); }
+.vrow__tags{ display:flex; gap:10px; align-items:center; font-size:.75rem; }
+.vrow__miles{ font-family:var(--mono); font-weight:700; color:var(--ink); }
+
+/* día del calendario que solo tiene opción GOL (fuera de Brasil) */
+.dcell.gol{ position:relative; opacity:.72; }
+.dcell.gol::after{
+  content:'G'; position:absolute; top:2px; right:3px;
+  font-size:7px; font-weight:800; color:var(--amber-lt);
+  font-family:var(--mono);
+}
