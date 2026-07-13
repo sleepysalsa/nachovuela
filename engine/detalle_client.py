@@ -1,13 +1,17 @@
 """
 Detalle de vuelos de un día puntual: aerolínea, horarios, duración y escalas.
 
-Smiles solo muestra esta información a usuarios logueados, así que este módulo
-usa la sesión guardada por login_smiles.py (engine/.perfil_smiles/). Abre la
-página de resultados con un navegador invisible y captura la respuesta interna
-que la propia web recibe.
+Smiles solo muestra esto a usuarios logueados. login_smiles.py guarda la
+sesión (cookies + almacenamiento + token) en archivos locales ignorados por
+git, y acá la reutilizamos con dos vías:
 
-Si no hay sesión iniciada, el motor simplemente sigue sin detalle (la app
-muestra precios igual, pero sin aerolínea/duración).
+  Vía 1: abrir la página de resultados con la sesión inyectada y capturar la
+         respuesta interna de la web.
+  Vía 2: llamar a la API de búsqueda desde adentro de la página con el token
+         de usuario capturado.
+
+Si ninguna funciona (token vencido), el motor sigue sin detalle y la app
+avisa que conviene correr login_smiles.py de nuevo.
 """
 import datetime
 import json
@@ -17,45 +21,82 @@ from pathlib import Path
 
 ENGINE = Path(__file__).resolve().parent
 PERFIL = ENGINE / ".perfil_smiles"
+STORAGE = ENGINE / ".storage_smiles.json"
+TOKEN = ENGINE / ".token_smiles"
 DEBUG_DIR = ENGINE / ".debug"
+
+API_KEY = "aJqPU7xNHl9qN3NVZnPaJ208aPo2Bh2p2ZV844tw"
 
 
 def hay_sesion():
-    return (PERFIL / "Default").exists() or (PERFIL / "Cookies").exists()
+    return STORAGE.exists()
+
+
+def _token_usuario():
+    if TOKEN.exists():
+        t = TOKEN.read_text().strip()
+        if t.lower().startswith("bearer"):
+            return t
+    return None
 
 
 class DetalleBrowser:
-    """Un navegador persistente reutilizado para varias consultas de detalle."""
+    """Un navegador reutilizado para varias consultas de detalle."""
 
     def __init__(self):
         self._pw = None
+        self._browser = None
         self._ctx = None
         self._page = None
 
     def __enter__(self):
         from playwright.sync_api import sync_playwright
         self._pw = sync_playwright().start()
-        self._ctx = self._pw.chromium.launch_persistent_context(
-            str(PERFIL), headless=True,
-            viewport={"width": 1440, "height": 900},
-            locale="es-AR", timezone_id="America/Argentina/Buenos_Aires",
-        )
-        self._page = self._ctx.pages[0] if self._ctx.pages else self._ctx.new_page()
+        self._browser = self._pw.chromium.launch(headless=True)
+        kwargs = {
+            "viewport": {"width": 1440, "height": 900},
+            "locale": "es-AR",
+            "timezone_id": "America/Argentina/Buenos_Aires",
+        }
+        if STORAGE.exists():
+            kwargs["storage_state"] = str(STORAGE)
+        self._ctx = self._browser.new_context(**kwargs)
+
+        # sessionStorage no viaja en storage_state: inyectarlo antes de cargar
+        try:
+            extra = json.loads(STORAGE.read_text()).get("nachovuela_extra", {})
+            ss = extra.get("sessionStorage") or {}
+            if ss:
+                script = "".join(
+                    f"try{{sessionStorage.setItem({json.dumps(k)},{json.dumps(v)})}}catch(e){{}};"
+                    for k, v in ss.items()
+                )
+                self._ctx.add_init_script(script)
+        except Exception:
+            pass
+
+        self._page = self._ctx.new_page()
         return self
 
     def __exit__(self, *exc):
         try:
             if self._ctx:
                 self._ctx.close()
+            if self._browser:
+                self._browser.close()
         finally:
             if self._pw:
                 self._pw.stop()
 
-    def detalle_dia(self, origen, destino, fecha, currency="USD", timeout_s=50):
-        """
-        Trae los vuelos de un día. `fecha` es "YYYY-MM-DD".
-        Devuelve dict {"vuelos": [...], "directos": n} o None si no se pudo.
-        """
+    def detalle_dia(self, origen, destino, fecha, currency="USD", timeout_s=45):
+        """Vuelos de un día ("YYYY-MM-DD"). Dict {vuelos, directos} o None."""
+        res = self._via_pagina(origen, destino, fecha, currency, timeout_s)
+        if res:
+            return res
+        return self._via_fetch(origen, destino, fecha, currency)
+
+    # ---- Vía 1: la página busca sola y capturamos su respuesta ----
+    def _via_pagina(self, origen, destino, fecha, currency, timeout_s):
         dt = datetime.datetime.strptime(fecha, "%Y-%m-%d").replace(hour=12)
         ms = int(dt.timestamp() * 1000)
         url = (
@@ -65,7 +106,6 @@ class DetalleBrowser:
             f"&originAirportCode={origen}&searchType=g3&segments=1&tripType=2"
             f"&originAirportIsAny=false&destinAirportIsAny=false"
         )
-
         capturas = []
 
         def on_response(resp):
@@ -82,27 +122,85 @@ class DetalleBrowser:
             limite = time.time() + timeout_s
             while time.time() < limite and not capturas:
                 page.wait_for_timeout(1000)
-            page.wait_for_timeout(2500)  # dejar llegar respuestas tardías
+            page.wait_for_timeout(2000)
+        except Exception:
+            pass
         finally:
             page.remove_listener("response", on_response)
 
         for body in capturas:
             vuelos = _parsear_vuelos(body)
             if vuelos:
-                if os.environ.get("NACHOVUELA_DEBUG"):
-                    DEBUG_DIR.mkdir(exist_ok=True)
-                    (DEBUG_DIR / f"detalle_{origen}_{destino}_{fecha}.json").write_text(
-                        json.dumps(body, ensure_ascii=False)[:800000])
-                return {
-                    "fecha": fecha,
-                    "vuelos": vuelos,
-                    "directos": sum(1 for v in vuelos if v["escalas"] == 0),
-                }
-        if capturas and os.environ.get("NACHOVUELA_DEBUG"):
-            DEBUG_DIR.mkdir(exist_ok=True)
-            (DEBUG_DIR / f"detalle_raw_{origen}_{destino}_{fecha}.json").write_text(
-                json.dumps(capturas, ensure_ascii=False)[:800000])
+                self._debug(body, origen, destino, fecha, "pagina")
+                return _armar(fecha, vuelos)
         return None
+
+    # ---- Vía 2: fetch desde adentro de la página con el token de usuario ----
+    def _via_fetch(self, origen, destino, fecha, currency):
+        token = _token_usuario()
+        if not token:
+            return None
+        page = self._page
+        try:
+            if "smiles.com.ar" not in page.url:
+                page.goto("https://www.smiles.com.ar/home",
+                          wait_until="domcontentloaded", timeout=60000)
+                page.wait_for_timeout(1500)
+        except Exception:
+            return None
+
+        api = (
+            "https://api-air-flightsearch-prd.smiles.com.br/v1/airlines/search"
+            f"?adults=1&cabinType=all&children=0&currencyCode={currency}"
+            f"&departureDate={fecha}&destinationAirportCode={destino}"
+            f"&forceCongener=false&infants=0&isFlexibleDateChecked=false"
+            f"&originAirportCode={origen}&r=ar&region=ARGENTINA&tripType=2"
+        )
+        headers = {
+            "x-api-key": API_KEY,
+            "authorization": token,
+            "region": "ARGENTINA",
+            "channel": "Web",
+            "language": "es-ES",
+        }
+        try:
+            res = page.evaluate(
+                """async ([url, headers]) => {
+                    try {
+                        const r = await fetch(url, {headers});
+                        return {status: r.status, body: await r.text()};
+                    } catch (e) { return {status: -1, body: String(e)}; }
+                }""",
+                [api, headers],
+            )
+        except Exception:
+            return None
+        if res.get("status") != 200:
+            return None
+        try:
+            body = json.loads(res["body"])
+        except Exception:
+            return None
+        vuelos = _parsear_vuelos(body)
+        if vuelos:
+            self._debug(body, origen, destino, fecha, "fetch")
+            return _armar(fecha, vuelos)
+        return None
+
+    @staticmethod
+    def _debug(body, origen, destino, fecha, via):
+        if os.environ.get("NACHOVUELA_DEBUG"):
+            DEBUG_DIR.mkdir(exist_ok=True)
+            (DEBUG_DIR / f"detalle_{via}_{origen}_{destino}_{fecha}.json").write_text(
+                json.dumps(body, ensure_ascii=False)[:800000])
+
+
+def _armar(fecha, vuelos):
+    return {
+        "fecha": fecha,
+        "vuelos": vuelos,
+        "directos": sum(1 for v in vuelos if v["escalas"] == 0),
+    }
 
 
 def _minutos_duracion(f):
@@ -114,9 +212,7 @@ def _minutos_duracion(f):
         if h or m:
             return int(h) * 60 + int(m)
     if isinstance(dur, (int, float)) and dur > 0:
-        # a veces viene en minutos directo
         return int(dur)
-    # último recurso: restar horarios (aprox., ignora zonas horarias)
     try:
         d1 = _fecha_iso(f["departure"]["date"])
         d2 = _fecha_iso(f["arrival"]["date"])
