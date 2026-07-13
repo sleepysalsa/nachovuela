@@ -13,6 +13,11 @@ echo "=================================================="
 echo " NachoVuela · rastrillaje $(date '+%Y-%m-%d %H:%M')"
 echo "=================================================="
 
+# 0) Traer cambios hechos desde la app/GitHub (ej: viajes editados en el celu)
+if [ -d .git ] && git remote get-url origin >/dev/null 2>&1; then
+  git pull --rebase origin main >/dev/null 2>&1 && echo "✓ Config sincronizada desde GitHub" || echo "ℹ Sin conexión a GitHub, uso la config local"
+fi
+
 # 1) Rastrillar Smiles + generar datos.
 #    Los domingos (día 7) además refresca el clima.
 if [ "$(date +%u)" = "7" ]; then

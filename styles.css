@@ -234,6 +234,40 @@ main{position:relative;z-index:2;max-width:940px;margin:0 auto;padding:6px 18px 
 
 .empty{text-align:center;color:var(--ink-faint);padding:40px 20px;font-style:italic}
 
+/* ---------- Lock screen ---------- */
+.lock{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(900px 600px at 50% 30%,rgba(46,64,110,.4) 0%,transparent 60%),linear-gradient(180deg,var(--bg-2),var(--bg))}
+.lock[hidden]{display:none}
+.lock__box{text-align:center;padding:30px;animation:fade .5s}
+.lock__logo{border-radius:22px;box-shadow:0 16px 44px -12px rgba(245,166,35,.55);margin-bottom:16px}
+.lock__name{font-family:var(--serif);font-weight:900;font-size:2rem;letter-spacing:-.02em}
+.lock__name em{font-style:italic;font-weight:400;color:var(--amber)}
+.lock__sub{font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin:6px 0 24px}
+.lock__input{display:block;width:240px;margin:0 auto 12px;text-align:center;font-family:var(--mono);font-size:1.1rem;
+  color:var(--ink);background:var(--panel);border:1px solid var(--line-strong);border-radius:14px;padding:13px;outline:none;transition:.2s}
+.lock__input:focus{border-color:var(--amber)}
+.lock__btn{font-family:var(--sans);font-weight:700;font-size:.95rem;color:#0c0f1a;
+  background:linear-gradient(120deg,var(--amber-lt),var(--amber));border:none;border-radius:14px;
+  padding:12px 34px;cursor:pointer;box-shadow:0 10px 26px -10px rgba(245,166,35,.7);transition:.2s}
+.lock__btn:hover{transform:translateY(-2px)}
+.lock__err{color:var(--red);font-size:.82rem;margin-top:14px;animation:shake .4s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ---------- Editor de viajes ---------- */
+.ed-label{font-family:var(--sans);font-weight:700;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin:18px 0 8px;display:block}
+.ed-input{width:100%;font-family:var(--sans);font-size:.95rem;color:var(--ink);background:rgba(120,140,190,.07);
+  border:1px solid var(--line-strong);border-radius:12px;padding:11px 13px;outline:none;transition:.2s}
+.ed-input:focus{border-color:var(--amber)}
+.ed-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ed-chip{font-family:var(--sans);font-size:.8rem;font-weight:600;color:var(--ink-dim);background:transparent;
+  border:1px solid var(--line-strong);padding:7px 13px;border-radius:999px;cursor:pointer;transition:.15s;user-select:none}
+.ed-chip.on{color:#0c0f1a;background:linear-gradient(120deg,var(--amber-lt),var(--amber));border-color:transparent}
+.ed-save{width:100%;margin-top:22px;font-family:var(--sans);font-weight:700;font-size:.95rem;color:#0c0f1a;
+  background:linear-gradient(120deg,var(--amber-lt),var(--amber));border:none;border-radius:14px;padding:14px;cursor:pointer;transition:.2s}
+.ed-save:hover{transform:translateY(-1px)}
+.ed-steps{background:rgba(52,224,161,.07);border:1px solid rgba(52,224,161,.25);border-radius:14px;padding:14px 16px;margin-top:16px;font-size:.84rem;color:var(--ink-dim);line-height:1.6}
+.ed-steps b{color:var(--green)}
+
 /* ---------- Footer ---------- */
 .foot{position:relative;z-index:2;max-width:940px;margin:20px auto 0;padding:20px 18px;display:flex;
   justify-content:space-between;flex-wrap:wrap;gap:8px;border-top:1px solid var(--line);

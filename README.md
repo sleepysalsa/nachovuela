@@ -117,6 +117,25 @@ Editá **`engine/config.json`**. Ejemplo:
 
 ---
 
+## Clave de ingreso
+
+La app pide una clave al entrar (una sola vez por dispositivo). Para cambiarla:
+
+```bash
+python3 -c "import hashlib; print(hashlib.sha256('TU_NUEVA_CLAVE'.encode()).hexdigest())"
+```
+
+y pegá el resultado en `app.js` donde dice `PIN_HASH`. Ojo: es un candado de
+entrada, no un cifrado — los datos de precios siguen visibles en el repositorio
+público (no hay nada sensible en ellos).
+
+## Editar viajes desde la app
+
+En la pestaña **Viajes → ✏️ Editar viajes** elegís orígenes, destinos y meses.
+Al guardar, la app copia la configuración nueva y te abre GitHub para pegarla y
+confirmar (botón *Commit changes*). El motor la toma solo en el próximo
+rastrillaje, porque antes de buscar hace `git pull`.
+
 ## Preguntas frecuentes
 
 **¿Por qué algunos meses dicen "sin disponibilidad"?**

@@ -19,6 +19,20 @@
 <body>
 <div class="grain" aria-hidden="true"></div>
 
+<!-- Pantalla de ingreso -->
+<div class="lock" id="lock" hidden>
+  <div class="lock__box">
+    <img src="assets/logo-mark.svg" alt="" width="84" height="84" class="lock__logo">
+    <div class="lock__name">Nacho<em>Vuela</em></div>
+    <p class="lock__sub">radar privado · ingresá tu clave</p>
+    <form id="lockForm" autocomplete="off">
+      <input type="password" id="lockPin" class="lock__input" placeholder="••••••••" inputmode="text" autocomplete="off">
+      <button type="submit" class="lock__btn">Entrar ✈</button>
+    </form>
+    <p class="lock__err" id="lockErr" hidden>Clave incorrecta, probá de nuevo</p>
+  </div>
+</div>
+
 <header class="topbar">
   <div class="brand">
     <img src="assets/logo-mark.svg" alt="" class="brand__mark" width="40" height="40">
@@ -73,7 +87,9 @@
 
   <!-- VIAJES -->
   <section class="view" id="view-viajes">
-    <div class="section-head"><h2>Tus viajes</h2></div>
+    <div class="section-head"><h2>Tus viajes</h2>
+      <button class="chip-filter" id="editTripsBtn">✏️ Editar viajes</button>
+    </div>
     <div id="viajesWrap"></div>
   </section>
 

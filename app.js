@@ -1,4 +1,12 @@
 /* ================= NachoVuela · app ================= */
+
+/* ---- Clave de ingreso ----
+   Hash SHA-256 de la clave. Para cambiarla, corré en la Terminal:
+   python3 -c "import hashlib; print(hashlib.sha256('TU_NUEVA_CLAVE'.encode()).hexdigest())"
+   y pegá el resultado acá. */
+const PIN_HASH = '893993ca8c030d8316e3f50e4675e69473a1ca8f87d4e38e5843d04d43727fcb';
+const GH_EDIT_CONFIG = 'https://github.com/sleepysalsa/nachovuela/edit/main/engine/config.json';
+
 const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const MONTHS_LONG = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DOW = ['L','M','M','J','V','S','D'];
@@ -44,8 +52,35 @@ function smilesURL(r){
   return `https://www.smiles.com.ar/emission?${p.toString()}`;
 }
 
+/* ---------- Candado ---------- */
+async function sha256hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function setupLock(){
+  const lock = $('#lock');
+  if(localStorage.getItem('nv_auth') === PIN_HASH){ lock.hidden = true; return; }
+  lock.hidden = false;
+  $('#lockPin').focus();
+  $('#lockForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const h = await sha256hex($('#lockPin').value.trim());
+    if(h === PIN_HASH){
+      localStorage.setItem('nv_auth', h);
+      lock.hidden = true;
+    } else {
+      const err = $('#lockErr');
+      err.hidden = false;
+      $('#lockPin').value = '';
+      err.style.animation='none'; err.offsetHeight; err.style.animation='';
+    }
+  });
+}
+
 /* ---------- init ---------- */
 async function init(){
+  setupLock();
   [state.latest, state.clima, state.destinos, state.config] = await Promise.all([
     loadJSON('data/latest.json'),
     loadJSON('data/clima.json'),
@@ -56,6 +91,7 @@ async function init(){
   setupTabs();
   setupFilters();
   setupSheet();
+  $('#editTripsBtn')?.addEventListener('click', openEditor);
   renderStatus();
   renderHero();
   renderStats();
@@ -350,26 +386,39 @@ function pricesByMonthBlock(porMes,R){
 function climateBlock(clima){
   if(!clima) return '';
   const meses = clima.meses;
-  const W=520,H=150,pad=24;
+  const W=520,H=170,padL=34,padR=14,padT=16,padB=26;
   const maxs = meses.map(x=>x.t_max).filter(v=>v!=null);
   const mins = meses.map(x=>x.t_min).filter(v=>v!=null);
-  const hi = Math.max(...maxs), lo = Math.min(...mins);
-  const x = i => pad + i*((W-2*pad)/11);
-  const y = t => H-pad - ((t-lo)/((hi-lo)||1))*(H-2*pad);
-  const line = (key,) => meses.map((mm,i)=> (mm[key]==null?'':`${i===0?'M':'L'}${x(i).toFixed(1)},${y(mm[key]).toFixed(1)}`)).join(' ');
-  const areaMax = line('t_max'); const areaMin = line('t_min');
+  const hi = Math.ceil(Math.max(...maxs)), lo = Math.floor(Math.min(...mins));
+  const x = i => padL + i*((W-padL-padR)/11);
+  const y = t => H-padB - ((t-lo)/((hi-lo)||1))*(H-padT-padB);
+  const line = key => meses.map((mm,i)=> (mm[key]==null?'':`${i===0?'M':'L'}${x(i).toFixed(1)},${y(mm[key]).toFixed(1)}`)).join(' ');
+  // Eje Y: líneas de referencia con sus grados
+  const ticks = [lo, Math.round((lo+hi)/2), hi];
+  const grid = ticks.map(t=>`<line x1="${padL}" y1="${y(t).toFixed(1)}" x2="${W-padR}" y2="${y(t).toFixed(1)}" stroke="rgba(120,140,190,.15)" stroke-dasharray="2 4"/>
+    <text x="${padL-5}" y="${(y(t)+3).toFixed(1)}" font-size="9" fill="var(--ink-dim)" text-anchor="end" font-family="var(--mono)">${t}°</text>`).join('');
+  // Valores de máx y mín sobre las curvas, mes por medio para que respire
+  const vals = meses.map((mm,i)=>{
+    if(i%2!==0 || mm.t_max==null) return '';
+    return `<text x="${x(i).toFixed(1)}" y="${(y(mm.t_max)-5).toFixed(1)}" font-size="8.5" fill="var(--red)" text-anchor="middle" font-family="var(--mono)" font-weight="700">${Math.round(mm.t_max)}°</text>
+      <text x="${x(i).toFixed(1)}" y="${(y(mm.t_min)+12).toFixed(1)}" font-size="8.5" fill="var(--blue)" text-anchor="middle" font-family="var(--mono)" font-weight="700">${Math.round(mm.t_min)}°</text>`;
+  }).join('');
   const dots = meses.map((mm,i)=> mm.t_media==null?'':`<circle cx="${x(i).toFixed(1)}" cy="${y(mm.t_media).toFixed(1)}" r="2.4" fill="var(--amber-lt)"/>`).join('');
-  const labels = meses.map((mm,i)=>`<text x="${x(i).toFixed(1)}" y="${H-6}" font-size="8" fill="var(--ink-faint)" text-anchor="middle" font-family="var(--mono)">${MONTHS[i]}</text>`).join('');
-  return `<div class="block"><h3>Clima — promedio histórico</h3>
+  const labels = meses.map((mm,i)=>`<text x="${x(i).toFixed(1)}" y="${H-8}" font-size="8" fill="var(--ink-faint)" text-anchor="middle" font-family="var(--mono)">${MONTHS[i]}</text>`).join('');
+  // Fila de temperaturas concretas, mes por mes
+  const badges = meses.map((mm,i)=> mm.t_max==null?'':`<span class="tempbadge">${MONTHS[i]} <b style="color:var(--red)">${Math.round(mm.t_max)}°</b><i style="color:var(--ink-faint)">/</i><b style="color:var(--blue)">${Math.round(mm.t_min)}°</b></span>`).join('');
+  return `<div class="block"><h3>Clima — promedio histórico (°C)</h3>
     <svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-      <path d="${areaMax}" fill="none" stroke="var(--red)" stroke-width="2" opacity=".85"/>
-      <path d="${areaMin}" fill="none" stroke="var(--blue)" stroke-width="2" opacity=".85"/>
+      ${grid}
+      <path d="${line('t_max')}" fill="none" stroke="var(--red)" stroke-width="2" opacity=".85"/>
+      <path d="${line('t_min')}" fill="none" stroke="var(--blue)" stroke-width="2" opacity=".85"/>
       <path d="${line('t_media')}" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="3 3" opacity=".9"/>
-      ${dots}${labels}
+      ${vals}${dots}${labels}
     </svg>
     <div class="chart-legend"><span><i style="background:var(--red)"></i>máx</span>
       <span><i style="background:var(--amber)"></i>media</span>
-      <span><i style="background:var(--blue)"></i>mín</span></div></div>`;
+      <span><i style="background:var(--blue)"></i>mín</span></div>
+    <div style="margin-top:10px">${badges}</div></div>`;
 }
 
 function seasonHint(porMes, clima){
@@ -389,6 +438,103 @@ function seasonHint(porMes, clima){
   }
   if(!bits.length) return '';
   return `<div class="block"><h3>Para decidir la fecha</h3><p class="hint">${bits.join(' ')}</p></div>`;
+}
+
+/* ---------- Editor de viajes ---------- */
+function proximosMeses(n){
+  const out=[]; const hoy=new Date();
+  for(let i=1;i<=n;i++){
+    const d=new Date(hoy.getFullYear(), hoy.getMonth()+i, 1);
+    out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+  return out;
+}
+
+function chipsHTML(id, items, selected){
+  return `<div class="ed-chips" id="${id}">` + items.map(it=>
+    `<span class="ed-chip ${selected.includes(it.value)?'on':''}" data-v="${it.value}">${it.label}</span>`
+  ).join('') + `</div>`;
+}
+
+function chipsSelected(id){
+  return $$(`#${id} .ed-chip.on`).map(c=>c.dataset.v);
+}
+
+function openEditor(){
+  const cfg = state.config || {moneda_default:'USD', viajes:[], destinos_vigilados:[], meses_vigilados:[]};
+  const v = (cfg.viajes||[])[0] || {id:'viaje-1', nombre:'Mi próximo viaje', activo:true,
+    origenes:['EZE'], destinos:[], meses:[], notas:''};
+  const D = state.destinos?.destinos || {};
+  const O = state.destinos?.origenes || {};
+  const destItems = Object.entries(D).map(([k,d])=>({value:k, label:`${d.emoji} ${d.nombre}`}));
+  const origItems = Object.keys(O).map(k=>({value:k, label:`${k} · ${O[k].ciudad}`}));
+  const mesItems = proximosMeses(20).map(ym=>({value:ym, label:ymLabel(ym)}));
+
+  const body = $('#sheetBody');
+  body.innerHTML = `
+    <h2 class="sheet__title">✏️ Editar viajes</h2>
+    <p class="sheet__pais">elegí qué rastrillar — el motor lo toma en la próxima pasada</p>
+
+    <label class="ed-label">Nombre del viaje</label>
+    <input class="ed-input" id="edNombre" value="${(v.nombre||'').replace(/"/g,'&quot;')}">
+
+    <label class="ed-label">Salir desde</label>
+    ${chipsHTML('edOrig', origItems, v.origenes||[])}
+
+    <label class="ed-label">Destinos en carpeta</label>
+    ${chipsHTML('edDest', destItems, v.destinos||[])}
+
+    <label class="ed-label">Meses del viaje</label>
+    ${chipsHTML('edMeses', mesItems, v.meses||[])}
+
+    <label class="ed-label">Notas</label>
+    <input class="ed-input" id="edNotas" value="${(v.notas||'').replace(/"/g,'&quot;')}">
+
+    <label class="ed-label">Vigilancia general (sin viaje puntual)</label>
+    ${chipsHTML('edVigDest', destItems, cfg.destinos_vigilados||[])}
+    <div style="height:8px"></div>
+    ${chipsHTML('edVigMeses', mesItems, cfg.meses_vigilados||[])}
+
+    <button class="ed-save" id="edSave">💾 Guardar cambios</button>
+    <div class="ed-steps" id="edSteps" hidden>
+      <b>¡Config copiada al portapapeles!</b> Se abrió GitHub en otra pestaña:<br>
+      1. Borrá todo el contenido del archivo (tocá adentro, seleccioná todo y borrá).<br>
+      2. Pegá lo copiado.<br>
+      3. Tocá el botón verde <b>Commit changes</b> (dos veces).<br>
+      El motor usa la nueva config en el próximo rastrillaje (9:00 / 20:00). 🛰️
+    </div>`;
+
+  // chips clickeables
+  $$('.ed-chip', body).forEach(c=>c.addEventListener('click',()=>c.classList.toggle('on')));
+
+  $('#edSave').addEventListener('click', async ()=>{
+    const nuevo = {
+      moneda_default: cfg.moneda_default || 'USD',
+      viajes: [{
+        id: v.id || 'viaje-1',
+        nombre: $('#edNombre').value.trim() || 'Mi viaje',
+        activo: true,
+        origenes: chipsSelected('edOrig'),
+        destinos: chipsSelected('edDest'),
+        meses: chipsSelected('edMeses'),
+        notas: $('#edNotas').value.trim(),
+      }, ...(cfg.viajes||[]).slice(1)],
+      destinos_vigilados: chipsSelected('edVigDest'),
+      meses_vigilados: chipsSelected('edVigMeses'),
+    };
+    const json = JSON.stringify(nuevo, null, 2) + '\n';
+    try { await navigator.clipboard.writeText(json); } catch(e) {
+      // fallback viejo
+      const ta=document.createElement('textarea'); ta.value=json; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    $('#edSteps').hidden = false;
+    $('#edSteps').scrollIntoView({behavior:'smooth'});
+    window.open(GH_EDIT_CONFIG, '_blank');
+  });
+
+  $('#sheet').classList.add('open');
+  $('#sheet').setAttribute('aria-hidden','false');
 }
 
 /* ---------- Service worker ---------- */

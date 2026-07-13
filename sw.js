@@ -1,5 +1,5 @@
 /* NachoVuela service worker — cache del shell + datos para uso offline */
-const CACHE = 'nachovuela-v1';
+const CACHE = 'nachovuela-v2';
 const SHELL = [
   './', './index.html', './styles.css', './app.js',
   './manifest.webmanifest', './assets/logo-mark.svg'
