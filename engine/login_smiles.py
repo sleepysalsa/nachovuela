@@ -57,10 +57,16 @@ def main():
         )
         page = ctx.pages[0] if ctx.pages else ctx.new_page()
 
+        pagina_logueada = []
+
         def on_request(req):
             auth = req.headers.get("authorization", "")
             if auth and ANON_BEARER not in auth and auth.lower().startswith("bearer"):
                 tokens_vistos[auth] = req.url[:100]
+                try:
+                    pagina_logueada.append(req.frame.page)
+                except Exception:
+                    pass
 
         def on_response(resp):
             if "airlines/search" in resp.url and "calendar" not in resp.url:
@@ -69,8 +75,9 @@ def main():
                 except Exception:
                     pass
 
-        page.on("request", on_request)
-        page.on("response", on_response)
+        # A nivel de CONTEXTO: vigila todas las pestañas y popups
+        ctx.on("request", on_request)
+        ctx.on("response", on_response)
 
         page.goto("https://www.smiles.com.ar/home", wait_until="domcontentloaded",
                   timeout=60000)
@@ -79,16 +86,64 @@ def main():
         except Exception:
             pass
 
-        limite = time.time() + 15 * 60
+        JS_TOKEN = """(() => {
+            const bolsas = [localStorage, sessionStorage];
+            for (const b of bolsas) {
+                for (let i = 0; i < b.length; i++) {
+                    const k = b.key(i), v = b.getItem(k) || '';
+                    if (/token|auth|session/i.test(k) && v.length > 60) return k;
+                    if (v.startsWith('eyJ') && v.length > 100) return k; // JWT
+                }
+            }
+            return null;
+        })()"""
+
+        limite = time.time() + 20 * 60
+        ultimo_diag = 0.0
         logueado = False
         while time.time() < limite:
-            try:
-                texto = page.evaluate("document.body.innerText") or ""
-                if any(s in texto for s in SENIALES_LOGIN):
-                    logueado = True
-                    break
-            except Exception:
-                pass
+            # Señal 1 (la fuerte): apareció tu token en alguna llamada de red
+            if tokens_vistos:
+                logueado = True
+                if pagina_logueada:
+                    try:
+                        if not pagina_logueada[-1].is_closed():
+                            page = pagina_logueada[-1]
+                    except Exception:
+                        pass
+                break
+            # Señal 2: texto o almacenamiento en cualquier pestaña
+            for pg in list(ctx.pages):
+                try:
+                    texto = pg.evaluate("document.body.innerText") or ""
+                    if any(s in texto for s in SENIALES_LOGIN):
+                        logueado = True
+                        page = pg
+                        break
+                    if "smiles.com.ar" in pg.url and pg.evaluate(JS_TOKEN):
+                        logueado = True
+                        page = pg
+                        break
+                except Exception:
+                    pass
+            if logueado:
+                break
+            # Diagnóstico continuo cada 30s (para depurar si algo falla)
+            if time.time() - ultimo_diag > 30:
+                ultimo_diag = time.time()
+                try:
+                    diag = []
+                    for pg in list(ctx.pages):
+                        try:
+                            t = (pg.evaluate("document.body.innerText") or "")[:800]
+                        except Exception:
+                            t = "(sin acceso)"
+                        diag.append(f"URL: {pg.url}\n{t}\n{'-'*50}")
+                    (DEBUG / "login_diag.txt").write_text(
+                        f"{time.strftime('%H:%M:%S')} tokens:{len(tokens_vistos)}\n"
+                        + "\n".join(diag))
+                except Exception:
+                    pass
             time.sleep(3)
 
         if not logueado:
