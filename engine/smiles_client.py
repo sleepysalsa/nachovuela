@@ -46,25 +46,37 @@ class SmilesError(Exception):
 def calendario_mes(origen, destino, anio, mes, currency="USD",
                    pausa=(2.5, 5.0), reintentos=3):
     """
-    Trae el calendario de precios award de un mes para una ruta.
-
-    Args:
-        origen, destino: códigos IATA (ej. "EZE", "MIA").
-        anio, mes: año y mes a consultar (int).
-        currency: moneda de las tasas ("USD" o "ARS"). No afecta las millas.
-        pausa: rango (min, max) de segundos a esperar tras la llamada, para
-               no golpear a Smiles.
-        reintentos: intentos ante errores transitorios.
-
-    Returns:
-        Lista de dicts, uno por día:
-        {date, miles, price_range (1-4 o None), is_lowest (bool)}
-        Solo incluye días con precio disponible.
-        Además devuelve, aparte, las bandas de cuartil de la ruta.
+    Trae el calendario de precios award de un mes para una ruta, consultando
+    DOS veces: la búsqueda normal (GOL + socias según la ruta) y la forzada a
+    aerolíneas socias (forceCongener=true). Smiles a veces solo muestra las
+    opciones de socias en la segunda, así que fusionamos ambas tomando el
+    precio mínimo de cada día. Verificado el 13-jul-2026: en EZE->GRU la
+    normal daba 0 días y la de socias 2 días.
 
     Returns:
         (dias, quartil_bands)
+        dias: lista de dicts {date, miles, price_range, is_lowest, fare_type},
+              solo días con precio, con el mínimo entre ambas consultas.
     """
+    dias_a, bandas_a = _consulta(origen, destino, anio, mes, currency,
+                                 force_congener="false", reintentos=reintentos)
+    _dormir(pausa)
+    dias_b, bandas_b = _consulta(origen, destino, anio, mes, currency,
+                                 force_congener="true", reintentos=reintentos)
+    _dormir(pausa)
+
+    # Fusionar por fecha, quedándonos con el precio más bajo de cada día
+    por_fecha = {}
+    for d in dias_a + dias_b:
+        f = d["date"]
+        if f not in por_fecha or d["miles"] < por_fecha[f]["miles"]:
+            por_fecha[f] = d
+    dias = sorted(por_fecha.values(), key=lambda x: x["date"])
+    return dias, (bandas_a or bandas_b)
+
+
+def _consulta(origen, destino, anio, mes, currency, force_congener, reintentos=3):
+    """Una llamada al calendario. Devuelve (dias, bandas)."""
     # Ventana: primer día del mes objetivo hasta ~5 días del mes siguiente,
     # con departureDate a mitad de mes para que la API poble ese mes.
     departure = f"{anio:04d}-{mes:02d}-15"
@@ -85,7 +97,7 @@ def calendario_mes(origen, destino, anio, mes, currency="USD",
         "startDate": start, "endDate": end,
         "searchType": "g3", "segments": 1,
         "isFlexibleDateChecked": "false",
-        "forceCongener": "false", "checkCalendar": "false",
+        "forceCongener": force_congener, "checkCalendar": "false",
         "r": "ar",
     }
 
@@ -94,16 +106,14 @@ def calendario_mes(origen, destino, anio, mes, currency="USD",
         try:
             resp = requests.get(BASE, headers=HEADERS, params=params, timeout=40)
             if resp.status_code == 200:
-                dias, bandas = _parsear(resp.json(), anio, mes)
-                _dormir(pausa)
-                return dias, bandas
+                return _parsear(resp.json(), anio, mes)
             ultimo_error = f"HTTP {resp.status_code}"
         except requests.RequestException as e:
             ultimo_error = str(e)
         # backoff antes de reintentar
         time.sleep(3 * (intento + 1))
 
-    raise SmilesError(f"{origen}->{destino} {anio}-{mes:02d}: {ultimo_error}")
+    raise SmilesError(f"{origen}->{destino} {anio}-{mes:02d} (congener={force_congener}): {ultimo_error}")
 
 
 def _parsear(data, anio, mes):

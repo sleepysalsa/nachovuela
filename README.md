@@ -142,10 +142,18 @@ rastrillaje, porque antes de buscar hace `git pull`.
 Porque Smiles todavía no liberó asientos award para esas fechas (no es un error).
 Se van abriendo con el tiempo — por eso conviene el rastrillaje diario.
 
-**¿Y las escalas / vuelo directo?**
-El calendario de Smiles da el precio mínimo del día pero no el detalle de escalas.
-Ese filtro queda para una v2 (hay que "abrir" cada día en la web de Smiles). Por ahora,
-el botón *Abrir en Smiles* te lleva a la búsqueda exacta para ver las escalas ahí.
+**¿Busca en todas las aerolíneas o solo GOL?**
+En todas. El motor hace **doble consulta** por cada ruta y mes: la búsqueda normal
+y la forzada a aerolíneas socias (American, Copa, Aerolíneas, Iberia, Air France,
+etc.), y se queda con el precio más bajo de cada día. Verificamos que sin esa
+doble consulta Smiles a veces esconde opciones de socias.
+
+**¿Y las escalas / vuelo directo / con qué aerolínea?**
+El calendario de Smiles da el precio mínimo del día pero no dice aerolínea,
+duración ni escalas — ese detalle Smiles solo se lo muestra a usuarios con
+sesión iniciada. Está planeado para la v2 (requiere un login tuyo de Smiles una
+única vez en el motor). Por ahora, el botón *Abrir en Smiles* te lleva a la
+búsqueda exacta para verlo ahí.
 
 **Si un día deja de traer precios, ¿qué pasó?**
 Puede que Smiles haya rotado su clave interna. En `engine/smiles_client.py` hay

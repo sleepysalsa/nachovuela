@@ -111,6 +111,11 @@ def clasificar(miles, price_range, historico_ruta_mes):
             score += 2
             motivos.append(f"un {round((miles / prom - 1) * 100)}% sobre el promedio")
 
+    # Regla de sentido común: si iguala o mejora el mínimo que ya vimos,
+    # nunca puede ser "caro" (los cuartiles de Smiles a veces confunden).
+    if historico_ruta_mes and miles <= min(historico_ruta_mes):
+        score = min(score, -1)
+
     if score <= -3:
         nivel = "oportunidad"
     elif score <= -1:
