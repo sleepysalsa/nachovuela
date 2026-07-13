@@ -305,3 +305,25 @@ main{position:relative;z-index:2;max-width:940px;margin:0 auto;padding:6px 18px 
   font-size:7px; font-weight:800; color:var(--amber-lt);
   font-family:var(--mono);
 }
+
+/* ---------- precio cash (efectivo) + comparación millas vs plata ---------- */
+.card__cash{
+  font-size:.78rem; color:var(--ink-mid); margin:2px 0 4px;
+  font-family:var(--mono);
+}
+.card__cash b{ color:var(--ink); }
+.vs{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin-top:8px;
+}
+.vs__side{
+  flex:1; text-align:center; background:var(--panel-2);
+  border:1px solid var(--line); border-radius:12px; padding:14px 8px;
+}
+.vs__k{ font-family:var(--mono); font-size:1.35rem; font-weight:800; color:var(--ink); }
+.vs__u{ font-size:.68rem; color:var(--ink-dim); margin-top:3px; text-transform:uppercase; letter-spacing:.04em; }
+.vs__x{ font-family:var(--serif); font-style:italic; color:var(--amber-lt); font-size:1rem; }
+.btn--ghost{
+  background:transparent; border:1px solid var(--amber); color:var(--amber-lt);
+  border-radius:10px; font-weight:600; text-decoration:none;
+}

@@ -36,6 +36,7 @@ import destinos as cat
 import smiles_client
 import clima_client
 import detalle_client
+import cash_client
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENGINE = os.path.join(ROOT, "engine")
@@ -187,7 +188,13 @@ def correr(demo=False, refrescar_clima=False):
     if demo:
         tareas = tareas[:1]
 
+    cash_tok = cash_client.token(config)
     print(f"[{ahora_iso()}] Rastrillando {len(tareas)} ruta-mes...")
+    if cash_tok:
+        print("  (precios cash activados vía Travelpayouts)")
+    else:
+        print("  (sin token de precios cash: la app muestra solo millas — "
+              "ver README para activarlo)")
 
     resultados = []
     errores = []
@@ -232,6 +239,19 @@ def correr(demo=False, refrescar_clima=False):
 
         promedio_hist = round(sum(previos) / len(previos)) if previos else None
 
+        # Precio en efectivo (cash) para comparar millas vs plata. Solo si hay
+        # token de Travelpayouts; si falla, seguimos sin cash (no rompe nada).
+        cash = None
+        if cash_tok:
+            try:
+                cash = cash_client.precio_cash_mes(
+                    og, code, t["anio"], t["mes"], cash_tok, currency="usd",
+                    pausa=(0.2, 0.5) if demo else (0.6, 1.2),
+                )
+            except cash_client.CashError as e:
+                if str(e) not in errores:
+                    errores.append(str(e))
+
         resultados.append({
             "ruta": k,
             "origen": og,
@@ -254,6 +274,7 @@ def correr(demo=False, refrescar_clima=False):
             "promedio_historico": promedio_hist,
             "dias": dias,
             "total_dias_disponibles": len(dias),
+            "cash": cash,
         })
         flag = {"oportunidad": "🟢🔥", "bueno": "🟢", "normal": "⚪", "caro": "🔴"}[nivel]
         print(f"  [{i}/{len(tareas)}] {etiqueta}: {flag} {mejor['miles']:,} millas "

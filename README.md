@@ -117,6 +117,31 @@ Editá **`engine/config.json`**. Ejemplo:
 
 ---
 
+## Precios en efectivo (millas vs plata)
+
+La app puede mostrar, al lado del precio en millas, cuánto saldría el mismo
+vuelo **pagando en efectivo** (en USD), para que decidas si conviene quemar
+millas o pagar. Eso sale de la Data API de **Travelpayouts** (gratuita, oficial
+para desarrolladores — no scrapea Despegar ni Smiles, así que no la bloquean).
+
+Para activarlo, una sola vez:
+
+1. Registrate gratis en https://www.travelpayouts.com (botón *Sign up*).
+2. En tu panel, entrá a **Developers → API tokens** y copiá tu token.
+3. Guardalo en el motor (queda solo en tu Mac, ignorado por git):
+
+```bash
+echo "TU_TOKEN_ACA" > ~/Desktop/NachoVuela/engine/.travelpayouts_token
+```
+
+Listo: el próximo rastrillaje ya trae los precios en efectivo. Si no ponés
+token, la app funciona igual, solo que muestra únicamente las millas.
+
+> Nota: Despegar directo no se puede automatizar (bloquea todo acceso robot con
+> un escudo anti-bot, igual que Smiles con el detalle de vuelos). Esta API da el
+> mismo dato — el precio cash de la ruta — desde el pool que alimenta a las
+> agencias, y sí funciona sola en el cron.
+
 ## Clave de ingreso
 
 La app pide una clave al entrar (una sola vez por dispositivo). Para cambiarla:
@@ -148,12 +173,14 @@ y la forzada a aerolíneas socias (American, Copa, Aerolíneas, Iberia, Air Fran
 etc.), y se queda con el precio más bajo de cada día. Verificamos que sin esa
 doble consulta Smiles a veces esconde opciones de socias.
 
-**¿Y las escalas / vuelo directo / con qué aerolínea?**
+**¿Y las escalas / vuelo directo / con qué aerolínea en Smiles?**
 El calendario de Smiles da el precio mínimo del día pero no dice aerolínea,
-duración ni escalas — ese detalle Smiles solo se lo muestra a usuarios con
-sesión iniciada. Está planeado para la v2 (requiere un login tuyo de Smiles una
-única vez en el motor). Por ahora, el botón *Abrir en Smiles* te lleva a la
-búsqueda exacta para verlo ahí.
+duración ni escalas — ese detalle Smiles lo protege con un escudo anti-robot
+que rechaza todo acceso automático (probado a fondo: no se puede automatizar
+para el rastrillaje diario). Por eso el botón *Abrir en Smiles* te lleva a la
+búsqueda exacta ya logueado, donde ves ese detalle al instante. En cambio, para
+los vuelos **en efectivo** sí mostramos aerolínea y escalas, porque esa API no
+tiene ese bloqueo.
 
 **Si un día deja de traer precios, ¿qué pasó?**
 Puede que Smiles haya rotado su clave interna. En `engine/smiles_client.py` hay

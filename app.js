@@ -222,6 +222,7 @@ function cardHTML(r,i){
       <span class="card__unit">millas</span>
     </div>
     <p class="card__when">mejor día: <b>${dateLabel(r.mejor_fecha)}</b> · ${ymLabel(r.ym)}${r.promedio_historico?` · prom. ${fmtMiles(r.promedio_historico)}`:''}</p>
+    ${cashLine(r)}
     ${vueloLine(r)}
     ${motivo}
     ${meterHTML(r.price_range)}
@@ -231,6 +232,37 @@ function cardHTML(r,i){
     </div>
     <div class="monthcal">${monthCalHTML(r)}</div>
   </article>`;
+}
+
+function fmtUSD(v){ return 'US$ ' + Math.round(v).toLocaleString('es-AR'); }
+
+// Línea de precio cash + veredicto millas vs plata en la tarjeta
+function cashLine(r){
+  const c = r.cash;
+  if(!c || !c.precio) return '';
+  return `<p class="card__cash">💵 en plata: <b>${fmtUSD(c.precio)}</b>${c.escalas===0?' · <span class="esc-dir">directo</span>':(c.escalas!=null?` · ${escTxt(c.escalas)}`:'')}</p>`;
+}
+
+// Bloque grande de comparación para la ficha del destino
+function comparaBlock(r){
+  const c = r && r.cash;
+  if(!c || !c.precio) return '';
+  return `<div class="block">
+    <h3>Millas vs plata · ${dateLabel(r.mejor_fecha)}</h3>
+    <div class="vs">
+      <div class="vs__side">
+        <div class="vs__k">${fmtMiles(r.mejor_precio_millas)}</div>
+        <div class="vs__u">millas (Smiles)</div>
+      </div>
+      <div class="vs__x">vs</div>
+      <div class="vs__side">
+        <div class="vs__k">${fmtUSD(c.precio)}</div>
+        <div class="vs__u">en efectivo${c.escalas===0?' · directo':''}</div>
+      </div>
+    </div>
+    ${c.link?`<a class="btn btn--ghost" style="display:inline-block;margin-top:10px;padding:8px 14px" href="${c.link}" target="_blank" rel="noopener">Ver vuelo en efectivo ↗</a>`:''}
+    <p class="hint" style="margin-top:8px">El precio en efectivo es la mejor tarifa cash encontrada para esa ruta y mes (referencia para decidir si conviene usar millas o pagar).</p>
+  </div>`;
 }
 
 function durTxt(min){
@@ -378,6 +410,7 @@ function openDestino(key){
     <h2 class="sheet__title">${d.nombre}</h2>
     <p class="sheet__pais">${d.pais} · ${d.aeropuertos.map(a=>a.code).join(' / ')}</p>
     ${bestFound(R)}
+    ${comparaBlock(R.length ? R.reduce((a,b)=>a.mejor_precio_millas<=b.mejor_precio_millas?a:b) : null)}
     ${vuelosBlock(R.length ? ((R.reduce((a,b)=>a.mejor_precio_millas<=b.mejor_precio_millas?a:b).detalle) || (R.find(x=>x.detalle)?.detalle) || null) : null)}
     ${pricesByMonthBlock(porMes,R)}
     ${climateBlock(clima)}
