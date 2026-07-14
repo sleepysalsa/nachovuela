@@ -435,3 +435,33 @@ select.fld__in{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
 .legopt a{ color:var(--amber-lt); font-size:.78rem; margin-top:4px; display:inline-block; }
 .legopt__links{ display:flex; gap:12px; }
 @media(max-width:520px){ .legcmp__opts{ grid-template-columns:1fr; } }
+
+/* Cash clickeable, aerolíneas, comunidad, ideas */
+.cash__link{ color:var(--green); text-decoration:none; border-bottom:1px dashed rgba(46,180,120,.5); }
+.cash__link:hover{ border-bottom-style:solid; }
+.airchips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.airchip{ display:flex; flex-direction:column; gap:1px; background:rgba(10,14,28,.55); border:1px solid var(--line);
+  border-radius:10px; padding:8px 12px; text-decoration:none; color:var(--ink); }
+.airchip b{ font-size:.82rem; }
+.airchip span{ font-size:.66rem; color:var(--ink-faint); }
+.airchip:hover{ border-color:var(--amber); }
+.ofertas{ display:flex; flex-direction:column; gap:8px; }
+.oferta{ display:flex; align-items:baseline; gap:10px; background:rgba(16,22,42,.45); border:1px solid var(--line);
+  border-radius:11px; padding:10px 14px; text-decoration:none; color:var(--ink); }
+.oferta:hover{ border-color:var(--amber); }
+.oferta__src{ font-family:var(--mono); font-size:.62rem; color:var(--amber-lt); text-transform:uppercase;
+  letter-spacing:.04em; white-space:nowrap; }
+.oferta__t{ font-size:.88rem; flex:1; min-width:0; }
+.oferta__f{ font-size:.68rem; color:var(--ink-faint); white-space:nowrap; }
+.ideas{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; }
+.idea{ background:linear-gradient(180deg,rgba(28,36,64,.5),rgba(16,22,42,.3)); border:1px solid var(--line);
+  border-radius:15px; padding:14px 16px; cursor:pointer; display:flex; flex-direction:column; gap:8px; }
+.idea:hover{ border-color:var(--amber); transform:translateY(-2px); transition:.15s; }
+.idea.op{ border-color:rgba(46,180,120,.4); }
+.idea__head{ font-size:.98rem; }
+.idea__datos{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.idea__mi{ font-family:var(--mono); font-weight:800; color:var(--green); font-size:.92rem; }
+.idea__t{ font-size:.72rem; color:var(--ink-dim); background:rgba(120,140,190,.1); padding:2px 8px; border-radius:999px; }
+.idea__op{ font-size:.7rem; color:var(--green); }
+.idea__tip{ font-size:.8rem; color:var(--ink-dim); line-height:1.45; font-style:italic; }
+.idea__cta{ font-size:.75rem; color:var(--amber-lt); margin-top:auto; }

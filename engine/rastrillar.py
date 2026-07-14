@@ -105,9 +105,12 @@ def clasificar(miles, price_range, historico_ruta_mes):
     if historico_ruta_mes and len(historico_ruta_mes) >= 3:
         prom = sum(historico_ruta_mes) / len(historico_ruta_mes)
         minimo = min(historico_ruta_mes)
-        if miles <= minimo:
+        if miles < minimo:
             score -= 2
-            motivos.append("es el precio más bajo que registramos")
+            motivos.append("nuevo mínimo histórico: nunca lo vimos tan barato")
+        elif miles == minimo:
+            score -= 1
+            motivos.append("iguala el precio más bajo que registramos")
         elif miles <= prom * 0.85:
             score -= 2
             motivos.append(f"un {round((1 - miles / prom) * 100)}% bajo el promedio")
@@ -304,6 +307,8 @@ def correr(demo=False, refrescar_clima=False):
 
     # Datos del BUSCADOR ida+vuelta (piernas de ida y de regreso por día)
     escribir_busqueda(config, demo=demo)
+    escribir_meta(config)
+    escribir_ofertas()
 
     n_op = sum(1 for r in resultados if r["nivel"] == "oportunidad")
     print(f"[{ahora_iso()}] Listo. {len(resultados)} rutas, {n_op} oportunidades 🔥, "
@@ -375,8 +380,44 @@ def escribir_destinos():
             "nombre": d["nombre"], "pais": d["pais"], "region": d.get("region"),
             "emoji": d.get("emoji", "✈️"), "moneda": d.get("moneda", "USD"),
             "aeropuertos": d["aeropuertos"],
+            "aerolineas": cat.AEROLINEAS.get(k, []),
+            "tips": {str(m): t for m, t in cat.TIPS.get(k, {}).items()},
         }
     guardar_json(DESTINOS_PATH, {"origenes": cat.ORIGENES, "destinos": out})
+
+
+def escribir_meta(config):
+    """Dólar MEP + costo real de la milla en USD (para el armador)."""
+    import dolar_client
+    precio_ars = float(config.get("precio_milla_ars", 2.90))
+    dolar, dolar_fecha = dolar_client.dolar_mep()
+    valor_usd = round(precio_ars / dolar, 6) if dolar else \
+        float(config.get("valor_milla_usd", 0.012))
+    meta = {
+        "generado": ahora_iso(),
+        "dolar_mep": dolar,
+        "dolar_fecha": dolar_fecha,
+        "precio_milla_ars": precio_ars,
+        "valor_milla_usd": valor_usd,
+    }
+    guardar_json(os.path.join(DATA, "meta.json"), meta)
+    if dolar:
+        print(f"  Dólar MEP ${dolar:,.0f} → milla a AR${precio_ars} = "
+              f"{valor_usd*100:.2f}¢ USD")
+    return meta
+
+
+def escribir_ofertas():
+    """Alertas recientes de los blogs de la comunidad (RSS)."""
+    import ofertas_client
+    print("Trayendo alertas de la comunidad (RSS)...")
+    try:
+        posts = ofertas_client.traer_ofertas(log=print)
+    except Exception as e:
+        print(f"  Ofertas no disponibles: {e}")
+        return
+    guardar_json(os.path.join(DATA, "ofertas.json"),
+                 {"generado": ahora_iso(), "posts": posts})
 
 
 def escribir_clima():

@@ -82,12 +82,15 @@ function setupLock(){
 /* ---------- init ---------- */
 async function init(){
   setupLock();
-  [state.latest, state.clima, state.destinos, state.config, state.busqueda] = await Promise.all([
+  [state.latest, state.clima, state.destinos, state.config, state.busqueda,
+   state.meta, state.ofertas] = await Promise.all([
     loadJSON('data/latest.json'),
     loadJSON('data/clima.json'),
     loadJSON('data/destinos.json'),
     loadJSON('engine/config.json'),
     loadJSON('data/busqueda.json'),
+    loadJSON('data/meta.json'),
+    loadJSON('data/ofertas.json'),
   ]);
 
   setupTabs();
@@ -100,6 +103,8 @@ async function init(){
   renderStats();
   renderRadar();
   renderDestinos();
+  renderOfertas();
+  renderIdeas();
   registerSW();
 }
 
@@ -213,7 +218,16 @@ function renderDiasIda(){
 function diasEntre(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
 
 /* ---- Valor de la milla y estrategia por pierna ---- */
-function valorMilla(){ return state.busqueda?.valor_milla_usd || 0.012; } // US$ por milla
+// Costo real de reponer una milla, en US$: precio en ARS (Galicia/Smiles)
+// convertido al dólar MEP del día. Viene calculado por el motor en meta.json.
+function valorMilla(){
+  return state.meta?.valor_milla_usd || state.busqueda?.valor_milla_usd || 0.012;
+}
+function valorMillaTxt(){
+  const m = state.meta;
+  if(!m?.dolar_mep) return `milla valuada a ${(valorMilla()*100).toFixed(1)}¢`;
+  return `milla a AR$${m.precio_milla_ars.toFixed(2).replace('.',',')} ≈ ${(m.valor_milla_usd*100).toFixed(2)}¢ (dólar MEP $${Math.round(m.dolar_mep).toLocaleString('es-AR')})`;
+}
 
 // Cash de una pierna: precio del día exacto si existe; si no, referencia del mes.
 // Si la referencia es de ida y vuelta, se estima la pierna como la mitad (≈½).
@@ -394,13 +408,32 @@ function armadoLine(c){
   return `<p class="combo__armado">💡 conviene: <b>${armadoTxt(a)}</b> · total ≈ ${fmtUSD(a.totalEq)}</p>`;
 }
 
-// Links de un día puntual en las 3 fuentes
+// Links de un día puntual en todas las fuentes
 function aviasalesDayURL(og, de, iso){
   const [,m,d] = iso.split('-');
   return `https://www.aviasales.com/search/${og}${d}${m}${de}1`;
 }
 function despegarDayURL(og, de, iso){
   return `https://www.despegar.com.ar/shop/flights/results/oneway/${og}/${de}/${iso}/1/0/0`;
+}
+function googleFlightsURL(og, de, iso, vueltaISO){
+  const q = vueltaISO
+    ? `Flights from ${og} to ${de} on ${iso} through ${vueltaISO}`
+    : `Flights from ${og} to ${de} on ${iso} one way`;
+  return `https://www.google.com/travel/flights?q=${encodeURIComponent(q)}&curr=USD`;
+}
+function kayakURL(og, de, iso, vueltaISO){
+  return `https://www.kayak.com.ar/flights/${og}-${de}/${iso}${vueltaISO?'/'+vueltaISO:''}?sort=price_a`;
+}
+
+// Qué aerolíneas vuelan esta ruta (curado) — para saber dónde más mirar
+function aerolineasBlock(destKey, comoBloque=true){
+  const d = state.destinos?.destinos?.[destKey];
+  const aer = d?.aerolineas || [];
+  if(!aer.length) return '';
+  const chips = aer.map(a=>`<a class="airchip" href="${a.url}" target="_blank" rel="noopener"><b>${a.n}</b><span>${a.v}</span></a>`).join('');
+  const inner = `<h3>Aerolíneas que vuelan esta ruta</h3><div class="airchips">${chips}</div>`;
+  return comoBloque ? `<div class="block">${inner}</div>` : `<div style="margin-top:14px">${inner}</div>`;
 }
 
 // Hoja "armar este viaje": comparación millas vs plata pierna por pierna
@@ -413,11 +446,12 @@ function openArmadoSheet(idx){
 
   const legRow = (tag, legAward, cash, ogL, deL, iso)=>{
     const eqMillas = legAward.mi*V;
-    const c_pp = cash ? cpp(cash.p, legAward.mi) : null;
+    const costoC = V*100;                      // ¢ que cuesta reponer la milla
+    const c_pp = cash ? cpp(cash.p, legAward.mi) : null;  // ¢ que rinde acá
     const veredicto = !cash ? '' :
-      (c_pp >= 1.2 ? `<span class="cpp good">millas rinden: ${c_pp.toFixed(1)}¢/milla</span>`
-       : c_pp <= 0.8 ? `<span class="cpp bad">conviene plata: la milla rendiría ${c_pp.toFixed(1)}¢</span>`
-       : `<span class="cpp mid">parejo: ${c_pp.toFixed(1)}¢/milla</span>`);
+      (c_pp >= costoC*1.25 ? `<span class="cpp good">millas: rinden ${c_pp.toFixed(2)}¢ y te cuestan ${costoC.toFixed(2)}¢</span>`
+       : c_pp < costoC*0.9 ? `<span class="cpp bad">plata: la milla rendiría ${c_pp.toFixed(2)}¢ (te cuesta ${costoC.toFixed(2)}¢)</span>`
+       : `<span class="cpp mid">parejo: rinde ${c_pp.toFixed(2)}¢ vs ${costoC.toFixed(2)}¢</span>`);
     return `<div class="legcmp">
       <div class="legcmp__head"><span class="leg__tag">${tag}</span>
         <b>${dateLabel(iso)}</b> · ${ogL} → ${deL} ${veredicto}</div>
@@ -433,12 +467,16 @@ function openArmadoSheet(idx){
           <div class="legopt__eq">${cashNivelTxt(cash.nivel)}${cash.e===0?' · directo':''}</div>
           <span class="legopt__links">
             <a href="${despegarDayURL(ogL,deL,iso)}" target="_blank" rel="noopener">Despegar ↗</a>
+            <a href="${googleFlightsURL(ogL,deL,iso)}" target="_blank" rel="noopener">Google Flights ↗</a>
+            <a href="${kayakURL(ogL,deL,iso)}" target="_blank" rel="noopener">Kayak ↗</a>
             <a href="${aviasalesDayURL(ogL,deL,iso)}" target="_blank" rel="noopener">Aviasales ↗</a>
           </span>`:`
           <div class="legopt__k">—</div>
-          <div class="legopt__eq">sin precio cash aún</div>
+          <div class="legopt__eq">sin precio cash cacheado — miralo en vivo:</div>
           <span class="legopt__links">
-            <a href="${despegarDayURL(ogL,deL,iso)}" target="_blank" rel="noopener">mirar en Despegar ↗</a>
+            <a href="${despegarDayURL(ogL,deL,iso)}" target="_blank" rel="noopener">Despegar ↗</a>
+            <a href="${googleFlightsURL(ogL,deL,iso)}" target="_blank" rel="noopener">Google Flights ↗</a>
+            <a href="${kayakURL(ogL,deL,iso)}" target="_blank" rel="noopener">Kayak ↗</a>
           </span>`}
         </div>
       </div>
@@ -450,16 +488,19 @@ function openArmadoSheet(idx){
     <div class="destcard__emoji" style="font-size:2.2rem">${d.emoji}</div>
     <h2 class="sheet__title">Armar este viaje</h2>
     <p class="sheet__pais">${d.nombre} · ${orig} ⇄ ${c.code} · ${c.noches} noches</p>
-    ${a?`<div class="res__cash">💡 Armado sugerido: <b>${armadoTxt(a)}</b> — total equivalente ≈ <b>${fmtUSD(a.totalEq)}</b> <span class="cash__t">(milla valuada a ${(V*100).toFixed(1)}¢)</span></div>`:''}
+    ${a?`<div class="res__cash">💡 Armado sugerido: <b>${armadoTxt(a)}</b> — total equivalente ≈ <b>${fmtUSD(a.totalEq)}</b> <span class="cash__t">(${valorMillaTxt()})</span></div>`:''}
     ${legRow('IDA', c.ida, c.cashIda, orig, c.code, c.ida.d)}
     ${legRow('VUELTA', c.vuelta, c.cashVuelta, c.code, orig, c.vuelta.d)}
     <div class="block">
-      <h3>Todo en millas, de una</h3>
+      <h3>Viaje completo, de una</h3>
       <div class="diaslinks">
         <a class="btn btn--go" href="${smilesRoundURL(orig,c.code,c.ida.d,c.vuelta.d,d.moneda)}" target="_blank" rel="noopener">✈ Ida y vuelta en Smiles ↗</a>
+        <a class="btn" href="${googleFlightsURL(orig,c.code,c.ida.d,c.vuelta.d)}" target="_blank" rel="noopener">Ida y vuelta en Google Flights (todas las aerolíneas) ↗</a>
         <a class="btn" href="${despegarDayURL(orig,c.code,c.ida.d).replace('/oneway/','/roundtrip/').replace(`/${c.ida.d}/`,`/${c.ida.d}/${c.vuelta.d}/`)}" target="_blank" rel="noopener">Ida y vuelta en Despegar ↗</a>
+        <a class="btn" href="${kayakURL(orig,c.code,c.ida.d,c.vuelta.d)}" target="_blank" rel="noopener">Ida y vuelta en Kayak ↗</a>
       </div>
-      <p class="hint" style="margin-top:10px">El “equivalente” valúa tus millas a ${(V*100).toFixed(1)}¢ cada una (lo que cuesta comprarlas/reponerlas). Ojo: a las millas hay que sumarles las tasas que cobra Smiles — confirmalas al abrir el link. Regla de cazador: milla que rinde menos de 1¢, mejor guardarla y pagar en plata.</p>
+      ${aerolineasBlock(dest, false)}
+      <p class="hint" style="margin-top:10px">El “equivalente” usa tu costo real de reponer millas: ${valorMillaTxt()} — configurable en la config. Ojo: a las millas sumales las tasas de Smiles (confirmalas en el link). Google Flights y Kayak buscan en todas las aerolíneas a la vez, como hacías a mano.</p>
     </div>`;
   $('#sheet').classList.add('open');
   $('#sheet').setAttribute('aria-hidden','false');
@@ -585,12 +626,17 @@ function cashTipoTxt(c){
   const t = c.tipo==='ida_vuelta' ? 'ida y vuelta' : 'solo ida';
   return c.exacto ? t : `${t}, ref.`;
 }
-// Línea de precio cash + veredicto millas vs plata en la tarjeta
+// Línea de precio cash + veredicto millas vs plata en la tarjeta (clickeable)
 function cashLine(r){
   const c = r.cash;
   if(!c || !c.precio) return '';
   const esc = c.escalas===0?' · <span class="esc-dir">directo</span>':(c.escalas!=null?` · ${escTxt(c.escalas)}`:'');
-  return `<p class="card__cash">💵 en plata: <b>${fmtUSD(c.precio)}</b> <span class="cash__t">${cashTipoTxt(c)}</span>${esc}</p>`;
+  const fecha = c.fecha || r.mejor_fecha;
+  const precio = c.link
+    ? `<a class="cash__link" href="${c.link}" target="_blank" rel="noopener"><b>${fmtUSD(c.precio)}</b> ↗</a>`
+    : `<b>${fmtUSD(c.precio)}</b>`;
+  return `<p class="card__cash">💵 en plata: ${precio} <span class="cash__t">${cashTipoTxt(c)}</span>${esc}
+    · <a class="cash__link" href="${despegarDayURL(r.origen, r.aeropuerto, fecha)}" target="_blank" rel="noopener">Despegar ↗</a></p>`;
 }
 
 // Bloque grande de comparación para la ficha del destino
@@ -672,7 +718,9 @@ function monthCalHTML(r){
       cells += `<div class="dcell"><span>${d}</span></div>`;
     }
   }
-  return `<div class="monthcal__grid">${cells}</div>`;
+  const hora = state.latest?.generado ? state.latest.generado.slice(11,16) : '';
+  return `<div class="monthcal__grid">${cells}</div>
+  <p class="hint" style="margin-top:8px">Precios de la tarifa Club Smiles según el último rastrillaje${hora?` (${hora} hs)`:''}. La disponibilidad se mueve durante el día: puede haber sorpresas para bien o para mal — el precio final siempre lo confirma Smiles al abrir el día. El radar corre 9:00 y 20:00.</p>`;
 }
 
 /* ---------- VIAJES ---------- */
@@ -861,6 +909,87 @@ function seasonHint(porMes, clima){
   }
   if(!bits.length) return '';
   return `<div class="block"><h3>Para decidir la fecha</h3><p class="hint">${bits.join(' ')}</p></div>`;
+}
+
+/* ---------- Radar de la comunidad (RSS de los blogs cazadores) ---------- */
+function renderOfertas(){
+  const host = $('#ofertasWrap');
+  if(!host) return;
+  const posts = state.ofertas?.posts || [];
+  if(!posts.length){ host.innerHTML=''; return; }
+  const rows = posts.slice(0,12).map(p=>{
+    const f = p.fecha ? haceCuanto(p.fecha) : '';
+    return `<a class="oferta" href="${p.link}" target="_blank" rel="noopener">
+      <span class="oferta__src">${p.fuente}</span>
+      <span class="oferta__t">${p.titulo}</span>
+      <span class="oferta__f">${f}</span>
+    </a>`;
+  }).join('');
+  host.innerHTML = `<div class="section-head" style="margin-top:26px"><h2>📰 Radar de la comunidad</h2>
+    <p class="section-sub">Lo último de los blogs cazadores que seguís — sin entrar uno por uno.</p></div>
+    <div class="ofertas">${rows}</div>`;
+}
+
+/* ---------- Ideas de caza (precio + clima + qué se aprovecha) ---------- */
+function renderIdeas(){
+  const host = $('#ideasWrap');
+  if(!host) return;
+  const R = state.latest?.resultados || [];
+  const D = state.destinos?.destinos || {};
+  const C = state.clima?.destinos || {};
+  if(!R.length){ host.innerHTML=''; return; }
+
+  // mejor precio por destino+mes
+  const ideas = [];
+  R.forEach(r=>{
+    const mes = +r.ym.slice(5,7);
+    const d = D[r.destino_key]; if(!d) return;
+    const tip = d.tips?.[String(mes)];
+    const cl = C[r.destino_key]?.meses?.find(x=>x.mes===mes);
+    const t = cl?.t_media;
+    const climaOK = t!=null && t>=14 && t<=29;
+    let score = 0;
+    if(r.nivel==='oportunidad') score+=3; else if(r.nivel==='bueno') score+=2; else if(r.nivel==='caro') score-=2;
+    if(tip) score+=2;
+    if(climaOK) score+=1;
+    ideas.push({r, mes, tip, t, score});
+  });
+  // una idea por destino (la de mejor score), top 6
+  const porDest = {};
+  ideas.forEach(i=>{ const k=i.r.destino_key; if(!porDest[k]||i.score>porDest[k].score||(i.score===porDest[k].score&&i.r.mejor_precio_millas<porDest[k].r.mejor_precio_millas)) porDest[k]=i; });
+  const top = Object.values(porDest).sort((a,b)=>b.score-a.score).slice(0,6);
+  if(!top.length){ host.innerHTML=''; return; }
+
+  const cards = top.map(i=>{
+    const r = i.r;
+    const enBuscador = !!bDestinos()[r.destino_key]?.meses?.[r.ym];
+    return `<div class="idea ${r.nivel==='oportunidad'?'op':''}" data-dest="${r.destino_key}" data-ym="${r.ym}" data-buscable="${enBuscador?1:0}">
+      <div class="idea__head">${r.destino_emoji} <b>${r.destino_nombre}</b> en ${MONTHS_LONG[i.mes-1]}</div>
+      <div class="idea__datos">
+        <span class="idea__mi">${fmtMiles(r.mejor_precio_millas)} mi</span>
+        ${i.t!=null?`<span class="idea__t">${Math.round(i.t)}°C prom.</span>`:''}
+        ${r.nivel==='oportunidad'?'<span class="idea__op">🟢 oportunidad</span>':''}
+      </div>
+      ${i.tip?`<p class="idea__tip">${i.tip}</p>`:''}
+      <span class="idea__cta">${enBuscador?'buscar combinaciones →':'ver destino →'}</span>
+    </div>`;
+  }).join('');
+  host.innerHTML = `<div class="section-head" style="margin-top:26px"><h2>🎯 Ideas de caza</h2>
+    <p class="section-sub">Dónde y cuándo conviene, cruzando precio, clima y qué se aprovecha en cada época.</p></div>
+    <div class="ideas">${cards}</div>`;
+
+  $$('.idea',host).forEach(c=>c.addEventListener('click',()=>{
+    const k=c.dataset.dest, ym=c.dataset.ym;
+    if(c.dataset.buscable==='1'){
+      $('#fDest').value=k; state.finder.dest=k;
+      $('#fDest').dispatchEvent(new Event('change'));
+      $('#fMes').value=ym; state.finder.mes=ym;
+      $('#fMes').dispatchEvent(new Event('change'));
+      runFinder();
+    } else {
+      openDestino(k);
+    }
+  }));
 }
 
 /* ---------- Editor de viajes ---------- */
