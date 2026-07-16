@@ -98,6 +98,13 @@ DESTINOS = {
             {"code": "GRU", "ciudad": "San Pablo (Guarulhos)"},
         ],
     },
+    "florianopolis": {
+        "nombre": "Florianópolis", "pais": "Brasil", "region": "sudamerica",
+        "emoji": "🏄", "lat": -27.67, "lon": -48.55, "moneda": "USD",
+        "aeropuertos": [
+            {"code": "FLN", "ciudad": "Florianópolis"},
+        ],
+    },
     "bariloche": {
         "nombre": "Bariloche", "pais": "Argentina", "region": "cabotaje",
         "emoji": "🏔️", "lat": -41.15, "lon": -71.16, "moneda": "ARS",
@@ -195,6 +202,12 @@ AEROLINEAS = {
         {"n": "LATAM", "v": "directo", "url": "https://www.latamairlines.com/ar/es"},
         {"n": "JetSmart", "v": "directo (low cost)", "url": "https://jetsmart.com"},
     ],
+    "florianopolis": [
+        {"n": "Aerolíneas Argentinas", "v": "directo (temporada)", "url": "https://www.aerolineas.com.ar"},
+        {"n": "GOL", "v": "directo/vía San Pablo", "url": "https://www.voegol.com.br/es-ar"},
+        {"n": "JetSmart", "v": "directo (low cost)", "url": "https://jetsmart.com"},
+        {"n": "Flybondi", "v": "directo (temporada)", "url": "https://flybondi.com"},
+    ],
     "bariloche": [
         {"n": "Aerolíneas Argentinas", "v": "directo", "url": "https://www.aerolineas.com.ar"},
         {"n": "Flybondi", "v": "directo (low cost)", "url": "https://flybondi.com"},
@@ -214,6 +227,12 @@ AEROLINEAS = {
 
 # Tips de época por destino (mes -> qué se aprovecha). Curado, breve.
 TIPS = {
+    "florianopolis": {
+        11: "Playas listas y precios pre-temporada.",
+        12: "El mar más lindo del sur de Brasil, antes del pico de enero.",
+        3: "Mar caliente y multitudes en retirada: la mejor relación.",
+        4: "Otoño isleño: templado, verde y barato.",
+    },
     "miami": {
         1: "Temporada seca y fresca: parques y playa sin humedad.",
         2: "Seco y templado, ideal Orlando: filas cortas post-vacaciones.",

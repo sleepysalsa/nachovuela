@@ -302,7 +302,11 @@ def correr(demo=False, refrescar_clima=False):
     guardar_json(LATEST_PATH, latest)
     guardar_json(HIST_PATH, historial)
     escribir_destinos()
-    if refrescar_clima or not os.path.exists(CLIMA_PATH):
+    clima_actual = cargar_json(CLIMA_PATH, {}).get("destinos", {})
+    faltan_clima = [k for k in cat.DESTINOS if k not in clima_actual]
+    if refrescar_clima or faltan_clima:
+        if faltan_clima:
+            print(f"Clima: destinos nuevos sin datos {faltan_clima}, refrescando...")
         escribir_clima()
 
     # Datos del BUSCADOR ida+vuelta (piernas de ida y de regreso por día)

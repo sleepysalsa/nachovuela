@@ -512,6 +512,18 @@ function renderStatus(){
   const t = haceCuanto(state.latest.generado);
   el.textContent = `rastrillado ${t}`;
   foot.textContent = `último rastrillaje · ${state.latest.generado?.slice(0,16).replace('T',' ')}`;
+  // Aviso si el radar no corre hace más de un día (Mac apagada, error, etc.)
+  const horas = (Date.now() - new Date(state.latest.generado)) / 36e5;
+  const warn = $('#staleWarn');
+  if(warn) warn.remove();
+  if(horas > 26){
+    const dias = Math.floor(horas/24);
+    const div = document.createElement('div');
+    div.id = 'staleWarn';
+    div.className = 'stalewarn';
+    div.innerHTML = `⚠️ El radar no rastrilla hace ${dias>=1?dias+(dias===1?' día':' días'):Math.round(horas)+' h'}. Suele pasar si la Mac estuvo apagada a las 9:00 y 20:00. Los precios pueden estar desactualizados.`;
+    document.querySelector('main').prepend(div);
+  }
 }
 
 /* ---------- HERO ---------- */
@@ -1025,6 +1037,7 @@ function openEditor(){
   const body = $('#sheetBody');
   body.innerHTML = `
     <h2 class="sheet__title">✏️ Editar viajes</h2>
+    <p class="hint" style="margin-bottom:14px">💬 <b>El camino fácil:</b> decile a Claude qué destinos y meses querés ("buscame Miami en marzo y abril") y él carga todo. Este editor es la alternativa manual: al guardar te lleva a GitHub donde tenés que pegar y confirmar.</p>
     <p class="sheet__pais">elegí qué rastrillar — el motor lo toma en la próxima pasada</p>
 
     <label class="ed-label">Nombre del viaje</label>
