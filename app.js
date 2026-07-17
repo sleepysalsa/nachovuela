@@ -348,9 +348,22 @@ function runFinder(){
   const cashHTML = cashRef ? `<div class="res__cash">💵 Referencia en plata para ${d.nombre}: <b>${fmtUSD(cashRef.precio)}</b> <span class="cash__t">${cashTipoTxt(cashRef)}</span>${cashRef.link?` · <a href="${cashRef.link}" target="_blank" rel="noopener">ver en Aviasales ↗</a>`:''}</div>` : '';
 
   if(!combos.length){
+    const bloque = d.meses?.[mes] || {};
+    const sinAward = !Object.values(bloque.ida||{}).some(a=>a.length) &&
+                     !Object.values(bloque.vuelta||{}).some(a=>a.length);
+    const code0 = (d.aeropuertos[0]||{}).code;
+    const dia15 = `${mes}-15`;
+    const explic = sinAward
+      ? `<div class="res__cash">🎫 <b>Smiles todavía no cargó pasajes con millas para ${ymLabel(mes)}</b> — pasa seguido en temporada alta: los libera más cerca de la fecha (o los pocos que había ya volaron). El radar chequea 2 veces por día y los vas a ver acá apenas aparezcan. Mientras tanto, mirá los precios en plata:</div>
+        <div class="diaslinks" style="margin-top:10px">
+          <a class="btn" href="${googleFlightsURL(orig,code0,dia15)}" target="_blank" rel="noopener">Google Flights ↗</a>
+          <a class="btn" href="${despegarDayURL(orig,code0,dia15)}" target="_blank" rel="noopener">Despegar ↗</a>
+          <a class="btn" href="${kayakURL(orig,code0,dia15)}" target="_blank" rel="noopener">Kayak ↗</a>
+        </div>
+        <p class="hint" style="margin-top:8px">Los links abren a mitad de mes — ajustá la fecha ahí. Cuando Smiles libere premios, acá vas a poder armar ida y vuelta día por día.</p>`
+      : `<p class="empty">No encontré combinaciones ida+vuelta con ${nMin}–${nMax} noches para ese mes. Probá ampliar el rango de noches, cambiar el mes, o sacar “Cualquiera” en el día de salida.</p>`;
     host.innerHTML = `<div class="res__head"><h2>${d.emoji} ${d.nombre} · ${ymLabel(mes)}</h2></div>
-      ${cashHTML}
-      <p class="empty">No encontré combinaciones ida+vuelta con ${nMin}–${nMax} noches para ese mes. Probá ampliar el rango de noches, cambiar el mes, o sacar “Cualquiera” en el día de salida.</p>`;
+      ${cashHTML}${explic}`;
     host.scrollIntoView({behavior:'smooth'});
     return;
   }
