@@ -17,6 +17,13 @@ import time
 import random
 import requests
 
+import dns_cache
+dns_cache.precalentar([
+    "api-air-calendar-blue.smiles.com.br",
+    "api.travelpayouts.com",
+    "archive-api.open-meteo.com",
+])
+
 BASE = "https://api-air-calendar-blue.smiles.com.br/v1/airlines/calendar/month"
 
 # Clave pública que usa el propio sitio de Smiles (visible en el navegador).
