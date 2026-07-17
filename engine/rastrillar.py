@@ -203,20 +203,37 @@ def correr(demo=False, refrescar_clima=False):
 
     resultados = []
     errores = []
-    for i, t in enumerate(tareas, 1):
+    fallidas = []
+    # Dos vueltas: la principal y una repesca de lo que falló (las fallas de
+    # red suelen ser transitorias — visto 17-jul-2026 con DNS flameante).
+    cola = [(i, t) for i, t in enumerate(tareas, 1)]
+    repescando = False
+    while cola or (fallidas and not repescando):
+        if not cola:
+            repescando = True
+            print(f"  — Repesca: reintentando {len(fallidas)} rutas en 90 s...")
+            time.sleep(90)
+            cola, fallidas = fallidas, []
+        (i, t), cola = cola[0], cola[1:]
         og, code = t["origen"], t["aeropuerto"]["code"]
         moneda = t["destino"].get("moneda", config.get("moneda_default", "USD"))
         etiqueta = f"{og}->{code} {t['ym']}"
         es_brasil = t["destino"]["pais"] == "Brasil"
+        region = t["destino"].get("region")
         try:
             dias, bandas = smiles_client.calendario_mes(
                 og, code, t["anio"], t["mes"], currency=moneda,
                 pausa=(0.4, 0.9) if demo else (2.5, 5.0),
                 preferir_socias=not es_brasil,
+                solo_socias=region in ("eeuu", "europa"),
             )
         except smiles_client.SmilesError as e:
-            print(f"  [{i}/{len(tareas)}] {etiqueta}: ERROR {e}")
-            errores.append(str(e))
+            if not repescando:
+                fallidas.append((i, t))
+                print(f"  [{i}/{len(tareas)}] {etiqueta}: falló, va a repesca")
+            else:
+                print(f"  [{i}/{len(tareas)}] {etiqueta}: ERROR {e}")
+                errores.append(str(e))
             continue
 
         if not dias:

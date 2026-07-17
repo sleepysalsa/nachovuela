@@ -384,6 +384,7 @@ function runFinder(){
         <div class="combo__totu">millas ida+vuelta</div>
         <a class="btn btn--go combo__cta" href="${smilesRoundURL(orig,c.code,c.ida.d,c.vuelta.d,d.moneda)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>
         <button class="combo__detail" data-idx="${i}">armar este viaje →</button>
+        <button class="combo__detail armlink" data-dest="${dest}" data-ym="${mes}" data-code="${c.code}" data-ida="${c.ida.d}" data-vta="${c.vuelta.d}">🔀 elegir otros días</button>
       </div>
     </article>`;
   }).join('');
@@ -731,7 +732,10 @@ function monthCalHTML(r){
     }
   }
   const hora = state.latest?.generado ? state.latest.generado.slice(11,16) : '';
+  const armable = armadorCodes(r.destino_key, r.ym).includes(r.aeropuerto);
+  const armBtn = armable ? `<button type="button" class="btn btn--go armlink" style="margin-top:10px;padding:9px 16px" data-dest="${r.destino_key}" data-ym="${r.ym}" data-code="${r.aeropuerto}">🔀 Armar ida y vuelta con estos días</button>` : '';
   return `<div class="monthcal__grid">${cells}</div>
+  ${armBtn}
   <p class="hint" style="margin-top:8px">Precios de la tarifa Club Smiles según el último rastrillaje${hora?` (${hora} hs)`:''}. La disponibilidad se mueve durante el día: puede haber sorpresas para bien o para mal — el precio final siempre lo confirma Smiles al abrir el día. El radar corre 9:00 y 20:00.</p>`;
 }
 
@@ -820,6 +824,7 @@ function openDestino(key){
     <h2 class="sheet__title">${d.nombre}</h2>
     <p class="sheet__pais">${d.pais} · ${d.aeropuertos.map(a=>a.code).join(' / ')}</p>
     ${bestFound(R)}
+    ${armadorEntradaBlock(key)}
     ${comparaBlock(R.length ? R.reduce((a,b)=>a.mejor_precio_millas<=b.mejor_precio_millas?a:b) : null)}
     ${vuelosBlock(R.length ? ((R.reduce((a,b)=>a.mejor_precio_millas<=b.mejor_precio_millas?a:b).detalle) || (R.find(x=>x.detalle)?.detalle) || null) : null)}
     ${pricesByMonthBlock(porMes,R)}
@@ -1110,3 +1115,140 @@ function registerSW(){
 }
 
 init();
+
+/* ================= ARMADOR ida y vuelta (elegí día por día) ================= */
+function armadorCodes(destKey, ym){
+  const b = bDestinos()[destKey]?.meses?.[ym];
+  if(!b) return [];
+  return Object.keys(b.ida||{}).filter(c=>(b.vuelta?.[c]||[]).length);
+}
+
+function openArmador(destKey, ym, code, preIda, preVuelta){
+  const codes = armadorCodes(destKey, ym);
+  if(!codes.length) return;
+  state.armador = {
+    dest: destKey, ym,
+    code: (code && codes.includes(code)) ? code : codes[0],
+    ida: preIda || null, vuelta: preVuelta || null,
+  };
+  renderArmador(true);
+}
+
+function armadorGrid(dias, seleccionado, tipo){
+  // dias: [{d,mi,q,f}] puede cruzar de mes (la vuelta cubre mes + siguiente)
+  const porMes = {};
+  dias.forEach(x=>{ const k=x.d.slice(0,7); (porMes[k]=porMes[k]||[]).push(x); });
+  const min = Math.min(...dias.map(x=>x.mi));
+  return Object.keys(porMes).sort().map(ymk=>{
+    const [y,m] = ymk.split('-').map(Number);
+    const byDate = {}; porMes[ymk].forEach(x=>byDate[x.d]=x);
+    const startDow = (new Date(y,m-1,1).getDay()+6)%7;
+    const ndays = new Date(y,m,0).getDate();
+    let cells = DOW.map(d=>`<div class="dow">${d}</div>`).join('');
+    for(let i=0;i<startDow;i++) cells+=`<div></div>`;
+    for(let dd=1; dd<=ndays; dd++){
+      const iso=`${y}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+      const info=byDate[iso];
+      if(info){
+        const sel = iso===seleccionado ? ` sel-${tipo}`:'';
+        const best = info.mi===min?' best':'';
+        cells+=`<button type="button" class="daychip has arm${best}${sel}${info.f==='gol'?' gol':''}" data-tipo="${tipo}" data-d="${iso}" title="${dateLabel(iso)} · ${fmtMiles(info.mi)} millas">
+          <span>${dd}</span><span class="dm">${Math.round(info.mi/1000)}k</span></button>`;
+      } else cells+=`<div class="daycell-empty">${dd}</div>`;
+    }
+    return `<p class="arm__meslabel">${ymLabel(ymk)}</p><div class="daygrid">${cells}</div>`;
+  }).join('');
+}
+
+function renderArmador(abrir){
+  const A = state.armador;
+  const d = bDestinos()[A.dest]; if(!d) return;
+  const b = d.meses[A.ym];
+  const codes = armadorCodes(A.dest, A.ym);
+  const idas = b.ida[A.code]||[];
+  const vueltas = b.vuelta[A.code]||[];
+  const ciudad = (d.aeropuertos.find(a=>a.code===A.code)||{}).ciudad || A.code;
+
+  const chips = codes.length>1 ? `<div class="arm__codes">${codes.map(c=>{
+    const cc=(d.aeropuertos.find(a=>a.code===c)||{}).ciudad||c;
+    return `<button type="button" class="segbtn arm__code${c===A.code?' is-active':''}" data-code="${c}">${c} · ${cc}</button>`;
+  }).join('')}</div>` : '';
+
+  const body = $('#sheetBody');
+  body.innerHTML = `
+    <h2 class="sheet__title">🔀 Armá tu ${d.nombre}</h2>
+    <p class="sheet__pais">${d.origen} ⇄ ${A.code} · ${ciudad} · ${ymLabel(A.ym)}</p>
+    ${chips}
+    <div class="block">
+      <h3>1 · Elegí tu día de IDA <span class="arm__dir">${d.origen} → ${A.code}</span></h3>
+      ${armadorGrid(idas, A.ida, 'ida')}
+    </div>
+    <div class="block">
+      <h3>2 · Elegí tu día de VUELTA <span class="arm__dir">${A.code} → ${d.origen}</span></h3>
+      ${armadorGrid(vueltas, A.vuelta, 'vta')}
+    </div>
+    <div class="armbar" id="armBar">${armadorBarHTML()}</div>
+    <p class="hint">Verde punteado = el día más barato de cada calendario. Los números son miles de millas (63k = 63.000). Tocá un día de cada calendario y abajo se arma el viaje.</p>
+  `;
+  $$('.daychip.arm',body).forEach(c=>c.addEventListener('click',()=>{
+    if(c.dataset.tipo==='ida') A.ida = c.dataset.d; else A.vuelta = c.dataset.d;
+    renderArmador(false);
+  }));
+  $$('.arm__code',body).forEach(c=>c.addEventListener('click',()=>{
+    A.code = c.dataset.code; A.ida = A.vuelta = null; renderArmador(false);
+  }));
+  if(abrir){ $('#sheet').classList.add('open'); $('#sheet').setAttribute('aria-hidden','false'); }
+  if(!abrir){ /* mantener al usuario cerca de la barra */ }
+}
+
+function armadorBarHTML(){
+  const A = state.armador;
+  const d = bDestinos()[A.dest];
+  const b = d.meses[A.ym];
+  const idas = b.ida[A.code]||[], vueltas = b.vuelta[A.code]||[];
+  const iSel = idas.find(x=>x.d===A.ida), vSel = vueltas.find(x=>x.d===A.vuelta);
+  if(!iSel && !vSel) return `<div class="armbar__hint">👆 Elegí un día de ida y uno de vuelta</div>`;
+  if(iSel && !vSel) return `<div class="armbar__hint">IDA ${dateLabel(iSel.d)} · ${fmtMiles(iSel.mi)} mi — falta la vuelta 👆</div>`;
+  if(!iSel && vSel) return `<div class="armbar__hint">VUELTA ${dateLabel(vSel.d)} · ${fmtMiles(vSel.mi)} mi — falta la ida 👆</div>`;
+  const n = diasEntre(iSel.d, vSel.d);
+  if(n<=0) return `<div class="armbar__hint">⚠️ La vuelta (${dateLabel(vSel.d)}) tiene que ser después de la ida (${dateLabel(iSel.d)})</div>`;
+  const total = iSel.mi + vSel.mi;
+  const c = {ida:iSel, vuelta:vSel,
+             cashIda: cashLeg(b,'ida',A.code,iSel.d),
+             cashVuelta: cashLeg(b,'vuelta',A.code,vSel.d)};
+  const a = mejorArmado(c);
+  const orig = d.origen;
+  return `
+    <div class="armbar__row">
+      <div class="armbar__tot"><b>${fmtMiles(total)}</b> millas · ${n} ${n===1?'noche':'noches'}</div>
+      <div class="armbar__fechas">${dateLabel(iSel.d)} → ${dateLabel(vSel.d)}</div>
+    </div>
+    ${a?`<div class="armbar__sug">💡 ${armadoTxt(a)} ≈ <b>${fmtUSD(a.totalEq)}</b> <span class="cash__t">equivalente</span></div>`:''}
+    <div class="armbar__btns">
+      <a class="btn btn--go" href="${smilesRoundURL(orig,A.code,iSel.d,vSel.d,d.moneda)}" target="_blank" rel="noopener">✈ Ida y vuelta en Smiles ↗</a>
+      <a class="btn" href="${smilesOneWayURL(orig,A.code,iSel.d,d.moneda)}" target="_blank" rel="noopener">Solo ida ↗</a>
+      <a class="btn" href="${smilesOneWayURL(A.code,orig,vSel.d,d.moneda)}" target="_blank" rel="noopener">Solo vuelta ↗</a>
+      <a class="btn" href="${googleFlightsURL(orig,A.code,iSel.d,vSel.d)}" target="_blank" rel="noopener">Google Flights ↗</a>
+      <a class="btn" href="${despegarDayURL(orig,A.code,iSel.d).replace('/oneway/','/roundtrip/').replace('/'+iSel.d+'/','/'+iSel.d+'/'+vSel.d+'/')}" target="_blank" rel="noopener">Despegar ↗</a>
+    </div>`;
+}
+
+// Entrada al armador desde cualquier lado (tarjetas, ficha, combos)
+document.addEventListener('click', e=>{
+  const b = e.target.closest('.armlink');
+  if(!b) return;
+  openArmador(b.dataset.dest, b.dataset.ym, b.dataset.code||null,
+              b.dataset.ida||null, b.dataset.vta||null);
+});
+
+// Bloque de entrada al armador desde la ficha de destino (un botón por mes)
+function armadorEntradaBlock(destKey){
+  const d = bDestinos()[destKey];
+  if(!d) return '';
+  const meses = Object.keys(d.meses||{}).sort().filter(ym=>armadorCodes(destKey,ym).length);
+  if(!meses.length) return '';
+  const btns = meses.map(ym=>`<button type="button" class="btn armlink" data-dest="${destKey}" data-ym="${ym}">🔀 ${ymLabel(ym)}</button>`).join('');
+  return `<div class="block"><h3>Armar ida y vuelta</h3>
+    <div class="diaslinks">${btns}</div>
+    <p class="hint" style="margin-top:8px">Elegís tu día de ida y tu día de vuelta en dos calendarios, y te suma el total al instante.</p></div>`;
+}

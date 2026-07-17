@@ -468,3 +468,21 @@ select.fld__in{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
 
 .stalewarn{ background:rgba(216,120,80,.12); border:1px solid rgba(216,120,80,.45); color:var(--ink);
   border-radius:12px; padding:12px 16px; font-size:.85rem; margin-bottom:18px; line-height:1.5; }
+
+/* Armador ida y vuelta */
+.arm__dir{ font-family:var(--mono); font-size:.66rem; color:var(--ink-faint); margin-left:8px; text-transform:none; letter-spacing:0; }
+.arm__meslabel{ font-family:var(--mono); font-size:.68rem; color:var(--amber-lt); text-transform:uppercase; letter-spacing:.05em; margin:12px 0 6px; }
+.arm__codes{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+.daychip.sel-ida{ outline:2px solid var(--green); outline-offset:1px; background:rgba(46,180,120,.18); }
+.daychip.sel-vta{ outline:2px solid var(--amber); outline-offset:1px; background:rgba(245,166,35,.18); }
+.armbar{ position:sticky; bottom:-24px; background:linear-gradient(180deg,rgba(16,22,42,.97),rgba(10,14,28,.99));
+  border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-top:14px; z-index:5;
+  box-shadow:0 -8px 30px rgba(0,0,0,.45); }
+.armbar__hint{ font-size:.86rem; color:var(--ink-dim); text-align:center; }
+.armbar__row{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.armbar__tot{ font-family:var(--mono); font-size:1.05rem; color:var(--green); }
+.armbar__tot b{ font-size:1.25rem; font-weight:800; }
+.armbar__fechas{ font-size:.8rem; color:var(--ink-dim); }
+.armbar__sug{ font-size:.82rem; color:var(--ink); margin-top:6px; }
+.armbar__btns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.armbar__btns .btn{ padding:8px 12px; font-size:.78rem; }

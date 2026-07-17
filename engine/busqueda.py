@@ -104,10 +104,12 @@ def construir(config, log=print, demo=False):
                 pausa = (0.3, 0.7) if demo else (2.2, 4.5)
 
                 # IDA: EZE -> destino, mes del viaje
+                solo_soc = d.get("region") in ("eeuu", "europa")
                 try:
                     dias_ida, _ = sc.calendario_mes(
                         og, code, anio, mes, currency=moneda,
-                        pausa=pausa, preferir_socias=preferir_socias)
+                        pausa=pausa, preferir_socias=preferir_socias,
+                        solo_socias=solo_soc)
                 except sc.SmilesError as e:
                     log(f"    ida {og}->{code} {ym}: ERROR {e}")
                     dias_ida = []
@@ -120,7 +122,8 @@ def construir(config, log=print, demo=False):
                     try:
                         dv, _ = sc.calendario_mes(
                             code, og, ya, ma, currency=moneda,
-                            pausa=pausa, preferir_socias=preferir_socias)
+                            pausa=pausa, preferir_socias=preferir_socias,
+                            solo_socias=solo_soc)
                         vuelta.extend(dv)
                     except sc.SmilesError as e:
                         log(f"    vuelta {code}->{og} {ya}-{ma:02d}: ERROR {e}")

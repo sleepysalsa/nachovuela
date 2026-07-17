@@ -44,7 +44,8 @@ class SmilesError(Exception):
 
 
 def calendario_mes(origen, destino, anio, mes, currency="USD",
-                   pausa=(2.5, 5.0), reintentos=3, preferir_socias=False):
+                   pausa=(2.5, 5.0), reintentos=4, preferir_socias=False,
+                   solo_socias=False):
     """
     Trae el calendario de precios award de un mes para una ruta, consultando
     DOS veces: la búsqueda normal (GOL + socias según la ruta) y la forzada a
@@ -64,9 +65,15 @@ def calendario_mes(origen, destino, anio, mes, currency="USD",
               fuente ("gol"|"socias"|"ambas"), gol_alt (millas GOL si además
               existe opción GOL más barata que la elegida)}.
     """
-    dias_a, bandas_a = _consulta(origen, destino, anio, mes, currency,
-                                 force_congener="false", reintentos=reintentos)
-    _dormir(pausa)
+    # Para EEUU/Europa GOL no tiene vuelos propios: la consulta normal es
+    # redundante (verificado: EZE-MIA idéntico con y sin forceCongener).
+    # solo_socias=True la saltea y el rastrillaje tarda la mitad.
+    if solo_socias:
+        dias_a, bandas_a = [], None
+    else:
+        dias_a, bandas_a = _consulta(origen, destino, anio, mes, currency,
+                                     force_congener="false", reintentos=reintentos)
+        _dormir(pausa)
     dias_b, bandas_b = _consulta(origen, destino, anio, mes, currency,
                                  force_congener="true", reintentos=reintentos)
     _dormir(pausa)
@@ -98,7 +105,7 @@ def calendario_mes(origen, destino, anio, mes, currency="USD",
     return dias, (bandas_b or bandas_a)
 
 
-def _consulta(origen, destino, anio, mes, currency, force_congener, reintentos=3):
+def _consulta(origen, destino, anio, mes, currency, force_congener, reintentos=4):
     """Una llamada al calendario. Devuelve (dias, bandas)."""
     # Ventana: primer día del mes objetivo hasta ~5 días del mes siguiente,
     # con departureDate a mitad de mes para que la API poble ese mes.
@@ -131,10 +138,12 @@ def _consulta(origen, destino, anio, mes, currency, force_congener, reintentos=3
             if resp.status_code == 200:
                 return _parsear(resp.json(), anio, mes)
             ultimo_error = f"HTTP {resp.status_code}"
+            time.sleep(3 * (intento + 1))
         except requests.RequestException as e:
             ultimo_error = str(e)
-        # backoff antes de reintentar
-        time.sleep(3 * (intento + 1))
+            # Falla de red (DNS caído, wifi, etc.): esperar bastante más,
+            # suele ser transitorio (visto 17-jul-2026: DNS flameante).
+            time.sleep(15 * (intento + 1))
 
     raise SmilesError(f"{origen}->{destino} {anio}-{mes:02d} (congener={force_congener}): {ultimo_error}")
 
