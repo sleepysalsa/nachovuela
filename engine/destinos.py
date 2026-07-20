@@ -110,6 +110,11 @@ DESTINOS = {
         "emoji": "🏔️", "lat": -41.15, "lon": -71.16, "moneda": "ARS",
         "aeropuertos": [{"code": "BRC", "ciudad": "Bariloche"}],
     },
+    "mendoza": {
+        "nombre": "Mendoza", "pais": "Argentina", "region": "cabotaje",
+        "emoji": "🍷", "lat": -32.89, "lon": -68.85, "moneda": "ARS",
+        "aeropuertos": [{"code": "MDZ", "ciudad": "Mendoza"}],
+    },
     "iguazu": {
         "nombre": "Puerto Iguazú", "pais": "Argentina", "region": "cabotaje",
         "emoji": "💦", "lat": -25.74, "lon": -54.47, "moneda": "ARS",
@@ -213,6 +218,11 @@ AEROLINEAS = {
         {"n": "Flybondi", "v": "directo (low cost)", "url": "https://flybondi.com"},
         {"n": "JetSmart", "v": "directo (low cost)", "url": "https://jetsmart.com"},
     ],
+    "mendoza": [
+        {"n": "Aerolíneas Argentinas", "v": "directo", "url": "https://www.aerolineas.com.ar"},
+        {"n": "Flybondi", "v": "directo (low cost)", "url": "https://flybondi.com"},
+        {"n": "JetSmart", "v": "directo (low cost)", "url": "https://jetsmart.com"},
+    ],
     "iguazu": [
         {"n": "Aerolíneas Argentinas", "v": "directo", "url": "https://www.aerolineas.com.ar"},
         {"n": "Flybondi", "v": "directo (low cost)", "url": "https://flybondi.com"},
@@ -227,6 +237,14 @@ AEROLINEAS = {
 
 # Tips de época por destino (mes -> qué se aprovecha). Curado, breve.
 TIPS = {
+    "mendoza": {
+        9: "Empiezan a brotar las viñas, seco y templado, sin multitudes.",
+        10: "Fiesta de la Vendimia y montañas con nieve todavía — combo perfecto.",
+        11: "Días largos y cálidos para bodegas y alta montaña.",
+        12: "Calor seco de precordillera, ideal previo a las fiestas.",
+        2: "Vendimia en su punto: cosecha, calor y uvas en la planta.",
+        3: "Otoño mendocino: viñedos dorados y clima ideal para recorrer bodegas.",
+    },
     "florianopolis": {
         11: "Playas listas y precios pre-temporada.",
         12: "El mar más lindo del sur de Brasil, antes del pico de enero.",
