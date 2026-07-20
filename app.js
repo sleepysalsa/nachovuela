@@ -41,13 +41,18 @@ function haceCuanto(iso){
 }
 
 /* Deep link a la búsqueda de Smiles para esa ruta/fecha */
+// Recordatorio de las dos formas de pago de Smiles. El link ya abre en pesos;
+// el desglose exacto de "millas + pesos" (Smiles&Money) solo lo muestra Smiles
+// al abrir (vive en la página de detalle que Smiles bloquea para robots).
+const smilesMoneyHint = `<p class="hint smoney">💡 En Smiles vas a ver <b>dos formas de pagar</b> (tarifa Club Smiles): <b>todo en millas</b>, o <b>menos millas + pesos</b> (Smiles&Money) — esta última suele convenir bastante. El link abre en pesos así ves las tasas reales; el desglose exacto lo muestra Smiles.</p>`;
+
 function smilesURL(r){
   const [y,m,d] = r.mejor_fecha.split('-').map(Number);
   const ms = new Date(y, m-1, d, 12, 0, 0).getTime();
   const p = new URLSearchParams({
     originAirportCode:r.origen, destinationAirportCode:r.aeropuerto,
     departureDate:String(ms), adults:'1', children:'0', infants:'0',
-    tripType:'2', cabinType:'all', currencyCode:r.moneda||'USD',
+    tripType:'2', cabinType:'all', currencyCode:'ARS',
     isFlexibleDateChecked:'false'
   });
   return `https://www.smiles.com.ar/emission?${p.toString()}`;
@@ -278,7 +283,7 @@ function smilesRoundURL(orig, code, idaISO, vueltaISO, moneda){
     originAirportCode:orig, destinationAirportCode:code,
     departureDate:String(ms(idaISO)), returnDate:String(ms(vueltaISO)),
     adults:'1', children:'0', infants:'0', tripType:'1', cabinType:'all',
-    currencyCode:moneda||'USD', isFlexibleDateChecked:'false'
+    currencyCode:'ARS', isFlexibleDateChecked:'false'
   });
   return `https://www.smiles.com.ar/emission?${p.toString()}`;
 }
@@ -287,7 +292,7 @@ function smilesOneWayURL(orig, code, idaISO, moneda){
   const ms=new Date(y,m-1,d,12,0,0).getTime();
   const p=new URLSearchParams({originAirportCode:orig,destinationAirportCode:code,
     departureDate:String(ms),adults:'1',children:'0',infants:'0',tripType:'2',
-    cabinType:'all',currencyCode:moneda||'USD',isFlexibleDateChecked:'false'});
+    cabinType:'all',currencyCode:'ARS',isFlexibleDateChecked:'false'});
   return `https://www.smiles.com.ar/emission?${p.toString()}`;
 }
 
@@ -857,6 +862,7 @@ function bestFound(R){
     <div class="card__price"><span class="card__miles ${op?'op':''}">${fmtMiles(best.mejor_precio_millas)}</span><span class="card__unit">millas</span></div>
     <p class="card__when">${best.origen} → ${best.aeropuerto} · <b>${dateLabel(best.mejor_fecha)}</b></p>
     <a class="btn btn--go" style="display:inline-block;margin-top:8px;padding:9px 16px" href="${smilesURL(best)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>
+    ${smilesMoneyHint}
   </div>`;
 }
 
@@ -1243,7 +1249,8 @@ function armadorBarHTML(){
       <a class="btn" href="${smilesOneWayURL(A.code,orig,vSel.d,d.moneda)}" target="_blank" rel="noopener">Solo vuelta ↗</a>
       <a class="btn" href="${googleFlightsURL(orig,A.code,iSel.d,vSel.d)}" target="_blank" rel="noopener">Google Flights ↗</a>
       <a class="btn" href="${despegarDayURL(orig,A.code,iSel.d).replace('/oneway/','/roundtrip/').replace('/'+iSel.d+'/','/'+iSel.d+'/'+vSel.d+'/')}" target="_blank" rel="noopener">Despegar ↗</a>
-    </div>`;
+    </div>
+    ${smilesMoneyHint}`;
 }
 
 // Entrada al armador desde cualquier lado (tarjetas, ficha, combos)
