@@ -49,6 +49,7 @@
 
 <nav class="tabs" id="tabs">
   <button class="tab is-active" data-view="buscar">Buscar</button>
+  <button class="tab" data-view="vueltas">Vueltas</button>
   <button class="tab" data-view="radar">Radar</button>
   <button class="tab" data-view="destinos">Destinos</button>
 </nav>
@@ -108,6 +109,25 @@
 
     <div class="results" id="finderResults"></div>
     <div id="ideasWrap"></div>
+  </section>
+
+  <!-- VUELTAS (solo regreso → EZE) -->
+  <section class="view" id="view-vueltas">
+    <div class="finder__head">
+      <h1 class="finder__title">Cazar la vuelta primero</h1>
+      <p class="finder__sub">A veces la vuelta regalada aparece antes que la ida. Elegí destino y mes de regreso, y mirá los días más baratos volviendo a Ezeiza.</p>
+    </div>
+    <div class="vueltas__form" id="vueltasForm">
+      <label class="fld">
+        <span class="fld__lbl">Volver desde</span>
+        <select class="fld__in" id="vDest"></select>
+      </label>
+      <label class="fld">
+        <span class="fld__lbl">Mes de regreso</span>
+        <select class="fld__in" id="vMes"></select>
+      </label>
+    </div>
+    <div class="results" id="vueltasResults"></div>
   </section>
 
   <!-- RADAR -->

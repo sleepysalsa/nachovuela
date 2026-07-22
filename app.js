@@ -12,7 +12,8 @@ const MONTHS_LONG = ['enero','febrero','marzo','abril','mayo','junio','julio','a
 const DOW = ['L','M','M','J','V','S','D'];
 
 const state = { latest:null, clima:null, destinos:null, config:null, busqueda:null, filtro:'todos',
-  finder:{ dest:null, orig:'EZE', mes:null, nMin:10, nMax:20, esc:'todos', diaIda:null } };
+  finder:{ dest:null, orig:'EZE', mes:null, nMin:10, nMax:20, esc:'todos', diaIda:null },
+  vueltas:{ dest:null, mes:null } };
 
 const $ = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
@@ -103,6 +104,7 @@ async function init(){
   setupSheet();
   $('#editTripsBtn')?.addEventListener('click', openEditor);
   setupFinder();
+  setupVueltas();
   renderStatus();
   renderHero();
   renderStats();
@@ -418,6 +420,111 @@ function runFinder(){
     <p class="hint" style="margin-top:12px">El total es la suma de millas de ida + vuelta (el mejor regreso dentro de tu rango de noches). Tocá <b>“armar este viaje”</b> para comparar pierna por pierna si conviene millas o plata, con los links a Smiles, Despegar y Aviasales de ese día exacto.</p>`;
   $$('.combo__detail',host).forEach(b=>b.addEventListener('click',()=>openArmadoSheet(+b.dataset.idx)));
   host.scrollIntoView({behavior:'smooth'});
+}
+
+/* ================= VUELTAS sueltas (regreso → EZE) ================= */
+// Junta, por destino, todos los días de vuelta (destino→EZE) de todos los
+// meses del viaje, deduplicados por aeropuerto+fecha con el precio más bajo.
+function vueltasDestino(destKey){
+  const d = bDestinos()[destKey]; if(!d) return null;
+  const porAero = {};
+  Object.values(d.meses||{}).forEach(bloque=>{
+    Object.entries(bloque.vuelta||{}).forEach(([code, dias])=>{
+      const m = porAero[code] = porAero[code] || {};
+      dias.forEach(x=>{ if(!m[x.d] || x.mi<m[x.d].mi) m[x.d]={mi:x.mi, f:x.f, q:x.q}; });
+    });
+  });
+  return { orig:d.origen, moneda:d.moneda, aeropuertos:d.aeropuertos,
+           nombre:d.nombre, emoji:d.emoji, porAero };
+}
+// ¿Qué destinos tienen alguna vuelta cargada?
+function destinosConVuelta(){
+  return Object.keys(bDestinos()).filter(k=>{
+    const v = vueltasDestino(k);
+    return v && Object.values(v.porAero).some(m=>Object.keys(m).length);
+  });
+}
+// Meses de regreso disponibles para un destino (de las fechas reales de vuelta)
+function mesesVuelta(destKey){
+  const v = vueltasDestino(destKey); if(!v) return [];
+  const set = new Set();
+  Object.values(v.porAero).forEach(m=>Object.keys(m).forEach(f=>set.add(f.slice(0,7))));
+  return [...set].sort();
+}
+
+function setupVueltas(){
+  const dSel = $('#vDest'), mSel = $('#vMes');
+  const keys = destinosConVuelta();
+  if(!keys.length){
+    $('#vueltasForm').style.display='none';
+    $('#vueltasResults').innerHTML = `<p class="empty">Todavía no hay vueltas rastreadas. Aparecen solas cuando un viaje activo incluye ese destino.</p>`;
+    return;
+  }
+  const B = bDestinos();
+  dSel.innerHTML = keys.map(k=>`<option value="${k}">${B[k].emoji} ${B[k].nombre}</option>`).join('');
+  state.vueltas.dest = keys[0];
+  const refreshMeses = ()=>{
+    const meses = mesesVuelta(state.vueltas.dest);
+    mSel.innerHTML = meses.map(m=>`<option value="${m}">${ymLabel(m)}</option>`).join('');
+    state.vueltas.mes = meses[0] || null;
+    renderVueltas();
+  };
+  refreshMeses();
+  dSel.addEventListener('change', ()=>{ state.vueltas.dest=dSel.value; refreshMeses(); });
+  mSel.addEventListener('change', ()=>{ state.vueltas.mes=mSel.value; renderVueltas(); });
+}
+
+// Calendario de un mes de vuelta para un aeropuerto: cada día linkea a Smiles
+// (solo vuelta: aeropuerto → EZE, en pesos).
+function vueltaCalHTML(orig, code, mapaDias, ym, moneda){
+  const dias = Object.entries(mapaDias)
+    .filter(([f])=>f.startsWith(ym))
+    .map(([f,info])=>({d:f, ...info}));
+  if(!dias.length) return '';
+  const [y,m] = ym.split('-').map(Number);
+  const min = Math.min(...dias.map(x=>x.mi));
+  const byDate = {}; dias.forEach(x=>byDate[x.d]=x);
+  const startDow = (new Date(y,m-1,1).getDay()+6)%7;
+  const ndays = new Date(y,m,0).getDate();
+  let cells = DOW.map(x=>`<div class="dow">${x}</div>`).join('');
+  for(let i=0;i<startDow;i++) cells+=`<div></div>`;
+  for(let dd=1; dd<=ndays; dd++){
+    const iso=`${y}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+    const info=byDate[iso];
+    if(info){
+      const best = info.mi===min?' best':'';
+      const gol = info.f==='gol'?' gol':'';
+      cells+=`<a class="daychip has arm${best}${gol}" href="${smilesOneWayURL(code, orig, iso, moneda)}" target="_blank" rel="noopener" title="${dateLabel(iso)} · ${fmtMiles(info.mi)} millas (volver a ${orig})">
+        <span>${dd}</span><span class="dm">${Math.round(info.mi/1000)}k</span></a>`;
+    } else cells+=`<div class="daycell-empty">${dd}</div>`;
+  }
+  const ciudad = (state.destinos?.destinos?.[state.vueltas.dest]?.aeropuertos||[])
+    .find(a=>a.code===code)?.ciudad || code;
+  return `<div class="block">
+    <h3>${code} → ${orig} <span class="arm__dir">${ciudad} · desde ${fmtMiles(min)} mi</span></h3>
+    <div class="daygrid">${cells}</div></div>`;
+}
+
+function renderVueltas(){
+  const host = $('#vueltasResults');
+  const {dest, mes} = state.vueltas;
+  const v = vueltasDestino(dest);
+  if(!v || !mes){ host.innerHTML=''; return; }
+  const cals = Object.keys(v.porAero)
+    .filter(code=>Object.keys(v.porAero[code]).some(f=>f.startsWith(mes)))
+    .sort((a,b)=>{ // aeropuerto con el día más barato primero
+      const mn = c=>Math.min(...Object.entries(v.porAero[c]).filter(([f])=>f.startsWith(mes)).map(([,x])=>x.mi));
+      return mn(a)-mn(b);
+    })
+    .map(code=>vueltaCalHTML(v.orig, code, v.porAero[code], mes, v.moneda))
+    .join('');
+  host.innerHTML = `
+    <div class="res__head">
+      <h2>${v.emoji} Volver de ${v.nombre} · ${ymLabel(mes)}</h2>
+      <p class="res__sub">Días más baratos volviendo a ${v.orig}. Tocá un día para abrirlo (solo vuelta) en Smiles, en pesos.</p>
+    </div>
+    ${cals}
+    <p class="hint">Verde = el día más barato del mes. Los números son miles de millas. Si enganchás una vuelta que te cierra, después buscás la ida para esas fechas en la solapa <b>Buscar</b> o en el <b>Armador</b>.</p>`;
 }
 
 // Línea "mejor armado" en la tarjeta de combo

@@ -489,3 +489,7 @@ select.fld__in{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
 
 .hint.smoney{ background:rgba(126,90,175,.12); border:1px solid rgba(150,110,200,.35);
   border-radius:10px; padding:9px 12px; margin-top:10px; line-height:1.5; }
+
+/* Vista Vueltas */
+.vueltas__form{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px; }
+@media (max-width:520px){ .vueltas__form{ grid-template-columns:1fr; } }
