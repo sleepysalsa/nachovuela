@@ -687,6 +687,25 @@ function renderStats(){
     <div class="stat"><b>${rutas}</b><span>rutas activas</span></div>
     <div class="stat"><b>${destinos}</b><span>destinos</span></div>
     <div class="stat"><b>${min?fmtMiles(min):'—'}</b><span>millas · mínimo</span></div>`;
+  renderSequia();
+}
+
+// Aviso de "sequía": el motor consultó muchas rutas y Smiles devolvió premios
+// en muy pocas. Sin esto, la app parece rota cuando en realidad es Smiles el
+// que vació su inventario (visto 24-jul-2026: de 47 consultadas, 1 con precio).
+function renderSequia(){
+  const L = state.latest;
+  $('#sequiaWarn')?.remove();
+  if(!L || !L.total_consultadas) return;
+  const con = L.total_rutas, tot = L.total_consultadas;
+  if(tot < 5 || con/tot > 0.25) return;   // cobertura sana, no avisamos
+  const div = document.createElement('div');
+  div.id = 'sequiaWarn';
+  div.className = 'stalewarn sequia';
+  div.innerHTML = `🎫 <b>Smiles está mostrando muy pocos premios</b>: de ${tot} búsquedas, solo ${con} ${con===1?'trajo':'trajeron'} precio en millas.
+    No es un problema de la app — Smiles carga y retira asientos con millas todo el tiempo, y cuando los saca no hay nada que mostrar.
+    El radar sigue chequeando 2 veces por día y te avisa apenas vuelvan.`;
+  $('#statStrip').insertAdjacentElement('afterend', div);
 }
 
 /* ---------- RADAR CARDS ---------- */

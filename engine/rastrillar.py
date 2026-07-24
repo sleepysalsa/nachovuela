@@ -313,6 +313,10 @@ def correr(demo=False, refrescar_clima=False):
     latest = {
         "generado": ahora_iso(),
         "total_rutas": len(resultados),
+        # Cuántas ruta-mes se consultaron en total. Sirve para que la app
+        # distinga "el motor falló" de "Smiles no tiene premios cargados":
+        # si consultamos 47 y solo 1 trajo precio, es sequía de Smiles.
+        "total_consultadas": len(tareas),
         "errores": errores,
         "resultados": resultados,
     }
