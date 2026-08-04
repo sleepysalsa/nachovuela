@@ -193,6 +193,11 @@ def correr(demo=False, refrescar_clima=False):
     if demo:
         tareas = tareas[:1]
 
+    # Smiles cambia de servidor cada tanto y el viejo queda devolviendo
+    # calendarios vacíos (sin error). Elegimos el que esté sirviendo datos.
+    print(f"[{ahora_iso()}] Verificando el servidor de Smiles...")
+    smiles_client.base_activa(log=print)
+
     cash_tok = cash_client.token(config)
     print(f"[{ahora_iso()}] Rastrillando {len(tareas)} ruta-mes...")
     if cash_tok:

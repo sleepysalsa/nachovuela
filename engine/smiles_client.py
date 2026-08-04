@@ -19,12 +19,25 @@ import requests
 
 import dns_cache
 dns_cache.precalentar([
+    "api-air-calendar-green.smiles.com.br",
     "api-air-calendar-blue.smiles.com.br",
     "api.travelpayouts.com",
     "archive-api.open-meteo.com",
 ])
 
-BASE = "https://api-air-calendar-blue.smiles.com.br/v1/airlines/calendar/month"
+# Smiles despliega su API en varios entornos y de tanto en tanto MUEVE el
+# tráfico de uno a otro (2-ago-2026: pasó de "blue" a "green" y el viejo quedó
+# devolviendo calendarios vacíos, sin error — parecía que nos habían bloqueado).
+# Por eso ya no fijamos un servidor: probamos los conocidos y nos quedamos con
+# el que realmente devuelve precios. Ver base_activa().
+_HOSTS = ["green", "blue", "prd"]
+_PATH = ".smiles.com.br/v1/airlines/calendar/month"
+BASES = [f"https://api-air-calendar-{h}{_PATH}" for h in _HOSTS]
+
+import os as _os
+_BASE_FILE = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), ".base_smiles")
+
+BASE = BASES[0]  # se ajusta en base_activa()
 
 # Clave pública que usa el propio sitio de Smiles (visible en el navegador).
 API_KEY = "aJqPU7xNHl9qN3NVZnPaJ208aPo2Bh2p2ZV844tw"
@@ -48,6 +61,80 @@ HEADERS = {
 
 class SmilesError(Exception):
     pass
+
+
+def _sondear(base, timeout=25):
+    """Cuántos días con millas devuelve `base` en una consulta de prueba.
+
+    Usamos una ruta muy transitada a ~2 meses vista: si el servidor está vivo
+    y sirviendo datos, ahí seguro hay premios. -1 = no respondió.
+    """
+    import datetime
+    obj = datetime.date.today() + datetime.timedelta(days=70)
+    y, m = obj.year, obj.month
+    params = {
+        "adults": 1, "children": 0, "infants": 0, "cabinType": "all", "tripType": 2,
+        "currencyCode": "USD", "departureDate": f"{y}-{m:02d}-15",
+        "originAirportCode": "EZE", "originAirportIsAny": "false",
+        "destinationAirportCode": "MIA", "destinAirportIsAny": "false",
+        "startDate": f"{y}-{m:02d}-01", "endDate": f"{y}-{m:02d}-28",
+        "searchType": "g3", "segments": 1, "isFlexibleDateChecked": "false",
+        "forceCongener": "true", "checkCalendar": "false", "r": "ar",
+    }
+    try:
+        r = requests.get(base, headers=HEADERS, params=params, timeout=timeout)
+        if r.status_code != 200:
+            return -1
+        segs = r.json().get("calendarSegmentList") or []
+        dias = segs[0].get("calendarDayList", []) if segs else []
+        return sum(1 for d in dias if d.get("miles"))
+    except requests.RequestException:
+        return -1
+
+
+def base_activa(forzar=False, log=print):
+    """Elige el servidor de Smiles que realmente está sirviendo precios.
+
+    Recuerda el elegido en engine/.base_smiles para no sondear cada vez. Si el
+    recordado deja de traer datos (o `forzar`), vuelve a probar todos. Así, la
+    próxima vez que Smiles mude de entorno, el radar se reacomoda solo en vez
+    de quedar devolviendo cero (lo que pasó del 21-jul al 2-ago-2026).
+    """
+    global BASE
+    if not forzar:
+        try:
+            with open(_BASE_FILE, encoding="utf-8") as f:
+                guardada = f.read().strip()
+            if guardada:
+                n = _sondear(guardada)
+                if n > 0:
+                    BASE = guardada
+                    return BASE
+                log(f"  El servidor guardado no trae datos ({n}), buscando otro...")
+        except OSError:
+            pass
+
+    mejor, mejor_n = None, 0
+    for b in BASES:
+        n = _sondear(b)
+        etiqueta = b.split("//")[1].split(".")[0]
+        log(f"  sondeo {etiqueta}: {n if n >= 0 else 'sin respuesta'}")
+        if n > mejor_n:
+            mejor, mejor_n = b, n
+        time.sleep(1.5)
+
+    if mejor:
+        BASE = mejor
+        try:
+            with open(_BASE_FILE, "w", encoding="utf-8") as f:
+                f.write(mejor)
+        except OSError:
+            pass
+        log(f"  → usando {mejor.split('//')[1].split('.')[0]} ({mejor_n} días de prueba)")
+    else:
+        log("  ⚠ Ningún servidor de Smiles devolvió precios; sigo con el primero.")
+        BASE = BASES[0]
+    return BASE
 
 
 def calendario_mes(origen, destino, anio, mes, currency="USD",

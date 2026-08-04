@@ -40,6 +40,68 @@ SENIALES_LOGIN = [
 ]
 
 
+CAL_BASE = "https://api-air-calendar-blue.smiles.com.br/v1/airlines/calendar/month"
+API_KEY = "aJqPU7xNHl9qN3NVZnPaJ208aPo2Bh2p2ZV844tw"
+
+
+def prueba_cal(page, tokens_vistos):
+    """¿El calendario devuelve millas usando la sesión iniciada?
+
+    Prueba dos meses que sabemos que tienen vuelos a la venta, con el token
+    de usuario. Deja el resultado en engine/.debug/login_calendario.txt.
+    """
+    token = max(tokens_vistos, key=len) if tokens_vistos else None
+    hoy = datetime.date.today()
+    salida = []
+    ok_total = 0
+    for meses_adelante in (2, 8):
+        obj = hoy + datetime.timedelta(days=30 * meses_adelante)
+        y, m = obj.year, obj.month
+        url = (f"{CAL_BASE}?adults=1&children=0&infants=0&cabinType=all&tripType=2"
+               f"&currencyCode=USD&departureDate={y}-{m:02d}-15"
+               f"&originAirportCode=EZE&originAirportIsAny=false"
+               f"&destinationAirportCode=MIA&destinAirportIsAny=false"
+               f"&startDate={y}-{m:02d}-01&endDate={y}-{m:02d}-28"
+               f"&searchType=g3&segments=1&isFlexibleDateChecked=false"
+               f"&forceCongener=true&checkCalendar=false&r=ar")
+        headers = {"x-api-key": API_KEY, "region": "ARGENTINA",
+                   "channel": "Web", "language": "es-ES"}
+        if token:
+            headers["authorization"] = token
+        try:
+            res = page.evaluate(
+                """async ([u, h]) => { try { const r = await fetch(u, {headers:h});
+                     return {s:r.status, t:(await r.text()).slice(0,200000)}; }
+                   catch(e) { return {s:-1, t:String(e)}; } }""",
+                [url, headers])
+            if res["s"] != 200:
+                salida.append(f"{y}-{m:02d}: HTTP {res['s']}")
+                continue
+            d = json.loads(res["t"])
+            segs = d.get("calendarSegmentList") or []
+            dias = segs[0].get("calendarDayList", []) if segs else []
+            con = [x for x in dias if x.get("miles")]
+            ok_total += len(con)
+            detalle = ""
+            if con:
+                mn = min(con, key=lambda x: x["miles"])
+                detalle = f" | más barato {mn['miles']:,} el {mn['date']}"
+            salida.append(f"{y}-{m:02d}: {len(con)}/{len(dias)} días con millas{detalle}")
+        except Exception as e:
+            salida.append(f"{y}-{m:02d}: error {e}")
+
+    (DEBUG / "login_calendario.txt").write_text(
+        ("con token de usuario" if token else "SIN token") + "\n" + "\n".join(salida))
+    for s in salida:
+        print("   ", s)
+    if ok_total:
+        print("  ✓ ¡EL CALENDARIO FUNCIONA CON TU SESIÓN! El radar puede seguir.")
+    else:
+        print("  ✗ El calendario sigue vacío incluso con tu sesión iniciada.")
+        print("    (Smiles cerró esta puerta; hay que ir por otro lado.)")
+    return ok_total
+
+
 def main():
     DEBUG.mkdir(exist_ok=True)
     tokens_vistos = {}
@@ -206,6 +268,13 @@ def main():
         else:
             print("  (la página no disparó la búsqueda de vuelos por URL; el radar")
             print("   intentará otra vía con el token — diagnóstico en engine/.debug/)")
+
+        # 4. LA PRUEBA CLAVE (ago-2026): ¿el calendario de precios vuelve a dar
+        #    millas estando logueado? Desde fines de julio devuelve vacío para
+        #    todos los meses sin sesión. Si con tu cuenta trae precios, el radar
+        #    puede seguir funcionando usando esta sesión.
+        print("\n  Probando el calendario de precios con tu sesión...")
+        prueba_cal(page, tokens_vistos)
 
         MARCA.write_text(time.strftime("%Y-%m-%dT%H:%M:%S"))
         ctx.close()
