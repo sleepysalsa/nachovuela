@@ -5,7 +5,7 @@ html, body { height: 100%; overflow: hidden; background: #070a14; }
 /* Capa de estaciones (paneles DOM proyectados) */
 #estaciones { position: fixed; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
 .est {
-  position: absolute; left: 0; top: 0; will-change: transform, width, height, opacity;
+  position: absolute; left: 0; top: 0; transform-origin: 50% 50%;
   background: rgba(10, 14, 26, .92); color: var(--ink); border: 1px solid var(--line-strong);
   border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05);
   transition: box-shadow .3s; pointer-events: auto;
@@ -46,3 +46,18 @@ body.cam-enfocada .hud--pista { opacity: 0; }
 @media (max-width: 760px) { .hud--pista { font-size: .6rem; } .brujula { top: auto; bottom: 14px; flex-wrap: wrap; justify-content: center; max-width: 96vw; } .hud--pista { display: none; } }
 @media (max-width: 560px) { .hud--marca b { display: none; } .hud--estado { font-size: .6rem; padding: 6px 10px; } }
 @media (prefers-reduced-motion: reduce) { .est { transition: none; } }
+
+
+/* ── Fluidez del viaje de cámara ──────────────────────────────────────────
+   El panel mide siempre lo mismo y se mueve/escala con transform. Mientras
+   la cámara viaja le damos capa propia para que la GPU solo lo componga; al
+   frenar se la sacamos para que vuelva a rasterizar nítido (si se deja fija,
+   el texto queda borroso y come memoria).                                  */
+.est--mov { will-change: transform, opacity; }
+
+/* Las capas internas que se funden con --zoom también se componen aparte */
+.est .ca__lejos, .est .ca__cerca, .est .mac__resumen, .est .mac__ui { will-change: opacity; }
+
+/* Lo pesado no se dibuja mientras el cartel no es el que estás mirando:
+   .ca__cerca son ~2.500 fichas; con opacity:0 igual se pintaban. */
+.est--lejos .ca__cerca { content-visibility: hidden; }

@@ -1,7 +1,7 @@
 /* NachoVuela service worker — red primero con respaldo offline.
    Estrategia: TODO va a la red primero (así cada deploy se ve al instante)
    y se guarda copia en cache; si no hay conexión, se sirve la copia. */
-const CACHE = 'nachovuela-v18';
+const CACHE = 'nachovuela-v19';
 const SHELL = [
   './', './index.html', './styles.css', './app.js',
   './mundo/mundo.css', './mundo/camara.js', './mundo/estaciones.js', './mundo/arranque.js',
