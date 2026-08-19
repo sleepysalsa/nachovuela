@@ -4,6 +4,11 @@
    Un mueble colgado en lo alto: marco metálico, tornillos, luz cálida que cae
    desde arriba y su propia sombra. Adentro, fichas que giran.
 
+   LOOK: mueble de película de animación — esquinas infladas, contorno grueso
+   y parejo, cel-shading en bandas planas, tornillos grandotes con ranura y
+   tirantes regordetos. Las FICHAS conservan su mecánica y sus tiempos: acá
+   sólo se les redondeó apenas la esquina.
+
    Toda la escala del cartel cuelga de UN font-size (en .board-mueble): así el
    cartel se achica entero en pantallas chicas sin romperse ni desbordar.
    Ancho de una fila = 56 fichas · 1.08em + 4 huecos · 1.1em + bordes ≈ 68.6em
@@ -22,6 +27,7 @@
   display:flex; align-items:center; justify-content:center;
   pointer-events:none;                 /* solo las filas escuchan el mouse */
   --luz:1;
+  --brd-tinta:#060a13;                 /* tinta del contorno de dibujo */
 }
 
 /* ── El mueble ─────────────────────────────────────────────────────────── */
@@ -34,50 +40,77 @@
   backface-visibility:hidden;
 }
 
-/* Los tirantes que lo sostienen del techo de la terminal */
+/* Los tirantes que lo sostienen del techo: caños gorditos con contorno */
 .board-tirante{
-  position:absolute; top:-14em; height:14em; width:.22em;
-  background:linear-gradient(180deg, transparent, #3a4256 30%, #262c3a);
-  box-shadow:0 0 .6em rgba(0,0,0,.6);
+  position:absolute; top:-14em; height:14.35em; width:.85em;
+  border-radius:99px;
+  background:linear-gradient(90deg, #525d78 0 32%, #363f55 32% 64%, #20263a 64% 100%);
+  box-shadow:
+    0 0 0 .09em rgba(6,10,19,.85),
+    0 0 .6em rgba(0,0,0,.6);
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 24%);
+          mask-image:linear-gradient(180deg, transparent 0, #000 24%);
+}
+/* el remache donde el tirante muerde el marco */
+.board-tirante::after{
+  content:''; position:absolute; left:50%; bottom:.28em;
+  width:1.05em; height:1.05em; margin-left:-.525em; border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #8b95ab 0 26%, #3a4254 60%, #161b26 100%);
+  box-shadow:0 0 0 .09em var(--brd-tinta);
 }
 .board-tirante--izq{ left:16%; }
 .board-tirante--der{ right:16%; }
 
-/* La luz cálida que lo baña desde arriba */
+/* La luz cálida que lo baña desde arriba: más golosa, de farol de dibujito */
 .board-luz{
   position:absolute; left:50%; top:-6.5em; width:128%; height:12em;
   transform:translateX(-50%);
   background:
-    radial-gradient(52% 100% at 50% 0%, rgba(255,196,120,.30), transparent 72%),
-    radial-gradient(26% 60% at 50% 0%, rgba(255,225,180,.22), transparent 70%);
+    radial-gradient(52% 100% at 50% 0%, rgba(255,196,120,.38), transparent 72%),
+    radial-gradient(26% 60% at 50% 0%, rgba(255,228,185,.28), transparent 70%);
   opacity:var(--luz,1);
   filter:blur(.35em);
   pointer-events:none;
 }
 
-/* Marco metálico + tornillos */
+/* Marco metálico: contorno gordo, esquinas infladas, 3 bandas planas */
 .board-marco{
   position:relative;
-  padding:.6em;
-  border-radius:.62em;
+  padding:.72em;
+  border-radius:1.15em;
   background:
-    linear-gradient(180deg,#39404f 0%, #232936 8%, #171c27 46%, #0f131c 100%);
+    linear-gradient(180deg, #454f66 0 10%, #2c3345 10% 52%, #1a202d 52% 88%, #12161f 88% 100%);
   box-shadow:
-    inset 0 .06em 0 rgba(255,255,255,.16),
-    inset 0 -.06em 0 rgba(0,0,0,.7),
-    inset .06em 0 0 rgba(255,255,255,.05),
+    0 0 0 .17em var(--brd-tinta),
+    inset 0 .09em 0 rgba(222,234,255,.22),
+    inset 0 -.08em 0 rgba(0,0,0,.65),
+    inset .08em 0 0 rgba(255,255,255,.05),
     0 1.4em 3.2em rgba(0,0,0,.75),
     0 .35em 1em rgba(0,0,0,.55);
 }
+/* Tornillos grandotes, con su ranura torcida, como recién atornillados */
 .board-torn{
-  position:absolute; width:.44em; height:.44em; border-radius:50%;
-  background:radial-gradient(60% 60% at 35% 30%, #7d8699, #2b313d 70%, #12161f);
-  box-shadow:0 .05em .1em rgba(0,0,0,.8), inset 0 .03em 0 rgba(255,255,255,.35);
+  position:absolute; width:.82em; height:.82em; border-radius:50%; z-index:2;
+  background:radial-gradient(circle at 34% 30%, #9aa5bb 0 24%, #4a5468 58%, #1a202c 100%);
+  box-shadow:
+    0 0 0 .09em var(--brd-tinta),
+    0 .07em .12em rgba(0,0,0,.8),
+    inset 0 .05em 0 rgba(255,255,255,.4);
+}
+.board-torn::after{
+  content:''; position:absolute; left:15%; right:15%; top:50%;
+  height:.12em; margin-top:-.06em; border-radius:99px;
+  background:#0c1019;
+  transform:rotate(-36deg);
 }
 .board-torn--a{ left:.55em;  top:.55em; }
 .board-torn--b{ right:.55em; top:.55em; }
 .board-torn--c{ left:.55em;  bottom:.55em; }
 .board-torn--d{ right:.55em; bottom:.55em; }
+/* cada tornillo quedó apretado en otro ángulo, como atornillado a mano */
+.board-torn--b::after{ transform:rotate(48deg); }
+.board-torn--c::after{ transform:rotate(-79deg); }
+.board-torn--d::after{ transform:rotate(14deg); }
 
 /* Sombra propia sobre la pared */
 .board-sombra{
@@ -92,27 +125,27 @@
   position:relative; overflow:hidden;
   max-width:100%;
   padding:1.05em 1.25em .9em;
-  border-radius:.34em;
+  border-radius:.72em;
   background:
-    linear-gradient(180deg, rgba(255,190,110,.09), rgba(255,190,110,.02) 22%, transparent 46%),
+    linear-gradient(180deg, rgba(255,190,110,.10), rgba(255,190,110,.025) 22%, transparent 46%),
     linear-gradient(180deg, #0d111a 0%, #090c14 60%, #070911 100%);
   box-shadow:
-    inset 0 0 0 .06em rgba(0,0,0,.9),
+    inset 0 0 0 .11em rgba(4,7,12,.95),
     inset 0 .9em 2.4em rgba(0,0,0,.55);
 }
-/* Reflejo del vidrio que lo cubre */
+/* Reflejo del vidrio que lo cubre: dos banditas francas de historieta */
 .board-vidrio{
   position:absolute; inset:0; pointer-events:none;
   background:linear-gradient(104deg,
-    rgba(255,255,255,.055) 0%, rgba(255,255,255,.012) 22%,
-    transparent 44%, transparent 76%, rgba(255,255,255,.03) 100%);
+    transparent 0 8%, rgba(255,255,255,.05) 8% 16%, transparent 16% 20%,
+    rgba(255,255,255,.028) 20% 23%, transparent 23% 100%);
 }
 
 /* ── Encabezado: título + reloj ────────────────────────────────────────── */
 .board-head{
   display:flex; align-items:baseline; justify-content:space-between; gap:1.2em;
   padding:0 .15em .62em;
-  border-bottom:.06em solid rgba(120,140,190,.18);
+  border-bottom:.1em solid rgba(120,140,190,.2);
 }
 .board-head__tit{
   margin:0;
@@ -120,7 +153,7 @@
   font-family:var(--mono); font-weight:800;
   font-size:1.45em; line-height:1; letter-spacing:.2em;
   color:var(--neon);
-  text-shadow:0 0 .9em rgba(255,179,64,.4);
+  text-shadow:0 0 .9em rgba(255,179,64,.5), 0 .06em 0 rgba(6,10,19,.9);
 }
 .board-head__tit em{
   font-style:normal; font-size:.42em; letter-spacing:.34em;
@@ -153,7 +186,7 @@
 }
 .board-cab{
   padding:.6em .15em .45em;
-  border-bottom:.06em solid rgba(120,140,190,.12);
+  border-bottom:.08em solid rgba(120,140,190,.14);
 }
 .board-cab span{
   font-family:var(--mono); font-size:.64em; font-weight:600;
@@ -170,7 +203,8 @@
   --t:clamp(0, calc(var(--rp, 0) * var(--n, 1) - var(--i, 0)), 1);
   position:relative;
   width:100%; margin:0; padding:.3em .15em;
-  border:0; border-bottom:.06em solid rgba(120,140,190,.07);
+  border:0; border-bottom:.08em solid rgba(120,140,190,.09);
+  border-radius:.45em;
   background:transparent; text-align:left; cursor:pointer;
   font:inherit; color:inherit;
   pointer-events:auto;
@@ -185,8 +219,8 @@
 .board-fila:hover,
 .board-fila:focus-visible{
   outline:none;
-  background:linear-gradient(90deg, rgba(255,179,64,.16), rgba(255,179,64,.03) 55%, transparent);
-  box-shadow:inset .16em 0 0 var(--neon);
+  background:linear-gradient(90deg, rgba(255,179,64,.18), rgba(255,179,64,.04) 55%, transparent);
+  box-shadow:inset .22em 0 0 var(--neon);
 }
 .board-fila:hover .board-flap__c,
 .board-fila:focus-visible .board-flap__c{ text-shadow:0 0 .7em rgba(244,239,226,.35); }
@@ -195,18 +229,20 @@
 .board-fila__flecha{
   position:absolute; right:-.75em; top:50%;
   transform:translate(-.4em,-50%);
-  font-family:var(--mono); font-size:1.1em; color:var(--neon);
+  font-family:var(--mono); font-size:1.1em; font-weight:800; color:var(--neon);
   opacity:0; transition:opacity .2s ease, transform .2s ease;
   pointer-events:none;
 }
 
 .board-celda{ display:flex; white-space:nowrap; min-width:0; }
 
-/* ── La ficha (split-flap) ─────────────────────────────────────────────── */
+/* ── La ficha (split-flap) ─────────────────────────────────────────────
+   La mecánica y los tiempos quedan como estaban: sólo la esquina un pelo
+   más redonda y el borde apenas más marcado, para que acompañe al mueble. */
 .board-flap{
   position:relative; display:inline-block; flex:0 0 auto;
   width:1.02em; height:1.5em; margin-right:.06em;
-  border-radius:.1em;
+  border-radius:.16em;
   perspective:5em;
   background:linear-gradient(180deg,
     #1c2230 0%, #141924 48%, #0c1017 50%, #181d29 100%);
@@ -232,7 +268,7 @@
 /* La mitad que cae: gira sobre la bisagra mientras la ficha busca su letra */
 .board-flap__l{
   position:absolute; left:0; right:0; top:0; height:50%; z-index:4;
-  border-radius:.1em .1em 0 0;
+  border-radius:.16em .16em 0 0;
   background:linear-gradient(180deg, #232a3c 0%, #11151e 100%);
   box-shadow:0 .14em .2em rgba(0,0,0,.6);
   transform-origin:50% 100%;
@@ -269,13 +305,14 @@
 .board-pie{
   display:flex; align-items:center; gap:.6em;
   margin-top:.6em; padding-top:.55em;
-  border-top:.06em solid rgba(120,140,190,.12);
+  border-top:.08em solid rgba(120,140,190,.14);
   font-family:var(--mono); font-size:.6em; letter-spacing:.16em;
   text-transform:uppercase; color:var(--ink-faint);
 }
 .board-pie__led{
-  width:.5em; height:.5em; border-radius:50%;
-  background:var(--green); box-shadow:0 0 .8em var(--green);
+  width:.62em; height:.62em; border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 .8em var(--green), 0 0 0 .12em rgba(6,10,19,.85);
   animation:board-late 2.4s ease-in-out infinite;
 }
 .board-pie__hint{ margin-left:auto; color:rgba(255,179,64,.55); }

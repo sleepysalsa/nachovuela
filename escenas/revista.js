@@ -15,6 +15,10 @@
      · update() reparte el progreso p entre las hojas y sólo escribe dos custom
        properties (--a y --t) en las hojas que efectivamente cambiaron. Las
        sombras, el barrido de luz y el papel leen --t por herencia desde el CSS.
+     · CULLING: sólo las hojas a ±2 del pliego activo se pintan y reciben
+       estilos; el resto va visibility:hidden sin una sola escritura. El
+       will-change:transform se pone y saca por clase, sólo en las que giran.
+       Nada de lecturas de layout acá adentro: update() es sólo escritura.
 
    El índice:
      tapa → un pliego por destino con datos → pliegos de noticias → "buen viaje".
@@ -419,12 +423,20 @@
       + '</div>';
   }
 
-  /* estado vivo de la escena (una sola instancia) */
+  /* estado vivo de la escena (una sola instancia)
+     t[]    = último valor ESCRITO en el DOM por hoja (cache anti-escrituras)
+     tc[]   = valor computado este frame (matemática pura, sin DOM)
+     off[]  = ¿la hoja está culled (visibility:hidden)?
+     viva[] = ¿la hoja tiene will-change:transform puesto? */
   const S = {
     raiz: null, libro: null, hojas: [], frentes: [], dorsos: [],
-    baseDer: null, ini: [], fin: [], t: [],
+    baseDer: null, cinta: null, ini: [], fin: [], t: [], tc: [], off: [], viva: [],
     vIzq: null, vDer: null, ultEnt: -1, ultAbrir: -1, ultCinta: -1,
   };
+
+  /* Culling: sólo las hojas a ±VENTANA del pliego activo se pintan y reciben
+     estilos. Las demás quedan visibility:hidden con CERO escrituras. */
+  const VENTANA = 2;
 
   NV.escena('revista', {
 
@@ -499,6 +511,7 @@
       S.frentes = S.hojas.map(h => h.querySelector('.revista-cara--frente'));
       S.dorsos = S.hojas.map(h => h.querySelector('.revista-cara--dorso'));
       S.baseDer = el.querySelector('.revista-base--der');
+      S.cinta = el.querySelector('.revista-cinta');
 
       /* Reparto del progreso: la tapa y el cierre se toman su tiempo. */
       const n = S.hojas.length;
@@ -519,6 +532,9 @@
         S.ini[i] = Math.max(0, a - ext);
         S.fin[i] = Math.min(1, b + ext);
         S.t[i] = -1;                                       // fuerza la primera escritura
+        S.tc[i] = 0;
+        S.off[i] = false;
+        S.viva[i] = false;
       }
 
       /* Un solo listener para todo: botones de ficha. Los links van solos. */
@@ -546,30 +562,63 @@
         S.ultEnt = ent;
       }
 
-      /* Las hojas: sólo escribimos las que se movieron */
+      /* 1) Matemática pura: el t de cada hoja, sin tocar el DOM. flip cuenta
+         cuántas ya pasaron la mitad → de ahí sale el pliego activo. */
       let flip = 0;
       for (let i = 0; i < n; i++) {
         const t = U.ease(U.tramo(p, S.ini[i], S.fin[i]));
+        S.tc[i] = t;
         if (t > 0.5) flip++;
+      }
+      const s = flip - 1;                                  // última hoja dada vuelta
+
+      /* 2) Culling ±VENTANA del pliego activo (hojas s y s+1). Sólo esa
+         ventanita se pinta y recibe estilos; el resto, visibility:hidden y
+         CERO escrituras (el cache S.t guarda lo último escrito en el DOM,
+         así al volver a entrar en ventana se re-sincroniza sola). */
+      const lo = Math.max(0, s - VENTANA);
+      const hi = Math.min(n - 1, s + 1 + VENTANA);
+      for (let i = 0; i < n; i++) {
+        const h = S.hojas[i];
+        const fuera = i < lo || i > hi;
+        if (fuera !== S.off[i]) {
+          S.off[i] = fuera;
+          h.classList.toggle('revista-hoja--off', fuera);
+        }
+        if (fuera) {
+          if (S.viva[i]) {                                 // que no quede will-change colgado
+            S.viva[i] = false;
+            h.classList.remove('revista-hoja--viva');
+          }
+          continue;
+        }
+        const t = S.tc[i];
         if (t !== S.t[i]) {
           S.t[i] = t;
-          const h = S.hojas[i];
           h.style.setProperty('--t', t.toFixed(4));
           h.style.setProperty('--a', (-180 * t).toFixed(2) + 'deg');
+        }
+        /* will-change:transform sólo mientras la hoja está girando de verdad */
+        const viva = t > 0.0001 && t < 0.9999;
+        if (viva !== S.viva[i]) {
+          S.viva[i] = viva;
+          h.classList.toggle('revista-hoja--viva', viva);
         }
       }
 
       /* La tapa manda: mientras gira, el libro se corre y se endereza */
-      const abrir = U.clamp(S.t[0] * 1.35);
+      const abrir = U.clamp(S.tc[0] * 1.35);
       if (abrir !== S.ultAbrir) {
         S.raiz.style.setProperty('--rv-abrir', abrir.toFixed(4));
         S.ultAbrir = abrir;
       }
 
-      /* El marcador de tela se hamaca despacio con el scroll */
-      const cinta = (Math.sin(p * 7.2) * 2.6 + 1.4).toFixed(2);
-      if (cinta !== S.ultCinta) {
-        S.raiz.style.setProperty('--rv-cinta', cinta + 'deg');
+      /* El marcador de tela se hamaca despacio con el scroll. Cuantizado a
+         décima de grado (no se nota) y escrito sobre la cinta misma, así el
+         recálculo de estilo no arranca desde la raíz de la escena. */
+      const cinta = (Math.round((Math.sin(p * 7.2) * 2.6 + 1.4) * 10) / 10).toFixed(1);
+      if (cinta !== S.ultCinta && S.cinta) {
+        S.cinta.style.setProperty('--rv-cinta', cinta + 'deg');
         S.ultCinta = cinta;
       }
 
@@ -577,13 +626,12 @@
          exacto — a 20° de giro la página se ve y el navegador acierta el hit
          test igual, y así la ventana para hacer click no es un pelo. */
       const QUIETA = 0.88, CRUDA = 0.12;
-      const s = flip - 1;
       let nIzq = null, nDer = null;
       if (s < 0) {
-        nDer = S.t[0] <= CRUDA ? S.frentes[0] : null;
+        nDer = S.tc[0] <= CRUDA ? S.frentes[0] : null;
       } else {
-        nIzq = S.t[s] >= QUIETA ? S.dorsos[s] : null;
-        if (s + 1 < n) nDer = S.t[s + 1] <= CRUDA ? S.frentes[s + 1] : null;
+        nIzq = S.tc[s] >= QUIETA ? S.dorsos[s] : null;
+        if (s + 1 < n) nDer = S.tc[s + 1] <= CRUDA ? S.frentes[s + 1] : null;
         else nDer = S.baseDer;
       }
       if (nIzq !== S.vIzq) {

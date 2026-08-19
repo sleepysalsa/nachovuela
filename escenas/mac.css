@@ -9,6 +9,11 @@
      · el conjunto se inclina con rotateX(cam) para que la base se vea en escorzo,
        como una notebook mirada desde arriba.
    Todo lo que se mueve por scroll lo escribe mac.js (transform / opacity).
+
+   LOOK: caricatura de película de animación. Formas infladas y bien redondas,
+   contornos gruesos y parejos (--mac-linea), cel-shading de 2-3 tonos planos
+   con cortes duros, luz de borde, y un derrame ámbar cálido de la pantalla
+   sobre unas piernas de jean azul de dibujo animado.
    ========================================================================== */
 
 .esc--mac{
@@ -17,8 +22,10 @@
   --mac-w:  min(720px, 72vw, 70vh);          /* ancho de la notebook */
   --mac-d:  calc(var(--mac-w) * .665);       /* profundidad del deck */
   --mac-h:  calc(var(--mac-w) * .645);       /* alto de la tapa */
-  --mac-bz: calc(var(--mac-w) * .017);       /* marco de la pantalla */
-  --mac-al: calc(var(--mac-w) * .012);       /* radio "aluminio" */
+  --mac-bz: calc(var(--mac-w) * .028);       /* marco de la pantalla, bien gordito */
+  --mac-al: calc(var(--mac-w) * .012);       /* radio "aluminio" (legado) */
+  --mac-tinta:#060a13;                                   /* tinta del contorno */
+  --mac-linea:max(2.5px, calc(var(--mac-w) * .004));     /* grosor del contorno */
 }
 @media (max-width:820px){
   .esc--mac{ --mac-w: min(94vw, 56vh); }
@@ -26,38 +33,62 @@
 /* con la tapa abierta la escena pasa al frente para que los clics lleguen */
 .esc--mac.mac--usable{ z-index:12; }
 
-/* ============================ EL REGAZO ================================== */
+/* ============================ EL REGAZO ==================================
+   Piernas de jean azul de caricatura: gorditas, redondeadas, con costura
+   cosida en ámbar y un parche de luz en la rodilla. El contorno grueso lo
+   dibuja un drop-shadow en 4 direcciones sobre la silueta recortada. */
 .mac-regazo{
   position:absolute; left:50%; bottom:-1%;
-  width:min(1600px, 172%); height:54%;
+  width:min(1600px, 172%); height:56%;
   transform:translateX(-50%);
   pointer-events:none;
 }
 .mac-pierna{
-  position:absolute; top:0; bottom:0; width:46%;
-  clip-path:polygon(29% 0, 69% 0, 100% 100%, 0 100%);
+  position:absolute; top:0; bottom:0; width:47%;
+  filter:
+    drop-shadow(3px 0 0 rgba(6,10,19,.85)) drop-shadow(-3px 0 0 rgba(6,10,19,.85))
+    drop-shadow(0 3px 0 rgba(6,10,19,.85)) drop-shadow(0 -3px 0 rgba(6,10,19,.85));
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, rgba(0,0,0,.8) 16%, #000 38%);
+          mask-image:linear-gradient(180deg, transparent 0, rgba(0,0,0,.8) 16%, #000 38%);
+}
+/* la silueta: un muslo inflado que se acerca a cámara, con panza en los lados */
+.mac-pierna::before{
+  content:''; position:absolute; inset:0;
+  clip-path:polygon(31% 0, 67% 0, 78% 6%, 87% 16%, 94% 31%, 98% 50%, 100% 72%,
+                    100% 100%, 0 100%, 0 74%, 1% 52%, 4% 32%, 10% 17%, 20% 6%);
   background:
-    repeating-linear-gradient(104deg, rgba(255,255,255,.018) 0 1px, transparent 1px 4px),
-    linear-gradient(180deg, #151b2b 0%, #0f1421 40%, #0a0e18 74%, #06080e 100%);
-  -webkit-mask-image:linear-gradient(180deg, transparent 0, rgba(0,0,0,.65) 22%, #000 46%);
-          mask-image:linear-gradient(180deg, transparent 0, rgba(0,0,0,.65) 22%, #000 46%);
-  box-shadow:inset 0 0 calc(var(--mac-w)*.12) rgba(0,0,0,.55);
+    /* rodilla gastada: parche de luz redondo, bien de dibujo */
+    radial-gradient(34% 26% at 56% 64%, rgba(150,185,240,.16) 0%, rgba(150,185,240,.06) 55%, transparent 75%),
+    /* trama del jean, apenas */
+    repeating-linear-gradient(104deg, rgba(255,255,255,.03) 0 2px, transparent 2px 8px),
+    /* cel-shading: cilindro de denim en 4 planos con corte duro,
+       más claro hacia adentro, donde pega la luz de la pantalla */
+    linear-gradient(90deg, #101a31 0 13%, #1e2f52 13% 45%, #2a3f6b 45% 82%, #182647 82% 100%);
+}
+/* la costura: puntadas ámbar sobre el muslo, como jean cosido a mano */
+.mac-pierna::after{
+  content:''; position:absolute;
+  top:36%; bottom:14%; right:26%; width:max(3px, calc(var(--mac-w)*.005));
+  border-radius:99px;
+  transform:rotate(8deg); transform-origin:50% 100%;
+  background:repeating-linear-gradient(180deg,
+    rgba(255,196,110,.4) 0 calc(var(--mac-w)*.016),
+    transparent calc(var(--mac-w)*.016) calc(var(--mac-w)*.038));
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 18%, #000 78%, transparent 100%);
+          mask-image:linear-gradient(180deg, transparent 0, #000 18%, #000 78%, transparent 100%);
+  opacity:.6;
 }
 .mac-pierna--i{ left:1%;  }
 .mac-pierna--d{ right:1%; transform:scaleX(-1); }
-/* costura interna + filo de luz en el borde de afuera */
-.mac-pierna::after{
-  content:''; position:absolute; inset:0;
-  background:
-    linear-gradient(97deg, transparent 60%, rgba(160,190,255,.05) 70%, transparent 77%),
-    linear-gradient(263deg, transparent 74%, rgba(150,180,240,.075) 86%, transparent 94%);
-}
-/* la luz de la pantalla derramada sobre los jeans (la enciende mac.js) */
+/* la luz de la pantalla derramada sobre los jeans (la enciende mac.js):
+   ahora es un baño ámbar cálido, generoso, de fogata de dibujito */
 .mac-regazo__luz{
-  position:absolute; left:16%; right:16%; top:-6%; height:66%;
+  position:absolute; left:8%; right:8%; top:-10%; height:82%;
   opacity:0; mix-blend-mode:screen; pointer-events:none;
-  background:radial-gradient(58% 62% at 50% 0%, rgba(150,186,255,.20) 0%,
-             rgba(120,150,225,.07) 45%, transparent 72%);
+  background:
+    radial-gradient(56% 58% at 50% 0%, rgba(255,190,96,.5) 0%,
+                    rgba(255,166,64,.2) 44%, rgba(230,140,60,.06) 66%, transparent 80%),
+    radial-gradient(30% 34% at 50% 0%, rgba(255,226,170,.36) 0%, transparent 70%);
 }
 
 /* ============================ LA NOTEBOOK ================================ */
@@ -75,101 +106,114 @@
   transform:translateY(40vh) rotateX(-27deg);   /* mac.js lo reescribe */
 }
 
-/* sombra proyectada sobre el regazo, en el plano del deck */
+/* sombra proyectada sobre el regazo, en el plano del deck: una mancha blanda */
 .mac-sombra{
   position:absolute; top:0; left:-16%;
   width:132%; height:calc(var(--mac-d) * 1.55);
   transform-origin:50% 0%;
   transform:rotateX(90deg) translateZ(-6px) translateY(-8%);
-  background:radial-gradient(50% 50% at 50% 52%, rgba(0,0,0,.82) 0%,
-             rgba(0,0,0,.42) 44%, rgba(0,0,0,0) 74%);
+  background:radial-gradient(48% 46% at 50% 52%, rgba(0,0,0,.85) 0%,
+             rgba(0,0,0,.45) 46%, rgba(0,0,0,0) 72%);
 }
 
-/* ------------------------------ la base --------------------------------- */
+/* ------------------------------ la base ---------------------------------
+   Un deck de juguete: esquinas delanteras bien redondas, contorno grueso,
+   aluminio en 3 tonos planos y filo de luz en el borde que mira a cámara. */
 .mac-base{
   position:absolute; top:0; left:0; width:100%; height:var(--mac-d);
   transform-origin:50% 0%;
   transform:rotateX(90deg) translateZ(-2px);
-  border-radius:calc(var(--mac-al)*.5) calc(var(--mac-al)*.5) calc(var(--mac-al)*2.2) calc(var(--mac-al)*2.2);
+  border-radius:calc(var(--mac-w)*.022) calc(var(--mac-w)*.022)
+                calc(var(--mac-w)*.065) calc(var(--mac-w)*.065);
   background:
-    linear-gradient(105deg, rgba(255,255,255,.05) 0%, transparent 26%, transparent 74%, rgba(255,255,255,.035) 100%),
-    linear-gradient(180deg, #1b2130 0%, #232a3b 38%, #2b3346 78%, #39415580 96%, #454e64 100%);
+    linear-gradient(105deg, rgba(255,255,255,.05) 0 8%, transparent 8% 92%, rgba(255,255,255,.04) 92% 100%),
+    linear-gradient(180deg, #222b41 0 26%, #2c3854 26% 62%, #3b4a6b 62% 88%, #48587c 88% 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.10),
-    inset 0 calc(var(--mac-w)*-.004) 0 rgba(255,255,255,.30),
+    0 0 0 var(--mac-linea) var(--mac-tinta),
+    inset 0 calc(var(--mac-w)*.006) 0 rgba(214,230,255,.16),
+    inset 0 calc(var(--mac-w)*-.008) 0 rgba(236,246,255,.24),
     0 calc(var(--mac-w)*.02) calc(var(--mac-w)*.05) rgba(0,0,0,.55);
 }
-/* chaflán del borde delantero: la línea de luz mecanizada */
+/* chaflán del borde delantero: la línea de luz, ahora gorda y golosa */
 .mac-canto{
-  position:absolute; left:3%; right:3%; bottom:calc(var(--mac-w)*.002);
-  height:calc(var(--mac-w)*.0045); border-radius:99px;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.55) 18%,
-             rgba(255,255,255,.75) 50%, rgba(255,255,255,.55) 82%, transparent 100%);
+  position:absolute; left:5%; right:5%; bottom:calc(var(--mac-w)*.004);
+  height:calc(var(--mac-w)*.008); border-radius:99px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,236,200,.6) 18%,
+             rgba(255,246,224,.85) 50%, rgba(255,236,200,.6) 82%, transparent 100%);
+  opacity:.85;
+}
+/* muesca para abrir la tapa: un mordisco redondo bien visible */
+.mac-muesca{
+  position:absolute; left:42.5%; width:15%; bottom:0; height:3.4%;
+  border-radius:99px 99px 0 0;
+  background:linear-gradient(180deg, #0b101c 0 55%, #141b2b 55% 100%);
+  box-shadow:0 0 0 max(1.5px, calc(var(--mac-w)*.0025)) var(--mac-tinta);
+}
+/* parlantes: lunares grandes, de colador de dibujito */
+.mac-rejilla{
+  position:absolute; top:9%; height:37%; width:5.6%;
+  border-radius:calc(var(--mac-w)*.012);
+  background-image:radial-gradient(circle, rgba(4,7,13,.75) 38%, transparent 44%);
+  background-size:calc(var(--mac-w)*.015) calc(var(--mac-w)*.015);
   opacity:.75;
 }
-/* muesca para abrir la tapa */
-.mac-muesca{
-  position:absolute; left:44%; width:12%; bottom:0; height:2.4%;
-  border-radius:99px 99px 0 0;
-  background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.15));
-}
-/* parlantes */
-.mac-rejilla{
-  position:absolute; top:9%; height:37%; width:7.6%;
-  border-radius:calc(var(--mac-w)*.004);
-  background-image:radial-gradient(circle, rgba(0,0,0,.5) 34%, transparent 38%);
-  background-size:calc(var(--mac-w)*.0092) calc(var(--mac-w)*.0092);
-  opacity:.6;
-}
-.mac-rejilla--i{ left:2.6%; }
-.mac-rejilla--d{ right:2.6%; }
+.mac-rejilla--i{ left:2.4%; }
+.mac-rejilla--d{ right:2.4%; }
 
-/* teclado: teclas insinuadas, no legibles — se leen por la luz */
+/* teclado: teclas grandes, mullidas y bien separadas — dan ganas de apretarlas */
 .mac-teclado{
-  position:absolute; left:12.4%; right:12.4%; top:7.5%; height:39%;
-  display:flex; flex-direction:column; gap:1.4%;
-  padding:1.1%;
-  border-radius:calc(var(--mac-w)*.006);
-  background:linear-gradient(180deg, rgba(0,0,0,.42), rgba(0,0,0,.26));
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.35);
+  position:absolute; left:9.6%; right:9.6%; top:6.6%; height:42%;
+  display:flex; flex-direction:column; gap:2%;
+  padding:1.6%;
+  border-radius:calc(var(--mac-w)*.018);
+  background:linear-gradient(180deg, #0a0e18 0 50%, #0e1422 50% 100%);
+  box-shadow:
+    inset 0 0 0 max(2px, calc(var(--mac-w)*.003)) var(--mac-tinta),
+    inset 0 calc(var(--mac-w)*.004) calc(var(--mac-w)*.008) rgba(0,0,0,.6);
 }
-.mac-krow{ display:flex; flex:1; gap:1%; }
+.mac-krow{ display:flex; flex:1; gap:1.6%; }
 .mac-krow--fn{ flex:.62; }
 .mac-key{
   flex:1; min-width:0;
-  border-radius:calc(var(--mac-w)*.0035);
-  background:linear-gradient(180deg, #2f3648 0%, #232936 58%, #171c27 100%);
+  border-radius:calc(var(--mac-w)*.009);
+  background:linear-gradient(180deg, #3f4d6d 0 52%, #2b3752 52% 100%);
   box-shadow:
-    inset 0 calc(var(--mac-w)*.0012) 0 rgba(255,255,255,.13),
-    0 calc(var(--mac-w)*.0014) calc(var(--mac-w)*.0022) rgba(0,0,0,.55);
+    0 0 0 max(1.5px, calc(var(--mac-w)*.0022)) var(--mac-tinta),
+    inset 0 calc(var(--mac-w)*.0038) 0 rgba(226,238,255,.26),
+    inset 0 calc(var(--mac-w)*-.0034) 0 rgba(4,7,13,.5),
+    0 calc(var(--mac-w)*.0022) calc(var(--mac-w)*.003) rgba(0,0,0,.5);
 }
-/* trackpad */
+/* trackpad: una almohadilla redondeada con su brillito arriba */
 .mac-trackpad{
-  position:absolute; left:31%; width:38%; top:54.5%; height:33%;
-  border-radius:calc(var(--mac-w)*.008);
-  background:linear-gradient(180deg, #232a39 0%, #1b212d 60%, #161b25 100%);
+  position:absolute; left:30%; width:40%; top:55%; height:33.5%;
+  border-radius:calc(var(--mac-w)*.026);
+  background:linear-gradient(180deg, #2e3a56 0 34%, #253048 34% 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.055),
-    inset 0 calc(var(--mac-w)*.0022) calc(var(--mac-w)*.007) rgba(0,0,0,.5),
-    0 0 calc(var(--mac-w)*.01) rgba(0,0,0,.3);
+    0 0 0 max(2px, calc(var(--mac-w)*.003)) var(--mac-tinta),
+    inset 0 calc(var(--mac-w)*.004) 0 rgba(214,230,255,.18),
+    inset 0 calc(var(--mac-w)*-.005) calc(var(--mac-w)*.008) rgba(0,0,0,.45);
 }
-/* la luz de la pantalla cayendo sobre el aluminio (la enciende mac.js) */
+/* la luz de la pantalla cayendo sobre el aluminio (la enciende mac.js):
+   ámbar tibio, como si el deck se calentara con la interfaz */
 .mac-deckluz{
   position:absolute; inset:0; opacity:0; pointer-events:none;
   border-radius:inherit; mix-blend-mode:screen;
-  background:linear-gradient(180deg, rgba(146,182,255,.24) 0%, rgba(146,182,255,.09) 34%,
-             rgba(146,182,255,.02) 62%, transparent 82%);
+  background:linear-gradient(180deg, rgba(255,193,112,.30) 0%, rgba(255,183,96,.12) 36%,
+             rgba(255,172,84,.03) 64%, transparent 84%);
 }
 
-/* ------------------------------ la bisagra ------------------------------- */
+/* ------------------------------ la bisagra -------------------------------
+   Regordeta: un lomo de tres tonos con contorno, como caño de juguete. */
 .mac-lomo{
   position:absolute; left:3.4%; right:3.4%; bottom:0;
-  height:calc(var(--mac-w)*.022);
+  height:calc(var(--mac-w)*.034);
   transform-origin:50% 100%;
   transform:rotateX(-90deg);                 /* mac.js lo acompaña con la tapa */
-  border-radius:calc(var(--mac-w)*.004) calc(var(--mac-w)*.004) 0 0;
-  background:linear-gradient(180deg, #454d61 0%, #2a3140 34%, #141922 72%, #080b11 100%);
-  box-shadow:0 0 calc(var(--mac-w)*.02) rgba(0,0,0,.65);
+  border-radius:calc(var(--mac-w)*.02) calc(var(--mac-w)*.02) 0 0;
+  background:linear-gradient(180deg, #4d5c7f 0 30%, #333f5d 30% 62%, #161d2e 62% 100%);
+  box-shadow:
+    0 0 0 var(--mac-linea) var(--mac-tinta),
+    0 0 calc(var(--mac-w)*.02) rgba(0,0,0,.6);
 }
 
 /* ------------------------------- la tapa --------------------------------- */
@@ -179,67 +223,75 @@
   transform:rotateX(-90deg);                 /* cerrada por defecto */
   transform-style:preserve-3d;
 }
-/* dorso de aluminio (lo que se ve con la tapa cerrada) */
+/* dorso de aluminio (lo que se ve con la tapa cerrada): gordito e inflado */
 .mac-tapa__dorso{
   position:absolute; inset:0;
   transform:translateZ(-.6px) rotateY(180deg);
   backface-visibility:hidden;
   display:flex; align-items:center; justify-content:center;
-  border-radius:calc(var(--mac-al)*1.4) calc(var(--mac-al)*1.4) calc(var(--mac-al)*.5) calc(var(--mac-al)*.5);
+  border-radius:calc(var(--mac-w)*.055) calc(var(--mac-w)*.055)
+                calc(var(--mac-w)*.018) calc(var(--mac-w)*.018);
   background:
-    linear-gradient(196deg, rgba(255,255,255,.10) 0%, transparent 28%, transparent 72%, rgba(255,255,255,.045) 100%),
-    linear-gradient(178deg, #39415580 0%, #2a3142 26%, #1d2330 62%, #12161f 100%);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07), inset 0 0 calc(var(--mac-w)*.06) rgba(0,0,0,.45);
+    linear-gradient(188deg, #41506f 0 24%, #303d5a 24% 62%, #202944 62% 100%);
+  box-shadow:
+    0 0 0 var(--mac-linea) var(--mac-tinta),
+    inset 0 calc(var(--mac-w)*.007) 0 rgba(218,234,255,.20),
+    inset 0 calc(var(--mac-w)*-.006) 0 rgba(0,0,0,.35);
 }
 .mac-marca{
   transform:scaleX(-1);                       /* el dorso está espejado */
   font-family:var(--serif); font-weight:600;
-  font-size:calc(var(--mac-w)*.048); letter-spacing:-.02em;
-  color:rgba(244,239,226,.42);
-  text-shadow:0 0 calc(var(--mac-w)*.035) rgba(255,179,64,.30);
+  font-size:calc(var(--mac-w)*.062); letter-spacing:-.02em;
+  color:rgba(246,240,226,.6);
+  text-shadow:0 0 calc(var(--mac-w)*.045) rgba(255,179,64,.45);
 }
-.mac-marca em{ font-style:italic; font-weight:400; color:rgba(255,179,64,.62); }
+.mac-marca em{ font-style:italic; font-weight:400; color:rgba(255,185,72,.85); }
 
-/* cara interna: marco + pantalla */
+/* cara interna: marco + pantalla, con el mismo contorno gordo */
 .mac-tapa__cara{
   position:absolute; inset:0;
   transform:translateZ(.6px);
   backface-visibility:hidden;
-  border-radius:calc(var(--mac-al)*1.4) calc(var(--mac-al)*1.4) calc(var(--mac-al)*.5) calc(var(--mac-al)*.5);
-  background:linear-gradient(180deg, #0b0e15 0%, #070a10 60%, #04060b 100%);
+  border-radius:calc(var(--mac-w)*.055) calc(var(--mac-w)*.055)
+                calc(var(--mac-w)*.018) calc(var(--mac-w)*.018);
+  background:linear-gradient(180deg, #131a2a 0 42%, #0b101c 42% 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.055),
+    0 0 0 var(--mac-linea) var(--mac-tinta),
+    inset 0 0 0 1px rgba(255,255,255,.06),
+    inset 0 calc(var(--mac-w)*.005) 0 rgba(210,228,255,.10),
     0 calc(var(--mac-w)*.01) calc(var(--mac-w)*.04) rgba(0,0,0,.6);
 }
 .mac-camara{
-  position:absolute; left:50%; top:calc(var(--mac-bz)*.3);
-  width:calc(var(--mac-w)*.0045); height:calc(var(--mac-w)*.0045);
-  margin-left:calc(var(--mac-w)*-.00225);
-  border-radius:50%; background:#1b2434;
-  box-shadow:0 0 0 1px rgba(255,255,255,.05);
+  position:absolute; left:50%; top:calc(var(--mac-bz)*.30);
+  width:calc(var(--mac-w)*.012); height:calc(var(--mac-w)*.012);
+  margin-left:calc(var(--mac-w)*-.006);
+  border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #6d8cc2 0 26%, #26365a 58%, #101a30 100%);
+  box-shadow:0 0 0 max(1.5px, calc(var(--mac-w)*.0025)) var(--mac-tinta);
 }
 
 /* ============================ LA PANTALLA ================================ */
 .mac-scr{
   position:absolute; inset:var(--mac-bz);
   overflow:hidden;
-  border-radius:calc(var(--mac-w)*.005);
+  border-radius:calc(var(--mac-w)*.016);
   background:#04060b;
-  box-shadow:inset 0 0 calc(var(--mac-w)*.06) rgba(0,0,0,.85);
+  box-shadow:
+    0 0 0 max(2px, calc(var(--mac-w)*.003)) var(--mac-tinta),
+    inset 0 0 calc(var(--mac-w)*.05) rgba(0,0,0,.85);
 }
-/* destello del encendido */
+/* destello del encendido: ahora con corazón calentito */
 .mac-scr__flash{
   position:absolute; inset:0; opacity:0; pointer-events:none; mix-blend-mode:screen;
-  background:radial-gradient(140% 92% at 50% 50%, rgba(216,233,255,.95) 0%,
-             rgba(126,166,255,.34) 40%, transparent 74%);
+  background:radial-gradient(140% 92% at 50% 50%, rgba(255,241,214,.95) 0%,
+             rgba(255,196,110,.38) 40%, transparent 74%);
 }
-/* reflejo diagonal sobre el vidrio */
+/* reflejo diagonal sobre el vidrio: dos banditas francas, estilo cómic */
 .mac-scr__vidrio{
   position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
   background:linear-gradient(114deg,
-    rgba(255,255,255,.085) 0%, rgba(255,255,255,.030) 13%, rgba(255,255,255,.006) 27%,
-    transparent 40%, transparent 62%,
-    rgba(255,255,255,.045) 73%, rgba(255,255,255,.012) 83%, transparent 93%);
+    transparent 0 8%, rgba(255,255,255,.05) 8% 16%, transparent 16% 20%,
+    rgba(255,255,255,.03) 20% 23%, transparent 23% 100%);
 }
 
 /* --------- la interfaz, diseñada a 760px lógicos y escalada por JS -------- */
@@ -252,7 +304,7 @@
   font-family:var(--sans); color:var(--ink);
   background:
     radial-gradient(640px 340px at 80% -14%, rgba(46,64,110,.42) 0%, transparent 62%),
-    radial-gradient(540px 320px at 6% 2%, rgba(245,166,35,.11) 0%, transparent 58%),
+    radial-gradient(540px 320px at 6% 2%, rgba(245,166,35,.13) 0%, transparent 58%),
     linear-gradient(180deg, #0d1223 0%, #080b16 100%);
 }
 /* los clics sólo cuando la tapa está abierta */
@@ -262,7 +314,7 @@
 .mac-top{
   flex:0 0 auto; display:flex; align-items:center; gap:12px;
   height:38px; padding:0 18px;
-  border-bottom:1px solid var(--line);
+  border-bottom:2px solid rgba(120,140,190,.22);
   background:linear-gradient(180deg, rgba(9,13,24,.92), rgba(9,13,24,.35));
 }
 .mac-top__marca{ font-family:var(--serif); font-size:15px; font-weight:600; letter-spacing:-.015em; }
@@ -270,7 +322,7 @@
 .mac-top__tag{
   font-family:var(--mono); font-size:8.5px; letter-spacing:.2em;
   text-transform:uppercase; color:var(--ink-faint);
-  padding-left:12px; border-left:1px solid var(--line);
+  padding-left:12px; border-left:2px solid var(--line);
 }
 .mac-top__estado{
   margin-left:auto; display:flex; align-items:center; gap:6px;
@@ -278,8 +330,9 @@
   text-transform:uppercase; color:var(--ink-dim);
 }
 .mac-top__estado i{
-  width:5px; height:5px; border-radius:50%; background:var(--green);
-  box-shadow:0 0 8px var(--green); animation:mac-latir 2.6s ease-in-out infinite;
+  width:6px; height:6px; border-radius:50%; background:var(--green);
+  box-shadow:0 0 8px var(--green), 0 0 0 1.5px rgba(6,10,19,.8);
+  animation:mac-latir 2.6s ease-in-out infinite;
 }
 @keyframes mac-latir{ 0%,100%{opacity:1} 50%{opacity:.3} }
 
@@ -290,7 +343,8 @@
   padding:14px 18px 16px;
 }
 
-/* --------------------------- el buscador -------------------------------- */
+/* --------------------------- el buscador --------------------------------
+   Campos y botón como piezas de juguete: bordes gordos y esquinas mullidas */
 .mac-form{ display:grid; grid-template-columns:1.5fr 1fr .58fr .58fr; gap:9px 10px; }
 .mac-campo{ display:flex; flex-direction:column; gap:5px; min-width:0; }
 .mac-campo>span{
@@ -300,15 +354,16 @@
 .mac-sel,.mac-num{
   width:100%; height:32px; padding:0 10px;
   appearance:none; -webkit-appearance:none;
-  background:rgba(23,31,52,.75);
-  border:1px solid var(--line-strong); border-radius:8px;
-  color:var(--ink); font-family:var(--sans); font-size:12.5px; font-weight:500;
+  background:rgba(23,31,52,.8);
+  border:2px solid rgba(120,140,190,.32); border-radius:11px;
+  color:var(--ink); font-family:var(--sans); font-size:12.5px; font-weight:600;
   outline:none; cursor:pointer;
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.07);
   transition:border-color .18s, background .18s;
 }
 .mac-sel{
   padding-right:26px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1.2 1.4 5 5.1l3.8-3.7' fill='none' stroke='%23ffb340' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1.2 1.4 5 5.1l3.8-3.7' fill='none' stroke='%23ffb340' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat; background-position:right 10px center;
   text-overflow:ellipsis;
 }
@@ -317,23 +372,31 @@
 .mac-num::-webkit-outer-spin-button,
 .mac-num::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 .mac-num{ -moz-appearance:textfield; }
-.mac-sel:hover,.mac-num:hover{ border-color:rgba(255,179,64,.4); }
+.mac-sel:hover,.mac-num:hover{ border-color:rgba(255,179,64,.5); }
 .mac-sel:focus,.mac-num:focus{
   border-color:var(--neon); background:rgba(30,40,66,.9);
-  box-shadow:0 0 0 3px rgba(255,179,64,.14);
+  box-shadow:0 0 0 3px rgba(255,179,64,.18), inset 0 1.5px 0 rgba(255,255,255,.07);
 }
 .mac-btn{
   grid-column:1 / -1; height:38px;
   display:flex; align-items:center; justify-content:center; gap:9px;
-  border:none; border-radius:9px; cursor:pointer;
+  border:none; border-radius:14px; cursor:pointer;
   font-family:var(--sans); font-size:13px; font-weight:700; letter-spacing:.005em;
   color:#241804;
-  background:linear-gradient(180deg, var(--neon-2) 0%, var(--neon) 62%, #f09a1e 100%);
-  box-shadow:0 8px 20px -10px rgba(255,179,64,.85), inset 0 1px 0 rgba(255,255,255,.5);
+  background:linear-gradient(180deg, var(--neon-2) 0 46%, var(--neon) 46% 82%, #ef9a1c 82% 100%);
+  box-shadow:
+    0 0 0 2.5px rgba(30,19,4,.9),
+    inset 0 2px 0 rgba(255,255,255,.55),
+    inset 0 -3px 0 rgba(150,82,0,.4),
+    0 8px 20px -10px rgba(255,179,64,.85);
   transition:filter .18s, transform .12s, box-shadow .18s;
 }
 .mac-btn span{ font-size:12px; transform:translateY(-.5px); }
-.mac-btn:hover{ filter:brightness(1.07); box-shadow:0 10px 24px -10px rgba(255,179,64,1); }
+.mac-btn:hover{ filter:brightness(1.07); box-shadow:
+    0 0 0 2.5px rgba(30,19,4,.9),
+    inset 0 2px 0 rgba(255,255,255,.55),
+    inset 0 -3px 0 rgba(150,82,0,.4),
+    0 10px 24px -10px rgba(255,179,64,1); }
 .mac-btn:active{ transform:translateY(1px); }
 
 /* --------------------------- los resultados ----------------------------- */
@@ -357,18 +420,19 @@
   height:40px; padding:0 11px; flex:0 0 auto;
   text-align:left; cursor:pointer; color:var(--ink);
   font-family:var(--sans);
-  background:rgba(20,27,48,.6);
-  border:1px solid var(--line); border-radius:9px;
+  background:rgba(20,27,48,.65);
+  border:2px solid rgba(120,140,190,.2); border-radius:12px;
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.05);
   transition:background .18s, border-color .18s, transform .18s;
 }
 .mac-fila:hover{
-  background:rgba(33,44,74,.9); border-color:rgba(255,179,64,.45);
+  background:rgba(33,44,74,.9); border-color:rgba(255,179,64,.5);
   transform:translateX(2px);
 }
 .mac-fila:active{ transform:translateX(2px) scale(.995); }
 .mac-fila--top{
-  border-color:rgba(255,179,64,.35);
-  background:linear-gradient(90deg, rgba(255,179,64,.13) 0%, rgba(20,27,48,.62) 44%);
+  border-color:rgba(255,179,64,.45);
+  background:linear-gradient(90deg, rgba(255,179,64,.14) 0%, rgba(20,27,48,.62) 44%);
 }
 .mac-fila__cod{
   display:flex; align-items:center; gap:5px;
@@ -378,7 +442,7 @@
 .mac-tag{
   font-family:var(--mono); font-style:normal; font-size:7px; letter-spacing:.1em;
   text-transform:uppercase; color:var(--blue);
-  border:1px solid rgba(110,168,255,.35); border-radius:4px; padding:1px 3px;
+  border:1.5px solid rgba(110,168,255,.4); border-radius:6px; padding:1px 4px;
 }
 .mac-fila__fx{ display:flex; align-items:center; gap:8px; font-size:12px; min-width:0; }
 .mac-fila__fx b{ font-weight:600; white-space:nowrap; }
@@ -404,7 +468,7 @@
   flex:1; display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:8px; text-align:center;
   padding:14px 34px;
-  border:1px dashed var(--line); border-radius:12px;
+  border:2px dashed rgba(120,140,190,.28); border-radius:16px;
   background:radial-gradient(70% 90% at 50% 0%, rgba(46,64,110,.18), transparent 70%);
 }
 .mac-vacio__ic{ font-size:19px; color:var(--neon); opacity:.55; }

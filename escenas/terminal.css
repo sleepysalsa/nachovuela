@@ -51,11 +51,14 @@
   position:absolute; left:0; right:0; top:calc(var(--hz) - 8.5%); height:8.5%;
 }
 .terminal-skyline svg{ width:100%; height:100%; display:block; }
-.terminal-sky__masa{ fill:#070b16; }
+.terminal-sky__masa rect{ fill:#0a101f; stroke:#1c2947; stroke-width:2; }
 .terminal-sky__ventanas rect{ fill:#ffc98a; }
-.terminal-sky__torre path{ fill:#080d19; }
+.terminal-sky__torre path{ fill:#0c1322; stroke:#1c2947; stroke-width:2; }
+.terminal-sky__torre .terminal-sky__torre-luz{ fill:#ffd9a0; stroke:#7a5a2e; }
+.terminal-sky__torre-vent{ fill:#ffc98a; opacity:.75; }
 .terminal-sky__faro{
-  fill:#ff5a6e; filter:drop-shadow(0 0 6px rgba(255,90,110,.9));
+  fill:#ff5a6e; stroke:#33101a; stroke-width:2;
+  filter:drop-shadow(0 0 8px rgba(255,90,110,.95));
   animation:terminal-faro 3.6s steps(1,end) infinite;
 }
 @keyframes terminal-faro{ 0%,12%{opacity:1} 13%,100%{opacity:.05} }
@@ -130,17 +133,23 @@
 }
 .terminal-avion--izq .terminal-avion__cuerpo{ transform:scale(var(--s)) scaleX(-1); }
 .terminal-avion__cuerpo svg, .terminal-despegue__nave svg{
-  width:100%; height:auto; display:block; fill:#0a1122;
-  filter:drop-shadow(0 0 6px rgba(0,0,0,.6));
+  width:100%; height:auto; display:block;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.55));
 }
+/* juguete: dos tonos + contorno gordo + ventanillas encendidas */
+.terminal-av-cuerpo{ fill:#243a63; stroke:#060a14; stroke-width:3; stroke-linejoin:round; }
+.terminal-av-panza{ fill:#141f3a; }
+.terminal-av-metal{ fill:#1b2c4e; stroke:#060a14; stroke-width:3; stroke-linejoin:round; }
+.terminal-av-vidrio{ fill:#aacdf4; stroke:#060a14; stroke-width:2.4; }
+.terminal-av-ventana{ fill:var(--neon-2); stroke:#060a14; stroke-width:2; }
 .terminal-nav{
   position:absolute; width:3px; height:3px; border-radius:50%;
   animation:terminal-baliza-a 2.4s ease-out infinite;
 }
-.terminal-nav--roja{ left:2%; top:52%; background:#ff5a6e; box-shadow:0 0 8px 2px rgba(255,90,110,.75); }
-.terminal-nav--verde{ right:1%; top:50%; background:#34e0a1; box-shadow:0 0 8px 2px rgba(52,224,161,.7);
+.terminal-nav--roja{ left:10%; top:8%; background:#ff5a6e; box-shadow:0 0 8px 2px rgba(255,90,110,.75); }
+.terminal-nav--verde{ right:2%; top:54%; background:#34e0a1; box-shadow:0 0 8px 2px rgba(52,224,161,.7);
   animation-duration:3.1s; }
-.terminal-nav--blanca{ left:52%; top:14%; background:#fff; box-shadow:0 0 10px 3px rgba(255,255,255,.75);
+.terminal-nav--blanca{ left:54%; top:20%; background:#fff; box-shadow:0 0 10px 3px rgba(255,255,255,.75);
   animation:terminal-baliza-b 3.4s linear infinite; }
 
 .terminal-tag{
@@ -179,8 +188,16 @@
   will-change:transform;
 }
 .terminal-carro__tren{ position:relative; transform:scale(.6); transform-origin:50% 100%; }
-.terminal-carro__tren svg{ width:100%; height:auto; display:block; fill:#080d18;
+.terminal-carro__tren svg{ width:100%; height:auto; display:block;
   filter:drop-shadow(0 4px 8px rgba(0,0,0,.7)); }
+.terminal-cr-cabina{ fill:#16233c; stroke:#060a14; stroke-width:3; stroke-linejoin:round; }
+.terminal-cr-vidrio{ fill:#ffd9a0; stroke:#060a14; stroke-width:2; }
+.terminal-cr-carrito rect{ fill:#101b32; stroke:#060a14; stroke-width:3; }
+.terminal-cr-valijas rect{ fill:#25355c; stroke:#060a14; stroke-width:2.6; }
+.terminal-cr-valijas rect:nth-child(2){ fill:#54401e; }
+.terminal-cr-valijas rect:nth-child(4){ fill:#3c3050; }
+.terminal-cr-rueda circle{ fill:#0b1224; stroke:#060a14; stroke-width:2.6; }
+.terminal-cr-llanta circle{ fill:#31405f; }
 .terminal-carro__baliza{
   position:absolute; left:6%; top:-6%; width:4px; height:4px; border-radius:50%;
   background:var(--neon); box-shadow:0 0 10px 3px rgba(255,179,64,.7);
@@ -297,16 +314,16 @@
 .terminal-pasajero--izq .terminal-pasajero__bob svg{ transform:scaleX(-1); }
 
 .terminal-p-cabeza, .terminal-p-torso, .terminal-p-brazo, .terminal-p-pierna{ fill:#05080f; }
-.terminal-p-brazo{ fill:#070b14; transform-origin:50px 64px;
+.terminal-p-brazo{ fill:#070b14; transform-origin:52px 106px;
   animation:terminal-brazo var(--paso) ease-in-out infinite alternate-reverse; }
-.terminal-p-pierna--a{ transform-origin:54px 150px;
+.terminal-p-pierna--a{ transform-origin:54px 192px;
   animation:terminal-paso var(--paso) ease-in-out infinite alternate; }
-.terminal-p-pierna--b{ fill:#070b14; transform-origin:74px 150px;
+.terminal-p-pierna--b{ fill:#070b14; transform-origin:76px 192px;
   animation:terminal-paso var(--paso) ease-in-out infinite alternate-reverse; }
-@keyframes terminal-paso{ from{transform:rotate(-10deg)} to{transform:rotate(10deg)} }
-@keyframes terminal-brazo{ from{transform:rotate(-7deg)} to{transform:rotate(7deg)} }
+@keyframes terminal-paso{ from{transform:rotate(-11deg)} to{transform:rotate(11deg)} }
+@keyframes terminal-brazo{ from{transform:rotate(-8deg)} to{transform:rotate(8deg)} }
 .terminal-p-valija rect, .terminal-p-valija circle{ fill:#05080f; }
-.terminal-p-asa{ fill:none; stroke:#0a0f1c; stroke-width:4; stroke-linecap:round; }
+.terminal-p-asa{ fill:none; stroke:#0a0f1c; stroke-width:5; stroke-linecap:round; }
 
 /* ============================ 3 · EL PROTAGONISTA ========================= */
 .terminal-nacho{
@@ -325,29 +342,112 @@
   position:relative; width:100%; height:100%; display:block;
   filter:drop-shadow(0 26px 34px rgba(0,0,0,.6));
 }
-.terminal-cuerpo{ fill:url(#terminalCuerpo); }
-.terminal-miembro{ fill:none; stroke:url(#terminalCuerpo); stroke-linecap:round; stroke-linejoin:round; }
-.terminal-nacho__lejos .terminal-miembro{ stroke:#0a1120; }
-.terminal-butaca path{ fill:#04060c; stroke:rgba(140,175,240,.09); stroke-width:1.2; }
-.terminal-butaca path.terminal-butaca__pata{
-  fill:none; stroke:#0e1626; stroke-width:7; stroke-linecap:round;
+/* lenguaje caricatura: contorno gordo parejo + planos de color (cel-shading) */
+.terminal-nacho__svg path, .terminal-nacho__svg circle,
+.terminal-nacho__svg ellipse, .terminal-nacho__svg rect{
+  stroke-linecap:round; stroke-linejoin:round;
 }
-.terminal-mochila{ fill:#060a12; }
-.terminal-brazo{ fill:none; stroke:#111a2d; stroke-linecap:round; stroke-linejoin:round; }
-.terminal-brazo-mano{ fill:#141d31; }
-.terminal-gorra{ fill:url(#terminalGorra); }
-.terminal-gorra--visera{ fill:#0d1628; }
+.terminal-nk-borde{ fill:none; stroke:#0a1020; }
+.terminal-nl-shirt{ fill:none; stroke:#3c67ab; }
+.terminal-nl-cuff{ fill:none; stroke:#527fc0; }
+.terminal-nl-skin{ fill:none; stroke:#e8b489; }
+.terminal-nl-pant{ fill:none; stroke:#27334f; }
+.terminal-nl-pant2{ fill:none; stroke:#1d2942; }
+
+.terminal-nk-piel{ fill:#e8b489; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-piel--sombra{ fill:#c68e63; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-rubor{ fill:#e0806a; opacity:.4; }
+.terminal-nk-pelo{ fill:#2c1d13; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-pelo--luz{ fill:none; stroke:#5a4028; stroke-width:4; }
+.terminal-nk-barba{ fill:#271911; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-barba--sombra{ fill:#160d07; opacity:.85; }
+.terminal-nk-labio{ fill:#cf9166; }
+.terminal-nk-blanco{ fill:#f7f3ea; stroke:#0a1020; stroke-width:2.6; }
+.terminal-nk-iris{ fill:#5d3b22; }
+.terminal-nk-pupila{ fill:#160b04; }
+.terminal-nk-chispa{ fill:#fff; }
+.terminal-nk-ceja{ fill:#1c1109; stroke:#0a1020; stroke-width:2; }
+.terminal-nk-gorra{ fill:#2e4a7d; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-gorra--sombra{ fill:#1d3158; }
+.terminal-nk-gorra--boton{ fill:#1d3158; stroke:#0a1020; stroke-width:2.4; }
+.terminal-nk-visera{ fill:#22375d; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-visera--bajo{ fill:#101d38; }
+.terminal-nk-camisa{ fill:#3c67ab; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-camisa--sombra{ fill:#2a4a80; }
+.terminal-nk-cuello{ fill:#4d79ba; stroke:#0a1020; stroke-width:2.6; }
+.terminal-nk-cuello--atras{ fill:#33578e; }
+.terminal-nk-boton{ fill:#dde7f4; stroke:#0a1020; stroke-width:1.6; }
+.terminal-nk-cadena{ fill:none; stroke:#c9d4e4; stroke-width:2.4; }
+.terminal-cadena-brillo{ fill:#eef5ff; }
+.terminal-nk-linea{ fill:none; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-linea--fina{ stroke-width:2; }
+.terminal-nk-zapa{ fill:#cfd5e2; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-suela{ fill:#eef1f6; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-zapa-detalle{ fill:none; stroke:#8f99ad; stroke-width:2.4; }
+.terminal-nk-zapa-acento{ fill:var(--neon); }
+.terminal-nk-zapa2{ fill:#222d4a; stroke:#0a1020; stroke-width:3; }
+.terminal-nk-zapa2-suela{ fill:none; stroke:#38455f; stroke-width:5; }
+
+.terminal-butaca__almohadon{ fill:#101b32; stroke:#060b16; stroke-width:3; }
+.terminal-butaca__brillo{ fill:none; stroke:rgba(140,175,240,.18); stroke-width:5; }
+.terminal-butaca__pata{ fill:none; stroke:#0d1526; stroke-width:10; }
+.terminal-butaca__pata--fina{ stroke-width:7; }
+.terminal-mochila__cuerpo{ fill:#2f3d5c; stroke:#0a1020; stroke-width:3; }
+.terminal-mochila__tapa{ fill:#3a4a6e; stroke:#0a1020; stroke-width:3; }
+.terminal-mochila__bolsillo{ fill:#24314c; stroke:#0a1020; stroke-width:3; }
+.terminal-mochila__cierre{ fill:none; stroke:#0a1020; stroke-width:2.4; stroke-dasharray:1 5; }
+.terminal-mochila__tirador{ fill:var(--neon); stroke:#0a1020; stroke-width:1.6; }
+.terminal-mochila__correa{ fill:none; stroke:#1c2740; stroke-width:9; }
+
+/* la marca es la protagonista */
 .terminal-marca{
-  font-family:var(--mono); font-size:11.5px; font-weight:800; letter-spacing:.02em;
-  fill:var(--neon-2); filter:drop-shadow(0 0 6px rgba(255,179,64,.65));
+  font-family:var(--serif); font-size:20px; font-weight:900; letter-spacing:-.02em;
+  fill:var(--tiza); filter:drop-shadow(0 1px 2px rgba(0,0,0,.55));
+}
+.terminal-marca-v{ fill:var(--neon); font-style:italic; font-weight:600; }
+
+/* luz de borde: cálida del ventanal, fría cenital */
+.terminal-rim path{
+  fill:none; stroke:var(--neon); stroke-width:3; stroke-linecap:round;
+  opacity:.6; filter:drop-shadow(0 0 7px rgba(255,179,64,.6));
 }
 .terminal-rim--frio path{
-  stroke:#9ec2ff; opacity:.34; stroke-width:2.2;
+  stroke:#9ec2ff; opacity:.4; stroke-width:2.6;
   filter:drop-shadow(0 0 6px rgba(140,185,255,.5));
 }
-.terminal-rim path{
-  fill:none; stroke:var(--neon); stroke-width:2.8; stroke-linecap:round;
-  opacity:.55; filter:drop-shadow(0 0 7px rgba(255,179,64,.6));
+
+/* vida: respiración, parpadeo, taconeo y brillito de la cadenita */
+.terminal-vivo{ animation:terminal-respiro 4.6s ease-in-out infinite; }
+@keyframes terminal-respiro{
+  0%,100%{ transform:translate3d(0,0,0) }
+  50%    { transform:translate3d(0,-2.6px,0) }
+}
+.terminal-ojo{
+  transform-box:fill-box; transform-origin:50% 62%;
+  animation:terminal-parpadeo 5.7s linear infinite;
+}
+@keyframes terminal-parpadeo{
+  0%,93%,100%{ transform:scaleY(1) }
+  95%,96.6%  { transform:scaleY(.07) }
+  98.4%      { transform:scaleY(1) }
+}
+.terminal-pie{
+  transform-box:fill-box; transform-origin:8% 94%;
+  animation:terminal-taconeo 1.15s ease-in-out infinite;
+}
+@keyframes terminal-taconeo{
+  0%,100%{ transform:rotate(0deg) }
+  42%    { transform:rotate(-7deg) }
+  58%    { transform:rotate(-6deg) }
+}
+.terminal-cadena-brillo{
+  transform-box:fill-box; transform-origin:50% 50%;
+  animation:terminal-destello 3.6s ease-in-out infinite;
+}
+@keyframes terminal-destello{
+  0%,70%,100%{ opacity:.18; transform:scale(.7) }
+  80%        { opacity:1;   transform:scale(1.2) }
+  88%        { opacity:.35; transform:scale(.85) }
 }
 
 /* --- polvo suspendido ---------------------------------------------------- */
@@ -450,7 +550,11 @@
 .terminal-calmo .terminal-p-pierna,
 .terminal-calmo .terminal-p-brazo,
 .terminal-calmo .terminal-titulo__kicker i,
-.terminal-calmo .terminal-titulo__int{ animation:none !important; }
+.terminal-calmo .terminal-titulo__int,
+.terminal-calmo .terminal-vivo,
+.terminal-calmo .terminal-ojo,
+.terminal-calmo .terminal-pie,
+.terminal-calmo .terminal-cadena-brillo{ animation:none !important; }
 
 .terminal-calmo .terminal-pasajero{ animation-duration:220s !important; }
 .terminal-calmo .terminal-pasajero__bob{ transform:scale(var(--s)); }
@@ -464,6 +568,7 @@
   .terminal-respira, .terminal-brillo, .terminal-resplandor, .terminal-hazes i,
   .terminal-piso__charcos i, .terminal-pasajero__bob, .terminal-p-pierna,
   .terminal-p-brazo, .terminal-titulo__kicker i, .terminal-luz, .terminal-baliza,
-  .terminal-estrobo, .terminal-sky__faro{ animation:none !important; }
+  .terminal-estrobo, .terminal-sky__faro, .terminal-vivo, .terminal-ojo,
+  .terminal-pie, .terminal-cadena-brillo{ animation:none !important; }
   .terminal-pasajero{ animation-duration:220s !important; }
 }

@@ -35,6 +35,13 @@
   --rv-pw:min(35vw, calc(76svh * .705), 420px);
   --rv-ph:calc(var(--rv-pw) / .705);
 
+  /* Grano de papel PRE-RASTERIZADO: un PNG chiquito (64px, 3KB) con las motitas
+     ya horneadas en el alpha. Antes cada cara llevaba un feTurbulence SVG +
+     blend soft-light que el compositor re-rasterizaba en cada frame del giro:
+     eso era lo que fundía la escena. El PNG se decodifica UNA vez y se tilea
+     gratis en la GPU. */
+  --rv-grano:url("data:image/png;base64,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");
+
   --rv-in:0;
   --rv-abrir:0;
   --rv-cinta:0deg;
@@ -54,20 +61,22 @@
   position:absolute; left:50%; top:38%;
   width:min(120vw, 1100px); aspect-ratio:1.5;
   transform:translate(-50%,-50%);
+  /* sin filter:blur — el desenfoque va horneado en las paradas del gradiente */
   background:radial-gradient(50% 50% at 50% 50%,
-    rgba(255,196,110,.20) 0%, rgba(255,170,80,.09) 38%, transparent 72%);
+    rgba(255,196,110,.20) 0%, rgba(255,186,96,.14) 22%, rgba(255,170,80,.09) 40%,
+    rgba(255,170,80,.04) 56%, transparent 74%);
   opacity:calc(var(--rv-in) * (.45 + var(--rv-abrir) * .55));
-  filter:blur(6px);
 }
 .revista-sombra{
   position:absolute; left:50%; top:calc(44% + var(--rv-ph) * .52);
   width:calc(var(--rv-pw) * (1.1 + var(--rv-abrir) * 1.05));
   height:calc(var(--rv-ph) * .17);
   transform:translate(-50%,-50%) scaleY(calc(.5 + var(--rv-in) * .5));
+  /* sombra pre-horneada: mismas plumas que daba el blur(10px), a costo cero */
   background:radial-gradient(50% 50% at 50% 50%,
-    rgba(0,0,0,.62) 0%, rgba(0,0,0,.26) 45%, transparent 72%);
+    rgba(0,0,0,.55) 0%, rgba(0,0,0,.40) 28%, rgba(0,0,0,.22) 48%,
+    rgba(0,0,0,.09) 63%, transparent 80%);
   opacity:calc(var(--rv-in) * .9);
-  filter:blur(10px);
 }
 
 /* --- el libro ------------------------------------------------------------ */
@@ -79,6 +88,7 @@
   position:relative;
   width:calc(var(--rv-pw) * 2); height:var(--rv-ph);
   transform-style:preserve-3d;
+  will-change:transform;              /* un solo elemento: barato y siempre en movimiento */
   transform:
     translateY(calc((1 - var(--rv-in)) * 34%))
     rotateX(calc(26deg - var(--rv-abrir) * 19deg))
@@ -99,19 +109,28 @@
   width:var(--rv-pw); height:var(--rv-ph);
   transform-origin:left center;
   transform-style:preserve-3d;
+  /* OJO: acá NO va contain:paint — el recorte es propiedad agrupadora y
+     aplasta el preserve-3d (el dorso quedaría oculto para siempre por su
+     backface). layout+style alcanzan y no rompen el 3D. */
+  contain:layout style;
   /* el translateZ va DESPUÉS del giro: sin dar vuelta empuja hacia el ojo,
      dada vuelta empuja hacia el fondo. La pila se ordena sola. */
   transform:rotateY(var(--a, 0deg)) translateZ(var(--z, 0px));
 }
+/* Culling que maneja el JS: sólo las hojas a ±2 del pliego activo se pintan */
+.revista-hoja--off{ visibility:hidden; }
+/* will-change SÓLO mientras la hoja está girando (el JS pone y saca la clase);
+   si estuviera fijo en todas, la GPU guardaría 17 texturas al cuete */
+.revista-hoja--viva{ will-change:transform; }
 
 .revista-cara,
 .revista-base{
   position:absolute; inset:0;
   overflow:hidden;
+  /* grano PNG pre-horneado (sin blend-mode: el soft-light iba tarifado por cara) */
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23g)' opacity='.42'/%3E%3C/svg%3E"),
+    var(--rv-grano),
     linear-gradient(158deg, var(--rv-papel) 0%, var(--rv-papel-2) 100%);
-  background-blend-mode:soft-light, normal;
   color:var(--rv-tinta);
   font-family:var(--sans);
   font-size:calc(var(--rv-pw) * .0385);
@@ -122,18 +141,26 @@
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
   pointer-events:none;
+  /* la cara ya es un plano 2D con overflow:hidden: contener pintura acá es
+     gratis y le acota el daño de cualquier repintado al rectángulo propio */
+  contain:layout style paint;
 }
-/* frente = página derecha: lomo a la izquierda, canto a la derecha */
+/* frente = página derecha: lomo a la izquierda, canto a la derecha.
+   Esquinas de afuera bien infladas, contorno finito parejo: dibujito animado. */
 .revista-cara--frente{
   transform:translateZ(.3px);
-  border-radius:.14em .85em .85em .14em;
-  box-shadow:inset -1px 0 0 rgba(255,255,255,.5), 1px 0 3px rgba(0,0,0,.25);
+  border-radius:.14em 1.1em 1.1em .14em;
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.5),
+             inset 0 0 0 2px rgba(60,46,24,.10),
+             1px 0 0 rgba(20,14,6,.28);
 }
 /* dorso = página izquierda: al girar, su izquierda local queda hacia afuera */
 .revista-cara--dorso{
   transform:rotateY(180deg) translateZ(.3px);
-  border-radius:.85em .14em .14em .85em;
-  box-shadow:inset 1px 0 0 rgba(255,255,255,.5), -1px 0 3px rgba(0,0,0,.25);
+  border-radius:1.1em .14em .14em 1.1em;
+  box-shadow:inset 1px 0 0 rgba(255,255,255,.5),
+             inset 0 0 0 2px rgba(60,46,24,.10),
+             -1px 0 0 rgba(20,14,6,.28);
 }
 .revista-cara.is-viva{ pointer-events:auto; }
 
@@ -169,9 +196,11 @@
 .revista-brillo{
   position:absolute; top:-12%; bottom:-12%; left:-55%; width:48%;
   z-index:7; pointer-events:none;
-  background:linear-gradient(102deg, transparent 0%,
-    rgba(255,226,170,.55) 48%, transparent 100%);
-  filter:blur(5px);
+  /* el blur(5px) que tenía forzaba una re-rasterización por frame en CADA cara;
+     el mismo pluma va horneado en las paradas del gradiente */
+  background:linear-gradient(102deg, transparent 4%,
+    rgba(255,226,170,.20) 30%, rgba(255,226,170,.50) 48%,
+    rgba(255,226,170,.20) 66%, transparent 96%);
   transform:translateX(calc(var(--t, 0) * 330%));
   /* parábola: pico en la mitad del giro */
   opacity:calc(var(--t, 0) * (1 - var(--t, 0)) * 3.1);
@@ -186,18 +215,17 @@
 .revista-base--izq{
   left:0; right:auto; width:var(--rv-pw);
   transform:translateZ(var(--rv-zbase, -10px));
-  border-radius:.85em .14em .14em .85em;
+  border-radius:1.1em .14em .14em 1.1em;
   background:linear-gradient(90deg,
     rgba(3,6,14,0) 0%, rgba(3,6,14,.42) 72%, rgba(3,6,14,.66) 100%);
-  background-blend-mode:normal;
   box-shadow:none;
 }
 .revista-base--der{
   left:var(--rv-pw); right:auto; width:var(--rv-pw);
   transform:translateZ(-.7px);
-  border-radius:.14em .85em .85em .14em;
+  border-radius:.14em 1.1em 1.1em .14em;
   background:linear-gradient(158deg, var(--rv-tapa-2), var(--rv-tapa));
-  background-blend-mode:normal;
+  box-shadow:inset 0 0 0 2.5px rgba(5,8,18,.85);
 }
 .revista-base--der.is-viva{ pointer-events:auto; }
 
@@ -221,18 +249,19 @@
 .revista-cinta{
   position:absolute; top:calc(var(--rv-ph) * -.012);
   left:var(--rv-pw);
-  width:calc(var(--rv-pw) * .03);
+  width:calc(var(--rv-pw) * .042);      /* más gordita, de dibujito */
   height:calc(var(--rv-ph) * 1.06);
   /* queda en el margen del lomo: el texto de la página arranca recién en 2.5em */
-  margin-left:calc(var(--rv-pw) * .028);
+  margin-left:calc(var(--rv-pw) * .024);
   transform-origin:top center;
   transform:translateZ(var(--rv-ztop, 12px)) rotate(var(--rv-cinta, 0deg));
   background:linear-gradient(96deg,
     #5e0d18 0%, #93202f 26%, #b53344 48%, #8c1a27 72%, #5e0d18 100%);
   background-color:#8c1a27;
-  box-shadow:1px 0 6px rgba(0,0,0,.45);
-  /* la punta de la cinta, apenas escotada */
-  clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 96.5%, 0 100%);
+  /* sombra dura desplazada + contorno parejo: cel-shading, cero blur */
+  box-shadow:2px 2px 0 rgba(0,0,0,.32), inset 0 0 0 1.5px rgba(46,5,12,.55);
+  /* la punta bien redondeada, como lengüeta de historieta (chau clip-path) */
+  border-radius:3px 3px 999px 999px;
   opacity:calc(var(--rv-abrir) * .92);
   pointer-events:none;
 }
@@ -295,9 +324,14 @@
   background:
     radial-gradient(120% 80% at 26% 12%, rgba(255,179,64,.16) 0%, transparent 58%),
     linear-gradient(158deg, var(--rv-tapa-2) 0%, var(--rv-tapa) 62%, #070c1a 100%);
-  background-blend-mode:normal, normal;
   color:var(--tiza);
-  box-shadow:inset -1px 0 0 rgba(255,255,255,.14), 2px 0 12px rgba(0,0,0,.55);
+  /* tapa gordita de película animada: esquinas infladas, contorno grueso y
+     parejo + filete ámbar adentro. Sombra dura del canto, sin blur. */
+  border-radius:.2em 1.35em 1.35em .2em;
+  box-shadow:inset 0 0 0 2.5px rgba(4,7,16,.9),
+             inset 0 0 0 5px rgba(255,179,64,.30),
+             inset -1px 0 0 rgba(255,255,255,.14),
+             3px 0 0 rgba(4,7,16,.5);
 }
 .revista-tapa{
   position:absolute; inset:0; z-index:2;
@@ -311,16 +345,21 @@
 }
 .revista-tapa__marca img{ width:2.1em; height:2.1em; }
 .revista-tapa__marca em{ font-style:italic; color:var(--neon); }
+/* etiqueta tipo calco pegado torcido: foil ámbar juguetón */
 .revista-tapa__et{
-  margin-top:1.5em;
+  margin-top:1.5em; align-self:flex-start;
   font-family:var(--mono); font-size:.5em; letter-spacing:.28em;
   text-transform:uppercase; color:var(--neon-2);
+  border:1.5px solid rgba(255,179,64,.55); border-radius:99px;
+  padding:.55em 1.1em .5em; transform:rotate(-1.6deg);
+  box-shadow:1.5px 1.5px 0 rgba(4,7,16,.7);
 }
 .revista-tapa__tit{
-  margin:.35em 0 0;
+  margin:.45em 0 0;
   font-family:var(--serif); font-weight:900; font-size:2.55em; line-height:.94;
   letter-spacing:-.025em; color:var(--tiza);
-  text-shadow:0 2px 22px rgba(255,179,64,.22);
+  /* sombra dura de historieta en vez del glow difuso */
+  text-shadow:.045em .06em 0 rgba(4,7,16,.85);
 }
 .revista-tapa__tit em{
   display:block; font-style:italic; font-weight:400;
@@ -346,8 +385,9 @@
   display:flex; align-items:center; gap:.7em; margin-bottom:.5em;
 }
 .revista-dest__emoji{
-  font-size:1.9em; line-height:1;
-  filter:drop-shadow(0 2px 4px rgba(60,40,10,.25));
+  font-size:2.15em; line-height:1;
+  /* el drop-shadow (filter) obligaba a re-rasterizar; sombra dura y listo */
+  text-shadow:0 .06em 0 rgba(60,40,10,.22);
 }
 .revista-dest__region{
   font-family:var(--mono); font-size:.5em; letter-spacing:.24em;
@@ -611,9 +651,8 @@
 .revista-cara--fin{
   background:
     radial-gradient(90% 60% at 50% 32%, rgba(255,196,110,.16) 0%, transparent 68%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23g)' opacity='.42'/%3E%3C/svg%3E"),
+    var(--rv-grano),
     linear-gradient(158deg, var(--rv-papel) 0%, var(--rv-papel-2) 100%);
-  background-blend-mode:normal, soft-light, normal;
 }
 .revista-cierre{
   position:absolute; inset:0; z-index:2;

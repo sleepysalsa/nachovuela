@@ -89,33 +89,44 @@
    *  1 · EXTERIOR: pista de noche detrás del vidrio
    * ======================================================================== */
 
-  /* Skyline lejano: perfil dentado + ventanitas encendidas recortadas */
+  /* Skyline lejano: edificios regordetes, esquinas redondas, ventanotas */
   function svgSkyline() {
-    let d = 'M0,140 L0,104 ';
-    let x = 0;
-    while (x < 1600) {
-      const w = rnd(26, 104), h = rnd(14, 78);
-      d += 'L' + n2(x) + ',' + n2(140 - h) + ' L' + n2(x + w) + ',' + n2(140 - h) + ' ';
-      x += w;
-    }
-    d += 'L1600,140 Z';
-
+    let edificios = '';
     let ventanas = '';
-    for (let i = 0; i < 130; i++) {
-      ventanas += '<rect x="' + n2(rnd(0, 1596)) + '" y="' + n2(rnd(62, 136)) +
-                  '" width="2.4" height="3.4" opacity="' + n2(rnd(.18, .8)) + '"/>';
+    let x = -12;
+    while (x < 1612) {
+      const w = rnd(48, 122), h = rnd(24, 86);
+      const r = Math.min(16, w * .3);
+      const top = 140 - h;
+      edificios += '<rect x="' + n2(x) + '" y="' + n2(top) + '" width="' + n2(w) +
+                   '" height="' + n2(h + 24) + '" rx="' + n2(r) + '"/>';
+      /* ventanitas grandes y desparejas, algunas apagadas */
+      const cols = Math.max(1, Math.round(w / 27));
+      for (let c = 0; c < cols; c++) {
+        const filas = 1 + Math.floor(rnd(1, Math.max(2, h / 24)));
+        for (let f = 0; f < filas; f++) {
+          if (Math.random() < .34) continue;
+          ventanas += '<rect x="' + n2(x + 9 + c * (w - 16) / cols + rnd(-2.5, 2.5)) +
+                      '" y="' + n2(top + 8 + f * 17 + rnd(-2.5, 2.5)) +
+                      '" width="' + n2(rnd(4.5, 8.5)) + '" height="' + n2(rnd(5, 9.5)) +
+                      '" rx="2" opacity="' + n2(rnd(.25, .9)) + '"/>';
+        }
+      }
+      x += w - rnd(6, 16);
     }
-
     return '<svg viewBox="0 0 1600 140" preserveAspectRatio="none" aria-hidden="true">' +
-      '<defs><clipPath id="terminalSkyClip"><path d="' + d + '"/></clipPath></defs>' +
-      '<path class="terminal-sky__masa" d="' + d + '"/>' +
-      '<g class="terminal-sky__ventanas" clip-path="url(#terminalSkyClip)">' + ventanas + '</g>' +
-      /* torre de control */
+      '<g class="terminal-sky__masa">' + edificios + '</g>' +
+      '<g class="terminal-sky__ventanas">' + ventanas + '</g>' +
+      /* torre de control regordeta, con cabina inflada y faro grandote */
       '<g class="terminal-sky__torre">' +
-        '<path d="M1268,140 L1268,58 L1282,58 L1282,140 Z"/>' +
-        '<path d="M1252,58 L1298,58 L1292,34 L1258,34 Z"/>' +
+        '<path d="M1252,146 C1255,102 1260,74 1266,58 L1290,58 C1296,74 1301,102 1304,146 Z"/>' +
+        '<rect class="terminal-sky__torre-vent" x="1272" y="78" width="7" height="9" rx="2"/>' +
+        '<rect class="terminal-sky__torre-vent" x="1279" y="104" width="7" height="9" rx="2"/>' +
+        '<path d="M1246,62 C1246,40 1260,28 1278,28 C1296,28 1310,40 1310,62 C1300,69 1256,69 1246,62 Z"/>' +
+        '<path class="terminal-sky__torre-luz" d="M1257,52 C1259,42 1268,36 1278,36 C1288,36 1297,42 1299,52 C1289,57 1267,57 1257,52 Z"/>' +
+        '<path d="M1275,28 L1275,12 L1281,12 L1281,28 Z"/>' +
       '</g>' +
-      '<circle class="terminal-sky__faro" cx="1275" cy="28" r="4"/>' +
+      '<circle class="terminal-sky__faro" cx="1278" cy="10" r="7"/>' +
       '</svg>';
   }
 
@@ -164,12 +175,18 @@
     }).join('');
   }
 
-  /* Avión chiquito de perfil */
+  /* Avioncito de juguete: nariz redonda, panza gorda, ventanillas encendidas */
   function svgAvion() {
-    return '<svg viewBox="0 0 150 42" aria-hidden="true">' +
-      '<path d="M8,26 C24,19 52,16 84,16 L110,16 C126,16 140,19 145,24 C140,29 126,31 110,31 L36,31 C22,31 12,29 8,26 Z"/>' +
-      '<path d="M78,16 L92,2 L101,2 L92,16 Z"/>' +
-      '<path d="M62,29 L52,40 L61,40 L73,29 Z"/>' +
+    return '<svg viewBox="0 0 160 64" aria-hidden="true">' +
+      '<path class="terminal-av-metal" d="M30,34 C22,32 16,26 14,18 C13,11 17,6 24,6 C32,6 38,14 41,25 Z"/>' +
+      '<path class="terminal-av-cuerpo" d="M18,34 C34,26 62,22 92,22 C118,22 138,26 148,33 C152,36 152,42 147,45 C136,51 114,54 88,54 C58,54 32,50 18,44 C14,42 14,36 18,34 Z"/>' +
+      '<path class="terminal-av-panza" d="M20,43 C36,48 60,51 88,51 C114,51 134,48 145,43 C136,50 114,54 88,54 C58,54 32,50 18,44 Z"/>' +
+      '<path class="terminal-av-metal" d="M62,38 C56,48 52,56 54,60 C56,63 62,63 68,58 C76,52 84,44 88,38 Z"/>' +
+      '<path class="terminal-av-vidrio" d="M124,27 C132,27 140,29 144,32 C140,36 132,38 124,37 C121,34 121,30 124,27 Z"/>' +
+      '<circle class="terminal-av-ventana" cx="52" cy="35" r="4.6"/>' +
+      '<circle class="terminal-av-ventana" cx="72" cy="34" r="4.6"/>' +
+      '<circle class="terminal-av-ventana" cx="92" cy="33" r="4.6"/>' +
+      '<circle class="terminal-av-ventana" cx="111" cy="33" r="4.6"/>' +
       '</svg>';
   }
 
@@ -209,19 +226,36 @@
       '</div></div>';
   }
 
-  /* Carro de equipaje cruzando la plataforma */
+  /* Carro de equipaje: tractorcito regordete + valijitas apiladas */
   function carro() {
     return '<div class="terminal-carro">' +
       '<div class="terminal-carro__tren">' +
-        '<svg viewBox="0 0 230 62" aria-hidden="true">' +
-          '<path d="M4,30 L4,14 L30,14 L36,30 L44,30 L44,44 L4,44 Z"/>' +
-          '<path d="M56,20 L104,20 L104,44 L56,44 Z"/>' +
-          '<path d="M116,20 L164,20 L164,44 L116,44 Z"/>' +
-          '<path d="M176,20 L224,20 L224,44 L176,44 Z"/>' +
-          '<circle cx="14" cy="48" r="6"/><circle cx="36" cy="48" r="6"/>' +
-          '<circle cx="66" cy="48" r="5"/><circle cx="96" cy="48" r="5"/>' +
-          '<circle cx="126" cy="48" r="5"/><circle cx="156" cy="48" r="5"/>' +
-          '<circle cx="186" cy="48" r="5"/><circle cx="216" cy="48" r="5"/>' +
+        '<svg viewBox="0 0 230 66" aria-hidden="true">' +
+          '<path class="terminal-cr-cabina" d="M8,46 C4,46 2,42 2,36 L2,22 C2,13 8,9 17,9 L30,9 C36,9 41,13 43,19 L48,33 C50,40 48,46 42,46 Z"/>' +
+          '<rect class="terminal-cr-vidrio" x="8" y="15" width="18" height="14" rx="6"/>' +
+          '<g class="terminal-cr-valijas">' +
+            '<rect x="66" y="12" width="20" height="15" rx="5"/>' +
+            '<rect x="90" y="8" width="16" height="19" rx="5"/>' +
+            '<rect x="130" y="10" width="22" height="17" rx="6"/>' +
+            '<rect x="190" y="12" width="18" height="15" rx="5"/>' +
+          '</g>' +
+          '<g class="terminal-cr-carrito">' +
+            '<rect x="58" y="24" width="54" height="24" rx="10"/>' +
+            '<rect x="120" y="24" width="54" height="24" rx="10"/>' +
+            '<rect x="182" y="24" width="44" height="24" rx="10"/>' +
+          '</g>' +
+          '<g class="terminal-cr-rueda">' +
+            '<circle cx="14" cy="53" r="9"/><circle cx="38" cy="53" r="9"/>' +
+            '<circle cx="74" cy="53" r="7"/><circle cx="100" cy="53" r="7"/>' +
+            '<circle cx="136" cy="53" r="7"/><circle cx="162" cy="53" r="7"/>' +
+            '<circle cx="196" cy="53" r="7"/><circle cx="218" cy="53" r="7"/>' +
+          '</g>' +
+          '<g class="terminal-cr-llanta">' +
+            '<circle cx="14" cy="53" r="3.5"/><circle cx="38" cy="53" r="3.5"/>' +
+            '<circle cx="74" cy="53" r="2.6"/><circle cx="100" cy="53" r="2.6"/>' +
+            '<circle cx="136" cy="53" r="2.6"/><circle cx="162" cy="53" r="2.6"/>' +
+            '<circle cx="196" cy="53" r="2.6"/><circle cx="218" cy="53" r="2.6"/>' +
+          '</g>' +
         '</svg>' +
         '<i class="terminal-carro__baliza"></i>' +
       '</div></div>';
@@ -281,16 +315,16 @@
    * ======================================================================== */
   function svgPasajero(valija) {
     return '<svg viewBox="0 0 130 300" preserveAspectRatio="xMidYMax meet" aria-hidden="true">' +
-      '<path class="terminal-p-pierna terminal-p-pierna--a" d="M46,148 L38,222 L31,286 L51,288 L55,224 L63,150 Z"/>' +
-      '<path class="terminal-p-pierna terminal-p-pierna--b" d="M67,150 L75,222 L81,286 L100,282 L87,222 L80,148 Z"/>' +
-      '<circle class="terminal-p-cabeza" cx="62" cy="28" r="17"/>' +
-      '<path class="terminal-p-torso" d="M62,46 C46,50 38,66 37,94 C36,120 40,140 43,156 L84,156 C87,140 90,120 89,94 C88,66 78,50 62,46 Z"/>' +
-      '<path class="terminal-p-brazo" d="M45,62 C36,86 33,112 34,142 L46,144 C48,116 51,92 57,70 Z"/>' +
+      '<path class="terminal-p-pierna terminal-p-pierna--a" d="M44,188 C38,216 34,248 32,272 C31,283 36,289 46,289 C56,289 60,283 60,274 C60,248 62,216 64,192 Z"/>' +
+      '<path class="terminal-p-pierna terminal-p-pierna--b" d="M66,192 C70,216 74,248 76,272 C77,283 82,289 92,289 C101,289 105,282 103,272 C97,246 90,214 86,190 Z"/>' +
+      '<circle class="terminal-p-cabeza" cx="64" cy="44" r="27"/>' +
+      '<path class="terminal-p-torso" d="M64,74 C42,76 30,96 28,128 C26,158 32,184 40,200 C48,208 82,208 90,198 C98,182 102,156 100,126 C98,96 86,76 64,74 Z"/>' +
+      '<path class="terminal-p-brazo" d="M42,102 C32,118 27,140 27,164 C27,172 31,177 38,177 C44,177 47,172 47,166 C48,144 52,124 58,108 Z"/>' +
       (valija
         ? '<g class="terminal-p-valija">' +
-            '<rect x="2" y="198" width="28" height="44" rx="5"/>' +
-            '<path class="terminal-p-asa" d="M22,200 L28,150 L36,148"/>' +
-            '<circle cx="9" cy="247" r="4"/><circle cx="24" cy="247" r="4"/>' +
+            '<rect x="0" y="196" width="34" height="52" rx="11"/>' +
+            '<path class="terminal-p-asa" d="M24,198 L30,152 L40,148"/>' +
+            '<circle cx="9" cy="252" r="6"/><circle cx="26" cy="252" r="6"/>' +
           '</g>'
         : '') +
       '</svg>';
@@ -320,76 +354,114 @@
    *  4 · EL PROTAGONISTA
    * ======================================================================== */
   function nacho() {
+    /* miembro "inflado": contorno grueso + relleno plano (doble trazo) */
+    const limb = (d, w, cls) =>
+      '<path class="terminal-nk-borde" style="stroke-width:' + (w + 6) + '" d="' + d + '"/>' +
+      '<path class="' + cls + '" style="stroke-width:' + w + '" d="' + d + '"/>';
+
     return '<div class="terminal-nacho"><div class="terminal-nacho__aura"></div>' +
       '<svg class="terminal-nacho__svg" viewBox="0 0 400 520" preserveAspectRatio="xMidYMax meet" aria-hidden="true">' +
-      '<defs>' +
-        '<linearGradient id="terminalCuerpo" gradientUnits="userSpaceOnUse" x1="0" y1="80" x2="0" y2="500">' +
-          '<stop offset="0" stop-color="#26334f"/>' +
-          '<stop offset=".42" stop-color="#141d33"/>' +
-          '<stop offset="1" stop-color="#111b2e"/>' +
-        '</linearGradient>' +
-        '<linearGradient id="terminalGorra" gradientUnits="userSpaceOnUse" x1="108" y1="84" x2="252" y2="156">' +
-          '<stop offset="0" stop-color="#3d527f"/>' +
-          '<stop offset="1" stop-color="#13203a"/>' +
-        '</linearGradient>' +
-      '</defs>' +
 
-      /* butaca de sala de espera */
+      /* butaca inflada de sala de espera */
       '<g class="terminal-butaca">' +
-        '<path d="M292,350 L380,342 L370,228 L296,238 Z"/>' +
-        '<path d="M146,350 L394,340 L398,370 L148,378 Z"/>' +
-        '<path class="terminal-butaca__pata" d="M174,376 L170,504"/>' +
-        '<path class="terminal-butaca__pata" d="M372,370 L376,504"/>' +
-        '<path class="terminal-butaca__pata" d="M172,468 L374,460"/>' +
+        '<path class="terminal-butaca__pata" d="M150,396 L146,502"/>' +
+        '<path class="terminal-butaca__pata" d="M272,396 L276,502"/>' +
+        '<path class="terminal-butaca__pata terminal-butaca__pata--fina" d="M148,470 L274,466"/>' +
+        '<rect class="terminal-butaca__almohadon" x="104" y="232" width="58" height="150" rx="26"/>' +
+        '<rect class="terminal-butaca__almohadon" x="108" y="356" width="196" height="42" rx="19"/>' +
+        '<path class="terminal-butaca__brillo" d="M116,252 C114,296 114,330 118,360"/>' +
       '</g>' +
-
-      /* mochila apoyada */
-      '<path class="terminal-mochila" d="M300,504 C286,504 278,492 280,474 C282,452 292,440 308,440 C324,440 334,452 334,472 C334,492 322,504 306,504 Z"/>' +
 
       /* pierna lejana */
       '<g class="terminal-nacho__lejos">' +
-        '<path class="terminal-miembro" style="stroke-width:44" d="M262,350 L140,368"/>' +
-        '<path class="terminal-miembro" style="stroke-width:32" d="M140,368 L128,490"/>' +
-        '<path class="terminal-miembro" style="stroke-width:18" d="M128,494 L86,502"/>' +
+        limb('M192,354 L268,351', 42, 'terminal-nl-pant2') +
+        limb('M270,354 L280,440', 28, 'terminal-nl-pant2') +
+        '<path class="terminal-nk-zapa2" d="M266,442 C260,460 262,474 270,480 C284,487 310,487 326,481 C336,477 338,467 330,461 C318,451 298,444 284,442 Z"/>' +
+        '<path class="terminal-nk-zapa2-suela" d="M270,478 L328,476"/>' +
       '</g>' +
 
-      /* torso */
-      '<path class="terminal-cuerpo" d="M212,178 C246,192 258,258 266,332 C270,352 262,366 242,364 L216,360 C202,344 197,300 196,258 C194,224 196,196 212,178 Z"/>' +
+      /* la mochila, apoyada contra la butaca */
+      '<g class="terminal-mochila" transform="rotate(-7 80 462)">' +
+        '<rect class="terminal-mochila__cuerpo" x="42" y="410" width="76" height="96" rx="26"/>' +
+        '<path class="terminal-mochila__tapa" d="M46,446 C60,436 100,436 114,446 L114,432 C114,418 102,410 80,410 C58,410 46,418 46,432 Z"/>' +
+        '<rect class="terminal-mochila__bolsillo" x="54" y="452" width="52" height="44" rx="15"/>' +
+        '<path class="terminal-mochila__cierre" d="M60,446 C74,440 88,440 100,446"/>' +
+        '<circle class="terminal-mochila__tirador" cx="100" cy="447" r="3.4"/>' +
+        '<path class="terminal-mochila__correa" d="M50,428 C40,444 38,470 44,494"/>' +
+      '</g>' +
 
-      /* pierna cercana */
-      '<path class="terminal-miembro terminal-miembro--near" style="stroke-width:48" d="M252,344 L118,352"/>' +
-      '<path class="terminal-miembro terminal-miembro--near" style="stroke-width:34" d="M118,352 L104,486"/>' +
-      '<path class="terminal-miembro terminal-miembro--near" style="stroke-width:20" d="M102,490 L54,500"/>' +
+      /* torso + cabezota: el grupo respira */
+      '<g class="terminal-vivo">' +
+        '<path class="terminal-nk-piel--sombra" d="M206,232 L242,236 L248,268 L204,266 Z"/>' +
+        '<path class="terminal-nk-camisa" d="M214,250 C190,256 172,276 164,306 C157,338 160,368 172,382 L256,386 C266,362 266,336 258,314 C272,300 276,282 266,268 C258,256 238,248 214,250 Z"/>' +
+        '<path class="terminal-nk-camisa--sombra" d="M214,250 C190,256 172,276 164,306 C157,338 160,368 172,382 L206,384 C192,356 190,300 202,252 Z"/>' +
+        '<path class="terminal-nk-cuello terminal-nk-cuello--atras" d="M214,250 C206,254 202,262 203,272 L216,266 C213,260 213,254 214,250 Z"/>' +
+        '<path class="terminal-nk-cuello" d="M238,254 L262,274 L240,290 C229,279 230,262 238,254 Z"/>' +
+        '<path class="terminal-nk-linea" d="M248,288 C258,310 262,336 258,362"/>' +
+        '<circle class="terminal-nk-boton" cx="253" cy="302" r="3.4"/>' +
+        '<circle class="terminal-nk-boton" cx="258" cy="324" r="3.4"/>' +
+        '<circle class="terminal-nk-boton" cx="259" cy="346" r="3.4"/>' +
+        '<path class="terminal-nk-cadena" d="M220,272 C230,291 248,293 258,276"/>' +
+        '<path class="terminal-cadena-brillo" d="M239,283 L241.5,289 L247,291.5 L241.5,294 L239,300 L236.5,294 L231,291.5 L236.5,289 Z"/>' +
 
-      /* brazo apoyado en el muslo */
-      '<path class="terminal-miembro terminal-brazo" style="stroke-width:30" d="M224,198 L240,272"/>' +
-      '<path class="terminal-miembro terminal-brazo" style="stroke-width:24" d="M240,272 L188,338"/>' +
-      '<circle class="terminal-brazo-mano" cx="182" cy="341" r="12"/>' +
-
-      /* cuello + cabeza de perfil */
-      '<path class="terminal-miembro terminal-miembro--near" style="stroke-width:26" d="M208,186 L214,208"/>' +
-      '<g class="terminal-cabeza" transform="translate(40,31) scale(.8)">' +
-        '<path class="terminal-cuerpo" d="M244,142 C244,118 227,101 203,101 C184,101 170,113 166,131 C165,137 161,142 157,147 C154,151 155,155 160,157 C165,159 166,163 166,170 C166,180 175,190 189,192 C216,196 244,178 244,154 Z"/>' +
-        /* la gorra: la marca es la protagonista */
-        '<path class="terminal-gorra" d="M164,129 C168,102 191,86 215,90 C238,94 248,111 248,133 C229,120 188,119 164,129 Z"/>' +
-        '<path class="terminal-gorra terminal-gorra--visera" d="M166,127 C145,127 125,131 113,138 C119,147 145,149 171,141 C168,136 167,131 166,127 Z"/>' +
-        '<text class="terminal-marca" x="173" y="118" transform="rotate(-8 200 112)">NachoVuela</text>' +
-        '<g class="terminal-rim terminal-rim--frio"><path d="M248,133 C248,111 238,95 215,90"/></g>' +
-        '<g class="terminal-rim">' +
-          '<path d="M113,138 C125,131 145,127 166,127"/>' +
-          '<path d="M166,131 C165,137 161,142 157,147 C154,151 155,155 160,157 C165,159 166,163 166,170"/>' +
+        '<g class="terminal-cabeza">' +
+          '<path class="terminal-nk-piel" d="M172,238 C152,214 148,162 174,124 C198,94 252,90 280,112 C298,126 304,150 300,168 L298,174 C310,176 320,186 318,197 C316,206 306,210 298,208 L296,214 C302,224 304,236 297,244 C286,258 258,262 238,258 C214,254 196,248 186,244 C178,242 174,240 172,238 Z"/>' +
+          '<path class="terminal-nk-pelo" d="M166,176 C150,190 146,212 156,234 C161,243 172,244 176,235 C169,229 169,220 174,213 C165,209 165,198 172,191 Z"/>' +
+          '<path class="terminal-nk-piel" d="M200,178 C185,174 177,190 185,206 C191,216 203,214 204,202 C204,193 202,184 200,178 Z"/>' +
+          '<path class="terminal-nk-linea terminal-nk-linea--fina" d="M192,190 C188,196 190,202 194,206"/>' +
+          '<path class="terminal-nk-barba" d="M184,196 C182,204 184,212 190,218 L198,212 C193,206 192,200 192,194 Z"/>' +
+          '<ellipse class="terminal-nk-rubor" cx="246" cy="204" rx="13" ry="8"/>' +
+          '<path class="terminal-nk-barba" d="M190,212 C188,228 192,244 202,252 C218,262 248,264 272,258 C292,251 302,238 302,224 C302,212 298,204 292,204 C286,205 281,207 277,210 C283,216 283,222 277,226 C268,232 258,232 250,228 C238,222 216,214 202,210 C197,209 192,210 190,212 Z"/>' +
+          '<path class="terminal-nk-barba--sombra" d="M206,242 C224,256 252,258 272,252 C288,247 298,236 300,226 C298,242 288,250 272,256 C252,262 222,258 206,242 Z"/>' +
+          '<path class="terminal-nk-linea" d="M258,224 C268,227 278,224 284,213"/>' +
+          '<path class="terminal-nk-labio" d="M263,228 C269,232 277,231 281,226 C277,233 267,234 263,228 Z"/>' +
+          '<g class="terminal-ojo">' +
+            '<ellipse class="terminal-nk-blanco" cx="266" cy="180" rx="13" ry="14.5"/>' +
+            '<circle class="terminal-nk-iris" cx="270.5" cy="177" r="7.6"/>' +
+            '<circle class="terminal-nk-pupila" cx="272" cy="176.5" r="3.5"/>' +
+            '<circle class="terminal-nk-chispa" cx="274" cy="173" r="2.2"/>' +
+            '<circle class="terminal-nk-chispa" cx="268" cy="181" r="1.1"/>' +
+            '<path class="terminal-nk-linea" d="M253,169 C260,162 275,163 280,171"/>' +
+          '</g>' +
+          '<path class="terminal-nk-ceja" d="M246,156 C254,147 270,145 281,151 C285,154 285,159 280,159 C269,155 256,157 250,162 C245,162 243,159 246,156 Z"/>' +
+          '<path class="terminal-nk-pelo" d="M236,120 C246,100 268,96 285,106 C297,113 301,129 295,143 C291,134 284,136 282,146 C276,134 267,138 265,150 C258,138 250,142 248,154 C238,146 233,131 236,120 Z"/>' +
+          '<path class="terminal-nk-pelo--luz" d="M250,110 C261,102 275,102 284,109"/>' +
+          '<path class="terminal-nk-gorra" d="M156,180 C142,146 156,102 198,88 C242,76 286,92 298,116 L299,124 C250,116 198,136 156,180 Z"/>' +
+          '<path class="terminal-nk-gorra--sombra" d="M299,124 C250,116 198,136 156,180 C162,166 172,152 188,142 C228,120 268,116 299,124 Z"/>' +
+          '<path class="terminal-nk-linea terminal-nk-linea--fina" d="M232,88 C224,104 220,118 221,130"/>' +
+          '<path class="terminal-nk-linea terminal-nk-linea--fina" d="M268,96 C266,110 266,118 268,127"/>' +
+          '<circle class="terminal-nk-gorra--boton" cx="226" cy="84" r="6"/>' +
+          '<path class="terminal-nk-visera" d="M287,112 C326,107 358,118 367,136 C371,148 361,157 345,155 C317,150 297,139 289,129 C285,123 285,115 287,112 Z"/>' +
+          '<path class="terminal-nk-visera--bajo" d="M293,132 C303,140 322,148 344,152 C354,152 361,146 363,139 C351,147 327,145 308,138 Z"/>' +
+          '<text class="terminal-marca" x="161" y="146" transform="rotate(-12 218 136)">Nacho<tspan class="terminal-marca-v">Vuela</tspan></text>' +
+          '<g class="terminal-rim terminal-rim--frio"><path d="M198,90 C240,78 284,94 297,116"/><path d="M156,180 C146,152 150,122 170,105"/></g>' +
+          '<g class="terminal-rim"><path d="M300,150 L298,174 C308,178 316,190 313,200"/><path d="M302,222 C302,238 292,251 274,258"/><path d="M291,115 C327,110 357,121 366,137"/></g>' +
         '</g>' +
+
+        '<g class="terminal-rim"><path d="M266,272 C275,288 271,304 260,314"/></g>' +
+        '<g class="terminal-rim terminal-rim--frio"><path d="M172,282 C163,306 158,340 162,368"/></g>' +
       '</g>' +
 
-      /* luz de borde: el ventanal desde la izquierda, la luminaria desde arriba */
-      '<g class="terminal-rim terminal-rim--frio">' +
-        '<path d="M214,182 C244,195 256,246 262,300"/>' +
-        '<path d="M232,206 L244,268"/>' +
+      /* pierna cercana + pie que marca el ritmo */
+      limb('M182,366 L296,368', 46, 'terminal-nl-pant') +
+      limb('M300,372 L306,452', 30, 'terminal-nl-pant') +
+      '<g class="terminal-pie">' +
+        '<path class="terminal-nk-zapa" d="M292,450 C287,466 287,479 292,487 C306,492 330,492 346,488 C360,484 366,476 362,469 C353,456 335,449 318,449 C308,448 298,448 292,450 Z"/>' +
+        '<path class="terminal-nk-suela" d="M287,486 C283,498 291,505 305,505 L362,503 C375,501 377,491 367,485 C344,492 310,493 287,486 Z"/>' +
+        '<path class="terminal-nk-zapa-detalle" d="M304,458 L316,466 M316,454 L328,462"/>' +
+        '<path class="terminal-nk-zapa-acento" d="M336,486 C348,484 356,478 358,471 C362,478 358,485 348,488 Z"/>' +
       '</g>' +
-      '<g class="terminal-rim">' +
-        '<path d="M196,258 C194,224 196,196 212,180"/>' +
-        '<path d="M100,364 L88,486"/>' +
+      '<g class="terminal-rim"><path d="M310,378 L315,448"/></g>' +
+
+      /* brazo apoyado en el muslo (respira junto al torso) */
+      '<g class="terminal-vivo">' +
+        limb('M238,276 C252,300 262,318 266,334', 34, 'terminal-nl-shirt') +
+        limb('M263,331 L269,343', 40, 'terminal-nl-cuff') +
+        limb('M268,342 C282,354 296,362 304,366', 26, 'terminal-nl-skin') +
+        '<path class="terminal-nk-piel" d="M300,356 C314,352 328,360 328,371 C328,382 316,389 304,385 C295,381 294,361 300,356 Z"/>' +
+        '<path class="terminal-nk-linea terminal-nk-linea--fina" d="M314,360 C317,366 317,374 314,380"/>' +
       '</g>' +
+
       '</svg></div>';
   }
 
