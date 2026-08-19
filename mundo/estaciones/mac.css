@@ -1,0 +1,287 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NachoVuela · mundo/estaciones/mac.css — la MacBook en el regazo.
+
+   El <section class="est est--mac"> es la NOTEBOOK vista de frente: la tapa
+   (bezel + pantalla) y, cuando está enfocada, una franja de teclado abajo.
+   Todo lo que se ve LEJOS se mide en cqw/cqh (unidades del contenedor) así
+   escala como una pantalla real cuando la cámara se acerca; la UI del
+   buscador (solo enfocada) usa px/rem para ser cómoda de leer y usar.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.est.est--mac {
+  container-type: size;
+  background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  overflow: visible;
+  --mac-bz: 2.1cqw;                     /* bezel lateral */
+  --mac-bz-top: 2.6cqw;                 /* bezel superior (cámara) */
+  --mac-bz-bot: 3.1cqw;                 /* bezel inferior (marca) */
+  --mac-r: 2.6cqw;                      /* radio de la tapa */
+  --mac-teclado: 0px;
+}
+.est.est--mac.est--mirando { box-shadow: none; }
+.est.est--mac.est--foco { --mac-teclado: 7.5cqh; }
+
+.mac { position: absolute; inset: 0; display: flex; flex-direction: column; }
+
+/* ── La tapa: aluminio afuera, bezel negro adentro ────────────────────── */
+.mac__tapa {
+  position: relative; flex: 1 1 auto; min-height: 0;
+  border-radius: var(--mac-r);
+  background: linear-gradient(180deg, #14171f 0%, #0b0d13 100%);
+  box-shadow:
+    0 0 0 max(1px, .18cqw) rgba(150, 160, 185, .55),           /* canto de aluminio */
+    0 0 0 max(2px, .34cqw) rgba(40, 46, 60, .9),
+    0 3cqw 8cqw -3cqw rgba(0, 0, 0, .95),
+    inset 0 0 0 max(1px, .1cqw) rgba(255, 255, 255, .06);
+  transition: box-shadow .3s;
+}
+.est--mirando .mac__tapa {
+  box-shadow:
+    0 0 0 max(1px, .18cqw) rgba(150, 160, 185, .55),
+    0 0 0 max(2px, .34cqw) rgba(40, 46, 60, .9),
+    0 0 0 max(3px, .55cqw) rgba(245, 166, 35, .85),
+    0 0 6cqw rgba(245, 166, 35, .35),
+    0 3cqw 8cqw -3cqw rgba(0, 0, 0, .95);
+}
+.mac__cam {
+  position: absolute; left: 50%; top: calc(var(--mac-bz-top) / 2);
+  width: .95cqw; height: .95cqw; transform: translate(-50%, -50%);
+  border-radius: 50%; background: radial-gradient(circle at 35% 35%, #2b3a3a 0%, #0a1212 55%, #000 100%);
+  box-shadow: 0 0 0 max(1px, .14cqw) #1c2027, 0 0 0 max(2px, .26cqw) #0a0c11;
+}
+.mac__cam::after {
+  content: ''; position: absolute; left: 30%; top: 26%; width: 22%; height: 22%;
+  border-radius: 50%; background: rgba(120, 190, 160, .55);
+}
+.mac__marca {
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--mac-bz-bot);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--sans); font-weight: 600; font-size: 1.15cqw; letter-spacing: .02em;
+  color: rgba(190, 198, 215, .42); pointer-events: none; user-select: none;
+}
+
+/* ── La pantalla ──────────────────────────────────────────────────────── */
+.mac__pantalla {
+  position: absolute;
+  left: var(--mac-bz); right: var(--mac-bz); top: var(--mac-bz-top); bottom: var(--mac-bz-bot);
+  border-radius: .7cqw; overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(245, 166, 35, .13) 0%, transparent 55%),
+    radial-gradient(90% 70% at 100% 100%, rgba(52, 224, 161, .07) 0%, transparent 60%),
+    linear-gradient(180deg, #0d1220 0%, #080b15 100%);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .03), inset 0 0 6cqw rgba(0, 0, 0, .55);
+}
+/* reflejo suave sobre el vidrio */
+.mac__pantalla::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 5;
+  background: linear-gradient(112deg, rgba(255, 255, 255, .06) 0%, rgba(255, 255, 255, .015) 28%, transparent 46%);
+}
+
+/* ── Estado LEJOS: resumen grande, legible desde chico ────────────────── */
+.mac__resumen {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  text-align: center; padding: 6cqw 6cqw 8cqw;
+  opacity: 1; transition: opacity .28s ease;
+}
+.mac__resumen .kicker {
+  position: absolute; left: 3cqw; top: 2.4cqw; right: 3cqw;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 1.35cqw; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-dim);
+}
+.mac__resumen .kicker b { color: var(--ink); font-family: var(--serif); font-size: 1.9cqw; letter-spacing: 0; text-transform: none; font-weight: 600; }
+.mac__resumen .kicker b em { color: var(--amber-lt); font-style: italic; font-weight: 400; }
+.mac__resumen .kicker i { display: inline-block; width: .9cqw; height: .9cqw; border-radius: 50%; background: var(--green); box-shadow: 0 0 1.4cqw var(--green); margin-right: .8cqw; vertical-align: middle; }
+.mac__resumen .nivel {
+  font-family: var(--mono); font-size: 1.45cqw; letter-spacing: .22em; text-transform: uppercase; color: var(--green);
+  border: 1px solid rgba(52, 224, 161, .45); border-radius: 999px; padding: .55cqw 1.6cqw; margin-bottom: 2.2cqw;
+}
+.mac__resumen .nivel.es-bueno { color: var(--amber-lt); border-color: rgba(255, 212, 121, .45); }
+.mac__resumen .nivel.es-normal { color: var(--ink-dim); border-color: var(--line-strong); }
+.mac__resumen .dest {
+  font-family: var(--serif); font-weight: 600; font-size: 8cqw; line-height: 1; letter-spacing: -.02em; color: var(--ink);
+  text-wrap: balance;
+}
+.mac__resumen .millas {
+  margin-top: 1.6cqw; font-family: var(--mono); font-weight: 800; font-size: 5.2cqw; letter-spacing: -.03em; line-height: 1;
+  color: var(--amber-lt); text-shadow: 0 0 3cqw rgba(245, 166, 35, .35);
+}
+.mac__resumen .millas small { font-size: 2cqw; font-weight: 500; letter-spacing: 0; color: var(--ink-dim); margin-left: .6cqw; }
+.mac__resumen .cuando { margin-top: 1.4cqw; font-family: var(--sans); font-size: 2.3cqw; color: var(--ink-dim); }
+.mac__resumen .cta {
+  position: absolute; left: 0; right: 0; bottom: 3cqw;
+  font-family: var(--mono); font-size: 1.7cqw; letter-spacing: .18em; text-transform: uppercase; color: var(--amber);
+}
+.mac__resumen .cta::before { content: ''; display: inline-block; width: 1cqw; height: 1cqw; border-radius: 50%; background: var(--amber); margin-right: 1cqw; vertical-align: middle; animation: mac-late 1.6s ease-in-out infinite; }
+@keyframes mac-late { 0%, 100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.15); } }
+.est--foco .mac__resumen { opacity: 0; pointer-events: none; }
+
+/* ── Estado ENFOCADO: la UI del buscador ──────────────────────────────── */
+.est--mac .mac__ui.est__scroll {
+  position: absolute; inset: 0; z-index: 3; overflow: auto;
+  opacity: 0; transition: opacity .3s ease .05s;
+  font-family: var(--sans); font-size: 15px; line-height: 1.35;
+  scrollbar-gutter: stable;
+}
+.est--foco .mac__ui.est__scroll { opacity: 1; overflow: auto; }
+.est--mac:not(.est--foco) .mac__ui.est__scroll { pointer-events: none; }
+
+.mac__barra {
+  position: sticky; top: 0; z-index: 4;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 12px 22px; min-height: 48px;
+  background: linear-gradient(180deg, rgba(12, 16, 28, .96), rgba(12, 16, 28, .82));
+  backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+}
+.mac__barra .titulo { display: flex; align-items: baseline; gap: 10px; }
+.mac__barra .titulo b { font-family: var(--serif); font-weight: 600; font-size: 1.15rem; letter-spacing: -.01em; }
+.mac__barra .titulo b em { color: var(--amber-lt); font-style: italic; font-weight: 400; }
+.mac__barra .titulo span { font-family: var(--mono); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-dim); }
+.mac__barra .radar { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); white-space: nowrap; }
+.mac__barra .radar i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
+.mac__barra .radar.frio i { background: var(--ink-faint); box-shadow: none; }
+
+/* Formulario */
+.mac__form {
+  display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(150px, 1fr) auto auto; gap: 14px; align-items: end;
+  padding: 18px 22px 16px; border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(245, 166, 35, .04), transparent);
+}
+.mac-fld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.mac-fld > span { font-family: var(--mono); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-dim); }
+.mac-sel { position: relative; }
+.mac-sel select {
+  appearance: none; -webkit-appearance: none; width: 100%; font: 600 1rem var(--sans); color: var(--ink);
+  background: rgba(16, 22, 38, .9); border: 1px solid var(--line-strong); border-radius: 12px;
+  padding: 12px 40px 12px 14px; cursor: pointer; outline: none; transition: border-color .18s, box-shadow .18s;
+}
+.mac-sel select:hover { border-color: rgba(245, 166, 35, .45); }
+.mac-sel select:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245, 166, 35, .18); }
+.mac-sel select option { background: #0f1524; color: var(--ink); }
+.mac-sel::after {
+  content: ''; position: absolute; right: 15px; top: 50%; width: 8px; height: 8px; pointer-events: none;
+  border-right: 2px solid var(--amber); border-bottom: 2px solid var(--amber); transform: translateY(-70%) rotate(45deg);
+}
+.mac-noches { display: flex; align-items: center; gap: 8px; }
+.mac-noches em { font-style: normal; color: var(--ink-faint); font-family: var(--mono); font-size: .8rem; }
+.mac-step { display: inline-flex; align-items: center; background: rgba(16, 22, 38, .9); border: 1px solid var(--line-strong); border-radius: 12px; overflow: hidden; }
+.mac-step button {
+  font: 700 1.1rem var(--mono); color: var(--ink-dim); background: transparent; border: 0; width: 38px; height: 44px; cursor: pointer; transition: .15s;
+}
+.mac-step button:hover { color: var(--amber-lt); background: rgba(245, 166, 35, .1); }
+.mac-step output { font: 700 1.05rem var(--mono); color: var(--ink); min-width: 34px; text-align: center; }
+.mac__go {
+  font: 700 1rem var(--sans); color: #1a1206; border: 0; border-radius: 12px; padding: 0 20px; height: 46px; cursor: pointer;
+  background: linear-gradient(120deg, var(--amber-lt), var(--amber)); box-shadow: 0 10px 24px -10px rgba(245, 166, 35, .7);
+  transition: transform .15s, box-shadow .15s; white-space: nowrap;
+}
+.mac__go:hover { transform: translateY(-1px); box-shadow: 0 14px 28px -10px rgba(245, 166, 35, .85); }
+.mac__go:active { transform: translateY(0); }
+.mac__go.buscando { opacity: .7; pointer-events: none; }
+
+/* Resultados */
+.mac__res { padding: 16px 22px 26px; }
+.mac-rhead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.mac-rhead h2 { font-family: var(--serif); font-weight: 600; font-size: 1.45rem; letter-spacing: -.02em; }
+.mac-rhead h2 small { font-family: var(--mono); font-weight: 500; font-size: .85rem; color: var(--amber-lt); margin-left: 8px; letter-spacing: 0; }
+.mac-rhead p { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); }
+
+.mac-combos { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.mac-combo {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto auto; grid-template-rows: auto auto; column-gap: 16px; row-gap: 4px; align-items: center;
+  padding: 12px 16px 12px 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(16, 22, 38, .55);
+  animation: mac-in .35s ease both; transition: border-color .18s, background .18s;
+}
+.mac-combo:hover { border-color: var(--line-strong); background: rgba(20, 27, 46, .8); }
+.mac-combo--best { border-color: rgba(245, 166, 35, .45); background: linear-gradient(90deg, rgba(245, 166, 35, .1), rgba(16, 22, 38, .55) 45%); }
+@keyframes mac-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.mac-combo__rank { grid-column: 1; grid-row: 1 / 3; font: 800 1rem var(--mono); color: var(--ink-faint); text-align: center; }
+.mac-combo--best .mac-combo__rank { color: var(--amber); }
+.mac-combo__fechas { grid-column: 2; grid-row: 1; display: flex; align-items: center; gap: 12px; min-width: 0; flex-wrap: wrap; }
+.mac-leg { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+.mac-leg i { font: 700 .58rem var(--mono); letter-spacing: .18em; color: var(--ink-faint); font-style: normal; }
+.mac-leg b { font-family: var(--serif); font-weight: 600; font-size: 1.22rem; letter-spacing: -.01em; }
+.mac-leg span { font: 500 .8rem var(--mono); color: var(--ink-dim); }
+.mac-combo__flecha { color: var(--amber); font-size: 1.05rem; }
+.mac-combo__meta { grid-column: 2; grid-row: 2; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .82rem; color: var(--ink-dim); }
+.mac-combo__meta .ruta { font-family: var(--mono); font-size: .74rem; letter-spacing: .04em; color: var(--ink-dim); }
+.mac-combo__meta .ruta b { color: var(--ink); font-weight: 700; }
+.mac-combo__meta .noches { font-family: var(--mono); font-size: .72rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--ink); }
+.mac-combo__meta .gol { font-family: var(--mono); font-size: .66rem; padding: 2px 8px; border-radius: 999px; background: rgba(110, 168, 255, .12); color: var(--blue); }
+.mac-combo__meta .veredicto { color: var(--ink-dim); white-space: nowrap; }
+.mac-combo__meta .veredicto b { color: var(--green); font-weight: 600; }
+.mac-combo__meta .veredicto strong { color: var(--ink); font-weight: 600; }
+.mac-combo__total { grid-column: 3; grid-row: 1 / 3; text-align: right; }
+.mac-combo__total b { display: block; font: 800 1.55rem var(--mono); letter-spacing: -.03em; color: var(--amber-lt); line-height: 1; }
+.mac-combo--best .mac-combo__total b { text-shadow: 0 0 18px rgba(245, 166, 35, .45); }
+.mac-combo__total small { font: 500 .62rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+.mac-combo__acciones { grid-column: 4; grid-row: 1 / 3; display: flex; flex-direction: column; gap: 6px; min-width: 150px; }
+.mac-btn {
+  font: 700 .82rem var(--sans); text-align: center; text-decoration: none; cursor: pointer; border-radius: 10px; padding: 9px 12px;
+  border: 1px solid var(--line-strong); color: var(--ink); background: transparent; transition: .15s; white-space: nowrap;
+}
+.mac-btn:hover { border-color: var(--amber); color: var(--amber-lt); }
+.mac-btn--armar { border: 0; color: #1a1206; background: linear-gradient(120deg, var(--amber-lt), var(--amber)); }
+.mac-btn--armar:hover { color: #1a1206; transform: translateY(-1px); box-shadow: 0 8px 18px -8px rgba(245, 166, 35, .8); }
+
+.mac-vacio { padding: 26px 22px; border: 1px dashed var(--line-strong); border-radius: 14px; text-align: center; color: var(--ink-dim); }
+.mac-vacio b { display: block; font-family: var(--serif); font-size: 1.15rem; color: var(--ink); margin-bottom: 6px; font-weight: 600; }
+.mac-vacio p { max-width: 62ch; margin: 0 auto 12px; }
+.mac-vacio .links { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.mac-vacio .links .mac-btn { min-width: 140px; }
+.mac-nota { margin-top: 14px; font-size: .78rem; color: var(--ink-faint); }
+.mac-nota b { color: var(--ink-dim); }
+
+/* ── El teclado, insinuado abajo cuando estás enfocado ────────────────── */
+.mac__teclado {
+  position: relative; flex: 0 0 var(--mac-teclado); height: var(--mac-teclado); margin-top: .35cqw;
+  transition: flex-basis .35s ease, height .35s ease, opacity .3s; opacity: 0; overflow: hidden;
+  border-radius: 0 0 1.4cqw 1.4cqw;
+  background: linear-gradient(180deg, #23272f 0%, #171a21 20%, #101319 100%);
+  box-shadow: 0 0 0 max(1px, .18cqw) rgba(150, 160, 185, .35), 0 2cqw 5cqw -2cqw rgba(0, 0, 0, .9);
+}
+.est--foco .mac__teclado { opacity: 1; }
+.mac__teclado::before {           /* bisagra */
+  content: ''; position: absolute; left: 6%; right: 6%; top: 0; height: 18%;
+  background: linear-gradient(180deg, #05070b, #1a1e27 60%, #0d1016);
+  border-radius: 0 0 .5cqw .5cqw;
+}
+.mac__teclado::after {            /* teclas en escorzo */
+  content: ''; position: absolute; left: 9%; right: 9%; top: 26%; bottom: 8%;
+  transform: perspective(60cqw) rotateX(52deg); transform-origin: 50% 0%;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .0) 0 5.6%, rgba(0, 0, 0, .55) 5.6% 6.2%),
+    repeating-linear-gradient(180deg, #2a2f39 0 42%, #06080c 42% 50%, #2a2f39 50% 92%, #06080c 92% 100%);
+  border-radius: .3cqw;
+}
+
+/* ── Angosto ──────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .mac__form { grid-template-columns: 1fr 1fr; }
+  .mac__go { grid-column: 1 / -1; }
+  .mac-combo { grid-template-columns: 26px minmax(0, 1fr) auto; }
+  .mac-combo__acciones { grid-column: 2 / 4; grid-row: 3; flex-direction: row; }
+  .mac-combo__acciones .mac-btn { flex: 1; }
+}
+/* Teléfono: todo apilado (el total ya no cabe al lado de las fechas) */
+@media (max-width: 600px) {
+  .mac__form { grid-template-columns: 1fr; }
+  .mac-combo { grid-template-columns: 26px minmax(0, 1fr); column-gap: 10px; }
+  .mac-combo__rank { grid-row: 1 / 4; }
+  .mac-combo__total { grid-column: 2; grid-row: 3; text-align: left; display: flex; align-items: baseline; gap: 8px; }
+  .mac-combo__total b { font-size: 1.3rem; }
+  .mac-combo__acciones { grid-column: 1 / 3; grid-row: 4; min-width: 0; }
+  .mac-leg b { font-size: 1.05rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mac__resumen .cta::before { animation: none; } .mac-combo { animation: none; }
+}
+
+/* ── Fundido resumen↔UI mientras la cámara se acerca a la Mac ──────────────
+   camara.js escribe --zoom (0…1) en :root y body[data-enfocada]. Solo cuando
+   la Mac es la estación enfocada, el resumen se apaga entre zoom .55→.75 y la
+   UI se enciende entre .65→.85, así el cambio acompaña el viaje y no “salta”
+   al cruzar el umbral de .est--foco. */
+body[data-enfocada="mac"] .est--mac .mac__resumen { opacity: clamp(0, (0.75 - var(--zoom, 0)) * 5, 1); transition: none; }
+body[data-enfocada="mac"] .est--mac .mac__ui.est__scroll { opacity: clamp(0, (var(--zoom, 0) - 0.65) * 5, 1); transition: none; }

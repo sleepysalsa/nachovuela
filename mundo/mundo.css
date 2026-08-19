@@ -1,0 +1,48 @@
+/* NachoVuela · mundo/mundo.css — capa 3D + paneles + HUD de primera persona */
+html, body { height: 100%; overflow: hidden; background: #070a14; }
+#mundo3d { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+
+/* Capa de estaciones (paneles DOM proyectados) */
+#estaciones { position: fixed; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+.est {
+  position: absolute; left: 0; top: 0; will-change: transform, width, height, opacity;
+  background: rgba(10, 14, 26, .92); color: var(--ink); border: 1px solid var(--line-strong);
+  border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05);
+  transition: box-shadow .3s; pointer-events: auto;
+}
+.est--lejos { cursor: zoom-in; }
+.est--lejos > * { pointer-events: none; }        /* lejos: solo el click de "ir" */
+.est--mirando { box-shadow: 0 0 0 2px var(--amber), 0 30px 80px -30px rgba(0,0,0,.9); }
+.est--foco { cursor: default; border-color: var(--line-strong); }
+.est__scroll { position: absolute; inset: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.est__scroll::-webkit-scrollbar { width: 8px; } .est__scroll::-webkit-scrollbar-thumb { background: rgba(120,140,190,.3); border-radius: 8px; }
+/* Lejos, el contenido se ve como "cartel": lo achicamos con zoom CSS relativo al ancho */
+.est--lejos .est__scroll { overflow: hidden; }
+
+/* Visera de la gorra: asoma arriba del cuadro (primera persona) */
+#visera { position: fixed; left: 50%; top: -6px; transform: translateX(-50%); z-index: 3; pointer-events: none; width: min(64vw, 900px); opacity: .95; }
+#visera svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 6px 10px rgba(0,0,0,.6)); }
+body.cam-enfocada #visera { opacity: .35; }
+
+/* HUD */
+.hud { position: fixed; z-index: 4; pointer-events: none; font-family: var(--mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-dim); }
+.hud--marca { left: 18px; top: 14px; display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+.hud--marca img { width: 34px; height: 34px; }
+.hud--marca b { font-family: var(--serif); font-size: 1.15rem; letter-spacing: 0; text-transform: none; color: var(--ink); text-shadow: 0 1px 2px rgba(0,0,0,.9), 0 0 14px rgba(0,0,0,.8); } .hud--marca b em { color: var(--amber-lt); font-style: italic; }
+.hud--marca img { filter: drop-shadow(0 2px 6px rgba(0,0,0,.7)); }
+.hud--estado { right: 18px; top: 16px; padding: 7px 12px; border: 1px solid var(--line-strong); border-radius: 999px; background: rgba(10,14,26,.7); }
+.hud--estado i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 8px; box-shadow: 0 0 10px var(--green); }
+.hud--pista { left: 50%; bottom: 18px; transform: translateX(-50%); padding: 8px 14px; border-radius: 999px; background: rgba(10,14,26,.72); border: 1px solid var(--line); white-space: nowrap; }
+body.cam-enfocada .hud--pista { opacity: 0; }
+
+/* Brújula de estaciones (chips) */
+.brujula { position: fixed; z-index: 4; left: 50%; top: 14px; transform: translateX(-50%); display: flex; gap: 6px; pointer-events: auto; }
+.brujula button { font: inherit; font-family: var(--mono); font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-dim);
+  background: rgba(10,14,26,.7); border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px; cursor: pointer; transition: .18s; }
+.brujula button:hover, .brujula button.is-mirando { color: var(--ink); border-color: var(--line-strong); }
+.brujula button.is-foco { color: #1a1206; background: var(--amber); border-color: var(--amber); }
+.brujula .volver { display: none; } body.cam-enfocada .brujula .volver { display: inline-block; }
+
+@media (max-width: 760px) { .hud--pista { font-size: .6rem; } .brujula { top: auto; bottom: 14px; flex-wrap: wrap; justify-content: center; max-width: 96vw; } .hud--pista { display: none; } }
+@media (max-width: 560px) { .hud--marca b { display: none; } .hud--estado { font-size: .6rem; padding: 6px 10px; } }
+@media (prefers-reduced-motion: reduce) { .est { transition: none; } }

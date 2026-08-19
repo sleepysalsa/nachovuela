@@ -1,15 +1,15 @@
 /* NachoVuela service worker — red primero con respaldo offline.
    Estrategia: TODO va a la red primero (así cada deploy se ve al instante)
    y se guarda copia en cache; si no hay conexión, se sirve la copia. */
-const CACHE = 'nachovuela-v17';
+const CACHE = 'nachovuela-v18';
 const SHELL = [
   './', './index.html', './styles.css', './app.js',
-  './cine.css', './cine.js', './arranque.js',
-  './escenas/terminal.css', './escenas/terminal.js',
-  './escenas/mac.css', './escenas/mac.js',
-  './escenas/board.css', './escenas/board.js',
-  './escenas/revista.css', './escenas/revista.js',
-  './manifest.webmanifest', './assets/logo-mark.svg', './assets/logo-lockup.svg'
+  './mundo/mundo.css', './mundo/camara.js', './mundo/estaciones.js', './mundo/arranque.js',
+  './mundo/terminal3d.js', './vendor/three.module.min.js',
+  './mundo/estaciones/mac.js', './mundo/estaciones/mac.css',
+  './mundo/estaciones/carteles.js', './mundo/estaciones/carteles.css',
+  './mundo/estaciones/mostrador.js', './mundo/estaciones/mostrador.css',
+  './manifest.webmanifest', './assets/logo-mark.svg'
 ];
 
 self.addEventListener('install', e => {

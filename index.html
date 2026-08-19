@@ -15,13 +15,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="cine.css">
-<link rel="stylesheet" href="escenas/terminal.css">
-<link rel="stylesheet" href="escenas/mac.css">
-<link rel="stylesheet" href="escenas/board.css">
-<link rel="stylesheet" href="escenas/revista.css">
+<link rel="stylesheet" href="mundo/mundo.css">
 </head>
-<body class="cine">
+<body class="mundo">
 
 <!-- Puerta de entrada -->
 <div class="lock" id="lock" hidden>
@@ -37,30 +33,33 @@
   </div>
 </div>
 
-<!-- El viaje: su altura es el tiempo del relato -->
-<div id="viaje">
-  <!-- El escenario queda fijo; lo que cambia es el momento -->
-  <div id="escenario">
-    <!-- las escenas se insertan acá -->
-  </div>
+<!-- El mundo 3D: la terminal vista desde la butaca de Nacho -->
+<canvas id="mundo3d" aria-hidden="true"></canvas>
+
+<!-- Paneles de las estaciones, proyectados sobre el 3D -->
+<div id="estaciones"></div>
+
+<!-- La visera de tu gorra: asoma arriba, como en primera persona -->
+<div id="visera" aria-hidden="true">
+  <svg viewBox="0 0 900 120" preserveAspectRatio="none">
+    <defs><linearGradient id="vg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1c2b55"/><stop offset="1" stop-color="#0d1530"/></linearGradient></defs>
+    <path d="M0,0 H900 V38 C760,118 140,118 0,38 Z" fill="url(#vg)"/>
+    <path d="M40,40 C220,104 680,104 860,40" fill="none" stroke="#f5a623" stroke-width="3" stroke-dasharray="6 6" opacity=".55"/>
+    <text x="450" y="80" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-weight="900" font-size="30" fill="#f3efe4" opacity=".85">Nacho<tspan fill="#ffd479" font-style="italic">Vuela</tspan></text>
+  </svg>
 </div>
 
-<!-- Barra fija: logo + estado del radar + guía de scroll -->
-<header class="hud">
-  <a class="hud__marca" href="#" id="hudTop">
-    <img src="assets/logo-mark.svg" alt="" width="34" height="34">
-    <span>Nacho<em>Vuela</em></span>
-  </a>
-  <div class="hud__estado" id="hudEstado"></div>
-</header>
-
-<div class="guia" id="guia" aria-hidden="true">
-  <span class="guia__txt">scrolleá</span>
-  <span class="guia__flecha"></span>
-</div>
-
-<!-- Riel de capítulos: dónde estás en el relato -->
-<nav class="riel" id="riel" aria-label="Momentos"></nav>
+<!-- HUD -->
+<a class="hud hud--marca" href="#" id="hudTop"><img src="assets/logo-mark.svg" alt=""><b>Nacho<em>Vuela</em></b></a>
+<div class="hud hud--estado" id="hudEstado"><i></i><span>cargando…</span></div>
+<nav class="brujula" id="brujula" aria-label="Estaciones">
+  <button data-est="mac">💻 Buscar</button>
+  <button data-est="partidas">🛫 Partidas</button>
+  <button data-est="llegadas">🛬 Llegadas</button>
+  <button data-est="mostrador">📰 Revistas</button>
+  <button class="volver" data-est="">↩ Mirar alrededor</button>
+</nav>
+<div class="hud hud--pista" id="hudPista">movete con el mouse para mirar · scrolleá o hacé clic para acercarte</div>
 
 <!-- Hoja reutilizada de la app: Armador y fichas de destino -->
 <div class="sheet" id="sheet" aria-hidden="true">
@@ -73,11 +72,12 @@
 
 <script>window.NV_CINE = true;</script>
 <script src="app.js"></script>
-<script src="cine.js"></script>
-<script src="escenas/terminal.js"></script>
-<script src="escenas/mac.js"></script>
-<script src="escenas/board.js"></script>
-<script src="escenas/revista.js"></script>
-<script src="arranque.js"></script>
+<script src="mundo/camara.js"></script>
+<script src="mundo/estaciones.js"></script>
+<script src="mundo/estaciones/mac.js"></script>
+<script src="mundo/estaciones/carteles.js"></script>
+<script src="mundo/estaciones/mostrador.js"></script>
+<script type="module" src="mundo/terminal3d.js"></script>
+<script src="mundo/arranque.js"></script>
 </body>
 </html>

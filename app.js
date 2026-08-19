@@ -984,7 +984,7 @@ function openDestino(key){
 
 function bestFound(R){
   if(!R.length) return `<div class="block"><p class="hint">Todavía no rastreamos precios para este destino. Agregalo a un viaje o a los destinos vigilados en la config y corré el motor.</p></div>`;
-  const best = R.reduce((a,b)=>a.mejor_precio_millas<b.mejor_precio_millas?a:b);
+  const best = R.reduce((a,b)=>a.mejor_precio_millas<=b.mejor_precio_millas?a:b); // <= : mismo desempate que comparaBlock
   const op = best.nivel==='oportunidad';
   return `<div class="block">
     <h3>Mejor precio detectado</h3>

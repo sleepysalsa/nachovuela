@@ -1,0 +1,300 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NachoVuela · mundo/estaciones/carteles.css — carteles split-flap colgados.
+
+   El <section class="est est--partidas|llegadas"> es el MUEBLE entero: marco
+   de chapa oscura con tornillos, luz cenital cálida, dos tirantes al techo y
+   su sombra sobre la pared. Todo escala con UNA unidad (font-size en cqw):
+   lejos el cartel mide ~370px y cerca ~1180px, y las proporciones no cambian.
+
+   Adentro del panel hay dos capas que se funden con --zoom (lo escribe la
+   cámara en :root) mientras el body dice que ESTA estación es la enfocada:
+     .ca__lejos  primeras filas asentadas, 3 columnas, letra grande (cartel)
+     .ca__cerca  todas las filas, 4 columnas, scroll interno, fichas que giran
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.est.est--partidas, .est.est--llegadas {
+  container-type: size;
+  background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  overflow: visible;
+  --u: clamp(3px, calc(100cqw / 64), 19px);
+  --tinta: #04060b;
+  --tiza: #efe9da;
+  --tiza-dim: #b3b9c8;
+  --flap-borde: rgba(0, 0, 0, .8);
+}
+.est.est--partidas.est--mirando, .est.est--llegadas.est--mirando { box-shadow: none; }
+
+.ca, .ca * { box-sizing: border-box; }
+.ca {
+  position: absolute; inset: 0;
+  font-size: var(--u);
+  color: var(--tiza);
+}
+
+/* ── Tirantes al techo: dos caños de acero ─────────────────────────────── */
+.ca__tirante {
+  position: absolute; top: calc(-1 * min(16cqh, 6.5vh)); height: calc(min(16cqh, 6.5vh) + .6em);
+  width: .55em; left: 18%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #1b2130 0 18%, #5b6578 40%, #8a94a8 50%, #454e60 68%, #14181f 100%);
+  box-shadow: 0 0 .5em rgba(0, 0, 0, .55);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 30%);
+          mask-image: linear-gradient(180deg, transparent 0, #000 30%);
+}
+.ca__tirante--der { left: auto; right: 18%; }
+.ca__tirante::after {                    /* la brida que muerde el marco */
+  content: ''; position: absolute; left: 50%; bottom: .18em;
+  width: 1.15em; height: .5em; margin-left: -.575em; border-radius: .12em;
+  background: linear-gradient(180deg, #6a7488, #2b3242 55%, #161a24);
+  box-shadow: 0 0 0 1px var(--tinta), 0 .1em .2em rgba(0, 0, 0, .7);
+}
+
+/* ── La luz cenital cálida que baña el cartel ─────────────────────────── */
+.ca__luz {
+  position: absolute; left: 50%; top: -5.5em; width: 118%; height: 11em;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(48% 100% at 50% 0%, rgba(255, 196, 120, .30), transparent 72%),
+    radial-gradient(22% 62% at 50% 0%, rgba(255, 228, 185, .22), transparent 70%);
+  filter: blur(.35em);
+  opacity: .8; pointer-events: none;
+  transition: opacity .35s;
+}
+.est--mirando .ca__luz, .est--foco .ca__luz { opacity: 1; }
+
+/* ── Marco: chapa oscura, cepillada, con bisel ─────────────────────────── */
+.ca__marco {
+  position: absolute; inset: 0;
+  border-radius: .75em;
+  background:
+    linear-gradient(180deg, rgba(255, 200, 130, .22), rgba(255, 200, 130, .05) 18%, transparent 40%),
+    linear-gradient(90deg, rgba(255, 255, 255, .05), transparent 12%, transparent 88%, rgba(0, 0, 0, .25)),
+    linear-gradient(180deg, rgba(255, 255, 255, .07), transparent 30%, rgba(0, 0, 0, .3)),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #333b4d 0%, #202633 45%, #171b25 100%);
+  box-shadow:
+    0 0 0 1px var(--tinta),
+    inset 0 1px 0 rgba(230, 238, 255, .18),
+    inset 0 -1px 0 rgba(0, 0, 0, .7),
+    inset 1px 0 0 rgba(255, 255, 255, .05),
+    inset -1px 0 0 rgba(0, 0, 0, .35),
+    0 1.3em 2.8em rgba(0, 0, 0, .7),
+    0 .3em .8em rgba(0, 0, 0, .5);
+  transition: box-shadow .3s;
+}
+.est--mirando .ca__marco {
+  box-shadow:
+    0 0 0 1px var(--tinta),
+    0 0 0 .18em rgba(245, 166, 35, .85),
+    0 0 2.2em rgba(245, 166, 35, .28),
+    inset 0 1px 0 rgba(230, 238, 255, .18),
+    inset 0 -1px 0 rgba(0, 0, 0, .7),
+    0 1.3em 2.8em rgba(0, 0, 0, .7);
+}
+/* Tornillos de cabeza fresada, cada uno apretado en otro ángulo */
+.ca__torn {
+  position: absolute; width: .62em; height: .62em; border-radius: 50%; z-index: 3;
+  background: radial-gradient(circle at 36% 32%, #aeb7c8 0 18%, #5b6477 50%, #232938 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .85), 0 .06em .1em rgba(0, 0, 0, .8), inset 0 .04em 0 rgba(255, 255, 255, .35);
+}
+.ca__torn::after {
+  content: ''; position: absolute; left: 18%; right: 18%; top: 50%; height: .09em; margin-top: -.045em;
+  background: #0a0d14; border-radius: 99px; transform: rotate(-36deg);
+}
+.ca__torn--a { left: .5em;  top: .5em; }
+.ca__torn--b { right: .5em; top: .5em; }    .ca__torn--b::after { transform: rotate(48deg); }
+.ca__torn--c { left: .5em;  bottom: .5em; } .ca__torn--c::after { transform: rotate(-79deg); }
+.ca__torn--d { right: .5em; bottom: .5em; } .ca__torn--d::after { transform: rotate(14deg); }
+
+/* Sombra propia sobre la pared */
+.ca__sombra {
+  position: absolute; left: 6%; right: 6%; bottom: -2.2em; height: 2.6em;
+  background: radial-gradient(50% 100% at 50% 0%, rgba(0, 0, 0, .8), transparent 72%);
+  filter: blur(.5em); pointer-events: none;
+}
+
+/* ── El panel oscuro (vidrio + fondo negro azulado) ────────────────────── */
+.ca__panel {
+  position: absolute; inset: 1.15em; z-index: 1;
+  display: flex; flex-direction: column;
+  padding: .7em .95em .55em;
+  border-radius: .42em; overflow: hidden;
+  background:
+    radial-gradient(70% 38% at 50% 0%, rgba(255, 190, 110, .11), transparent 72%),
+    linear-gradient(180deg, #0c1019 0%, #080b13 60%, #06080f 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .07),               /* labio del rebaje */
+    0 0 0 2px rgba(0, 0, 0, .9),
+    0 .1em .4em rgba(0, 0, 0, .6),
+    inset 0 0 0 1px rgba(0, 0, 0, .95),
+    inset 0 .8em 2.2em rgba(0, 0, 0, .55),
+    inset 0 -1px 0 rgba(255, 255, 255, .03);
+}
+.ca__vidrio {
+  position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  background:
+    linear-gradient(104deg, transparent 0 9%, rgba(255, 255, 255, .03) 9% 15%, transparent 15% 19%, rgba(255, 255, 255, .014) 19% 22%, transparent 22% 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, .03), transparent 18%);
+}
+
+/* ── Encabezado: título + reloj ────────────────────────────────────────── */
+.ca__head {
+  flex: 0 0 auto;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 1em;
+  padding: 0 .1em .45em;
+  border-bottom: 1px solid rgba(120, 140, 190, .2);
+}
+.ca__tit {
+  margin: 0; display: flex; align-items: baseline; gap: .45em;
+  font-family: var(--mono); font-weight: 800; font-size: 1.45em; line-height: 1; letter-spacing: .2em;
+  color: var(--amber);
+  text-shadow: 0 0 .8em rgba(255, 179, 64, .45), 0 1px 0 rgba(0, 0, 0, .9);
+}
+.ca__tit em { font-style: normal; font-size: .42em; letter-spacing: .34em; color: var(--ink-faint); text-shadow: none; }
+.ca__avion { font-size: .78em; filter: grayscale(.2) drop-shadow(0 0 .3em rgba(245, 166, 35, .5)); }
+
+.ca__reloj { display: flex; align-items: center; gap: .6em; }
+.ca__reloj-lbl { font-family: var(--mono); font-size: .58em; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-faint); }
+.ca__reloj-pila { display: grid; align-items: center; justify-items: end; }
+.ca__reloj-pila > * { grid-area: 1 / 1; }
+.ca__reloj-caja { display: flex; align-items: center; opacity: 0; }
+.ca__dosp { font-family: var(--mono); font-style: normal; font-weight: 700; font-size: .95em; color: var(--amber); padding: 0 .1em; transform: translateY(-.06em); }
+.ca__reloj-txt {
+  font-family: var(--mono); font-weight: 700; font-size: 1.15em; letter-spacing: .08em; line-height: 1;
+  color: var(--amber-lt); text-shadow: 0 0 .5em rgba(255, 212, 121, .35);
+  padding: .18em .35em; border-radius: .18em;
+  background: linear-gradient(180deg, #161b28, #0c1018); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .8), inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+/* enfocado: el reloj de fichas reemplaza al de texto (mismo fundido que las capas) */
+body[data-enfocada="partidas"] .est--partidas .ca__reloj-txt,
+body[data-enfocada="llegadas"] .est--llegadas .ca__reloj-txt { opacity: calc(1 - clamp(0, (var(--zoom, 0) - .28) / .24, 1)); }
+body[data-enfocada="partidas"] .est--partidas .ca__reloj-caja,
+body[data-enfocada="llegadas"] .est--llegadas .ca__reloj-caja { opacity: clamp(0, (var(--zoom, 0) - .5) / .35, 1); }
+
+/* ── Cuerpo: las dos capas ─────────────────────────────────────────────── */
+.ca__cuerpo { position: relative; flex: 1 1 auto; min-height: 0; }
+.ca__lejos, .ca__cerca { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.ca__lejos { overflow: hidden; font-size: 1.62em; opacity: 1; }
+.ca__cerca { opacity: 0; pointer-events: none; }
+body[data-enfocada="partidas"] .est--partidas .ca__lejos,
+body[data-enfocada="llegadas"] .est--llegadas .ca__lejos { opacity: calc(1 - clamp(0, (var(--zoom, 0) - .28) / .24, 1)); }
+body[data-enfocada="partidas"] .est--partidas .ca__cerca,
+body[data-enfocada="llegadas"] .est--llegadas .ca__cerca { opacity: clamp(0, (var(--zoom, 0) - .5) / .35, 1); pointer-events: auto; }
+
+.ca__filas-lejos {
+  flex: 1 1 auto; min-height: 0; overflow: hidden; padding-top: .12em;
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 1.4em), transparent 100%);
+          mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 1.4em), transparent 100%);
+}
+.ca__tabla { position: relative; flex: 1 1 auto; min-height: 0; }
+.ca__scroll { padding-right: .2em; }
+.ca__filas { padding: .15em 0 .4em; }
+
+/* ── La grilla ─────────────────────────────────────────────────────────── */
+.ca { --fw: 1.08em; }
+.ca-cab, .ca-fila { display: grid; align-items: center; gap: 0 1em; }
+.ca__cerca .ca-cab, .ca__cerca .ca-fila {
+  grid-template-columns: 1.6em calc(20 * var(--fw)) calc(11 * var(--fw)) calc(11 * var(--fw)) calc(8 * var(--fw));
+}
+.ca__lejos .ca-cab, .ca__lejos .ca-fila {
+  grid-template-columns: calc(14 * var(--fw)) calc(11 * var(--fw)) calc(7 * var(--fw));
+  gap: 0 .85em;
+}
+.ca-cab { padding: .5em .12em .32em; border-bottom: 1px solid rgba(120, 140, 190, .13); }
+.ca__lejos .ca-cab { padding: .3em .1em .22em; }
+.ca-cab span {
+  font-family: var(--mono); font-size: .6em; font-weight: 600; letter-spacing: .26em; text-transform: uppercase;
+  color: var(--ink-faint); white-space: nowrap; overflow: hidden;
+}
+.ca-cab .ca-c--mi { text-align: right; }
+
+.ca-fila {
+  position: relative; width: 100%; margin: 0; padding: .28em .12em;
+  border: 0; border-bottom: 1px solid rgba(120, 140, 190, .08); border-radius: .3em;
+  background: transparent; text-align: left; font: inherit; color: inherit;
+  cursor: pointer;
+}
+.ca-fila--fija { padding: .2em .1em; cursor: default; }
+.ca-fila--relleno { cursor: default; pointer-events: none; }
+.ca-fila--relleno .ca-fila__n { opacity: .55; }
+.ca-fila--vacia { grid-template-columns: 1fr !important; justify-items: center; cursor: default; pointer-events: none; }
+.ca-fila__n { font-family: var(--mono); font-size: .62em; font-weight: 600; letter-spacing: .04em; color: var(--ink-faint); text-align: right; padding-right: .3em; }
+.ca-fila:hover, .ca-fila:focus-visible {
+  outline: none;
+  background: linear-gradient(90deg, rgba(255, 179, 64, .16), rgba(255, 179, 64, .04) 55%, transparent);
+  box-shadow: inset .2em 0 0 var(--amber);
+}
+.ca-fila:hover .ca-fila__n, .ca-fila:focus-visible .ca-fila__n { color: var(--amber); }
+.ca-fila:hover .ca-flap__c, .ca-fila:focus-visible .ca-flap__c { text-shadow: 0 0 .7em rgba(244, 239, 226, .35); }
+.ca-fila__flecha {
+  position: absolute; right: .35em; top: 50%; transform: translate(-.4em, -50%);
+  font-family: var(--mono); font-size: 1.1em; font-weight: 800; color: var(--amber);
+  opacity: 0; transition: opacity .2s ease, transform .2s ease; pointer-events: none;
+}
+.ca-fila:hover .ca-fila__flecha, .ca-fila:focus-visible .ca-fila__flecha { opacity: 1; transform: translate(0, -50%); }
+
+.ca-celda { display: flex; white-space: nowrap; min-width: 0; }
+
+/* ── La ficha (split-flap) ─────────────────────────────────────────────── */
+.ca-flap {
+  position: relative; display: inline-block; flex: 0 0 auto;
+  width: 1.02em; height: 1.5em; margin-right: .06em;
+  border-radius: .12em;
+  perspective: 5em;
+  background: linear-gradient(180deg, #1d2331 0%, #151a25 48%, #0b0f16 50%, #171c27 100%);
+  box-shadow: 0 .05em .09em rgba(0, 0, 0, .7), inset 0 .04em 0 rgba(255, 255, 255, .06), inset 0 -.04em 0 rgba(0, 0, 0, .55);
+  contain: layout paint style;
+}
+.ca-flap::after {                        /* la bisagra */
+  content: ''; position: absolute; left: 0; right: 0; top: 50%; height: .07em; margin-top: -.035em; z-index: 3;
+  background: var(--flap-borde); opacity: .9;
+}
+.ca-flap__c {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-weight: 700; font-size: .95em; line-height: 1;
+  color: var(--tiza); text-shadow: 0 0 .4em rgba(244, 239, 226, .18);
+}
+.ca-flap__l {                             /* la mitad que cae */
+  position: absolute; left: 0; right: 0; top: 0; height: 50%; z-index: 4;
+  border-radius: .12em .12em 0 0;
+  background: linear-gradient(180deg, #232a3c 0%, #11151e 100%);
+  box-shadow: 0 .14em .2em rgba(0, 0, 0, .6);
+  transform-origin: 50% 100%; backface-visibility: hidden; opacity: 0;
+}
+.ca-flap--gira .ca-flap__l { opacity: 1; will-change: transform; animation: ca-clac 74ms linear infinite; }
+@keyframes ca-clac { 0% { transform: rotateX(0deg); } 100% { transform: rotateX(-88deg); } }
+
+/* ── Color por columna / estado ────────────────────────────────────────── */
+.ca-c--dest .ca-flap__c { color: var(--tiza); }
+.ca-c--fec  .ca-flap__c { color: var(--tiza-dim); }
+.ca-c--mi   .ca-flap__c { color: var(--amber-lt); font-weight: 800; text-shadow: 0 0 .5em rgba(255, 212, 121, .35); }
+.ca-c--est  .ca-flap__c { color: var(--tiza-dim); }
+.ca-est--verde .ca-flap__c { color: var(--green); text-shadow: 0 0 .55em rgba(52, 224, 161, .45); }
+.ca-est--rojo  .ca-flap__c { color: var(--red);   text-shadow: 0 0 .55em rgba(255, 90, 110, .4); }
+.ca-est--tiza  .ca-flap__c { color: var(--tiza-dim); text-shadow: none; }
+.ca-est--late  { animation: ca-late 1.7s steps(1, end) infinite; }
+@keyframes ca-late { 0%, 62% { opacity: 1; } 63%, 100% { opacity: .55; } }
+.ca-c--vacia .ca-flap__c { color: var(--ink-faint); }
+
+/* ── Pie ───────────────────────────────────────────────────────────────── */
+.ca__pie {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: .55em;
+  margin-top: .35em; padding-top: .4em;
+  border-top: 1px solid rgba(120, 140, 190, .14);
+  font-family: var(--mono); font-size: .58em; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint);
+  white-space: nowrap;
+}
+.ca__led { width: .62em; height: .62em; border-radius: 50%; background: var(--green); box-shadow: 0 0 .8em var(--green), 0 0 0 1px rgba(0, 0, 0, .85); animation: ca-late 2.4s ease-in-out infinite; }
+.ca__pie-n { margin-left: auto; color: var(--tiza-dim); }
+.ca__pie-hint { display: none; color: rgba(255, 179, 64, .6); }
+.est--foco .ca__pie-hint { display: inline; }
+.est--foco .ca__pie-n { margin-left: auto; margin-right: 1.4em; }
+
+/* ── Menos movimiento ──────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ca-flap--gira .ca-flap__l { animation: none; opacity: 0; }
+  .ca-est--late, .ca__led { animation: none; }
+  .ca-fila__flecha, .ca__luz, .ca__marco { transition: none; }
+}

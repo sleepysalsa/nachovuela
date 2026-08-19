@@ -1,0 +1,364 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NachoVuela · mundo/estaciones/mostrador.css — el mostrador de revistas.
+
+   El <section class="est est--mostrador"> vive en dos estados:
+     LEJOS  → dos tapas de revista con lomo apoyadas sobre una repisa. Todo
+              en unidades de contenedor (cqw/cqh) para que escale con la
+              distancia, igual que un objeto de la escena.
+     CERCA  → un panel oscuro con dos pestañas de papel y una PÁGINA MARFIL
+              (#f1ead8, tinta #241c10) que scrollea adentro. Medidas en px/rem
+              porque acá se lee y se usa.
+   El fundido entre los dos lo maneja --zoom (lo escribe la cámara en :root)
+   solo cuando ESTA estación es la enfocada (body[data-enfocada="mostrador"]).
+   Sin filter:blur ni feTurbulence: la textura de papel son gradientes.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.est.est--mostrador {
+  container-type: size;
+  background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  overflow: visible;
+  --papel: #f1ead8;
+  --papel-2: #faf5ea;
+  --papel-3: #e6dcc4;
+  --tinta: #241c10;
+  --tinta-2: rgba(36, 28, 16, .72);
+  --tinta-3: rgba(36, 28, 16, .48);
+  --tinta-4: rgba(36, 28, 16, .22);
+  --tinta-5: rgba(36, 28, 16, .1);
+  --ambar-tinta: #9a6407;
+  --verde-tinta: #0f7a56;
+  --rojo-tinta: #a3352f;
+}
+.est.est--mostrador.est--mirando { box-shadow: none; }
+
+.mo { position: absolute; inset: 0; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEJOS · las dos tapas sobre el mostrador
+   ═══════════════════════════════════════════════════════════════════════════ */
+.mo__lejos {
+  position: absolute; inset: 0; z-index: 1;
+  opacity: 1; transition: opacity .2s linear;
+  font-family: var(--sans); color: var(--tinta); user-select: none;
+}
+body[data-enfocada="mostrador"] .est--mostrador .mo__lejos { opacity: calc(1.45 - var(--zoom, 0) * 2.2); }
+.est--foco .mo__lejos { opacity: 0; pointer-events: none; }
+
+.mo__kiosco {
+  position: absolute; left: 50%; top: 4cqh; transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--mono); font-size: 2.6cqw; letter-spacing: .22em; text-transform: uppercase;
+  color: rgba(255, 212, 121, .78);
+  padding: .8cqh 2.4cqw; border-radius: 99cqw;
+  background: rgba(7, 10, 20, .55); box-shadow: inset 0 0 0 1px rgba(245, 166, 35, .28);
+}
+
+/* la repisa de madera donde apoyan */
+.mo__repisa {
+  position: absolute; left: 3cqw; right: 3cqw; bottom: 5cqh; height: 5.5cqh;
+  border-radius: .8cqw;
+  background: linear-gradient(180deg, #6a563a 0%, #4a3a25 45%, #2b2114 100%);
+  box-shadow:
+    inset 0 .35cqh 0 rgba(255, 220, 160, .28),
+    0 1.2cqh 2.6cqh -.6cqh rgba(0, 0, 0, .8);
+}
+.mo__repisa::after {                            /* sombra de contacto de las revistas */
+  content: ''; position: absolute; left: 6cqw; right: 6cqw; top: -1.2cqh; height: 2.4cqh;
+  border-radius: 50%; background: rgba(0, 0, 0, .55);
+}
+
+/* una tapa de revista: papel, lomo a la izquierda, sombra hacia abajo */
+.mo__tapa {
+  position: absolute; bottom: 9.5cqh; width: 40cqw; height: 66cqh;
+  padding: 3.6cqh 2.6cqw 3.6cqh 7.4cqw;
+  border-radius: .5cqw 1.6cqw 1.6cqw .5cqw;
+  display: flex; flex-direction: column; justify-content: flex-start; gap: 1.2cqh;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .06),
+    0 2.6cqh 4cqh -1.4cqh rgba(0, 0, 0, .85),
+    inset 0 0 0 max(1px, .18cqw) rgba(255, 255, 255, .08);
+  transition: transform .35s ease, box-shadow .3s ease;
+}
+.mo__tapa::after {                              /* brillo de papel satinado */
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, rgba(255, 255, 255, .22) 0%, rgba(255, 255, 255, .06) 30%, transparent 48%, rgba(0, 0, 0, .12) 100%);
+}
+.mo__tapa--dest {
+  left: 7cqw; transform: rotate(-3.5deg);
+  background:
+    radial-gradient(90% 60% at 100% 100%, rgba(52, 224, 161, .32) 0%, transparent 60%),
+    linear-gradient(160deg, #f9dc9a 0%, #f0b64a 48%, #c37c17 100%);
+  color: #2a1a05;
+}
+.mo__tapa--novs {
+  right: 7cqw; transform: rotate(2.5deg);
+  background:
+    radial-gradient(80% 50% at 0% 0%, rgba(245, 166, 35, .28) 0%, transparent 60%),
+    linear-gradient(160deg, #202a45 0%, #111729 55%, #090c17 100%);
+  color: var(--papel);
+}
+.est--mirando .mo__tapa {
+  box-shadow:
+    0 0 0 max(1.5px, .45cqw) rgba(245, 166, 35, .9),
+    0 0 5cqw rgba(245, 166, 35, .45),
+    0 2.6cqh 4cqh -1.4cqh rgba(0, 0, 0, .85);
+}
+.est--mirando .mo__tapa--dest { transform: rotate(-3.5deg) translateY(-1cqh); }
+.est--mirando .mo__tapa--novs { transform: rotate(2.5deg) translateY(-1cqh); }
+
+.mo__lomo {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 5.2cqw;
+  background: linear-gradient(90deg, rgba(0, 0, 0, .55) 0%, rgba(0, 0, 0, .28) 45%, rgba(255, 255, 255, .14) 82%, rgba(0, 0, 0, .18) 100%);
+  border-right: 1px solid rgba(0, 0, 0, .28);
+}
+.mo__lomo::after {                              /* texto del lomo, apenas insinuado */
+  content: 'NachoVuela'; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg); white-space: nowrap;
+  font-family: var(--serif); font-weight: 700; font-size: 2.6cqw; letter-spacing: .06em;
+  color: rgba(255, 255, 255, .55);
+}
+.mo__tapa-et {
+  font-family: var(--mono); font-size: 2.05cqw; letter-spacing: .1em; text-transform: uppercase;
+  opacity: .78; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mo__tapa-tit {
+  font-family: var(--serif); font-weight: 900; font-size: 6.1cqw; line-height: .95; letter-spacing: -.035em; white-space: nowrap;
+  margin-top: .4cqh; text-wrap: balance;
+}
+.mo__tapa--novs .mo__tapa-tit { font-size: 5.6cqw; }
+.mo__tapa-baj {
+  font-family: var(--sans); font-size: 2.7cqw; line-height: 1.25; opacity: .86;
+  margin-top: .6cqh; max-width: 28cqw;
+}
+.mo__tapa-emojis {
+  margin-top: auto; font-size: 3.4cqw; letter-spacing: .08em; line-height: 1;
+  white-space: nowrap; overflow: hidden; opacity: .95;
+}
+.mo__tapa-lineas { margin-top: auto; display: flex; flex-direction: column; gap: 1.1cqh; }
+.mo__tapa-lineas i { display: block; height: 1cqh; border-radius: 1cqh; background: rgba(241, 234, 216, .38); }
+.mo__tapa-lineas i:nth-child(1) { width: 92%; background: var(--green); opacity: .8; }
+.mo__tapa-lineas i:nth-child(2) { width: 68%; }
+.mo__tapa-lineas i:nth-child(3) { width: 80%; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CERCA · panel oscuro + pestañas + página marfil
+   ═══════════════════════════════════════════════════════════════════════════ */
+.mo__cerca {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; flex-direction: column;
+  border-radius: 14px; overflow: hidden;
+  background: rgba(10, 14, 26, .94); border: 1px solid var(--line-strong);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .9), inset 0 1px 0 rgba(255, 255, 255, .05);
+  color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.35;
+  opacity: 0; pointer-events: none;
+}
+body[data-enfocada="mostrador"] .est--mostrador .mo__cerca { opacity: calc((var(--zoom, 0) - .5) * 2.8); }
+.est--foco .mo__cerca { opacity: 1; pointer-events: auto; }
+
+/* ── cabecera: kicker · pestañas · volver ─────────────────────────────── */
+.mo__cab {
+  flex: 0 0 auto; display: flex; align-items: flex-end; gap: 14px;
+  padding: 14px 18px 0 20px; min-height: 58px;
+  background: linear-gradient(180deg, rgba(245, 166, 35, .06), transparent 70%);
+}
+.mo__kicker {
+  align-self: center; margin-bottom: 8px;
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-dim);
+  white-space: nowrap;
+}
+.mo__tabs { display: flex; gap: 6px; margin-left: 10px; align-items: flex-end; }
+.mo__tab {
+  font: inherit; font-family: var(--serif); font-weight: 600; font-size: 1rem; letter-spacing: .01em;
+  color: var(--ink-dim); cursor: pointer;
+  padding: 9px 18px 10px; border: 1px solid var(--line-strong); border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(180deg, rgba(241, 234, 216, .1), rgba(241, 234, 216, .04));
+  transform: translateY(2px);
+  transition: color .15s, background .15s, transform .15s;
+}
+.mo__tab:hover { color: var(--ink); background: linear-gradient(180deg, rgba(241, 234, 216, .18), rgba(241, 234, 216, .08)); transform: translateY(0); }
+.mo__tab.is-activa, .mo__tab.is-activa:hover {
+  color: #1a1206; background: var(--amber); border-color: var(--amber);
+  transform: translateY(1px);
+  box-shadow: 0 -6px 18px -8px rgba(245, 166, 35, .7);
+}
+.mo__tab:focus-visible { outline: 2px solid var(--amber-lt); outline-offset: 2px; }
+.mo__soltar {
+  margin-left: auto; align-self: center; margin-bottom: 8px;
+  font: inherit; font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-dim); background: rgba(10, 14, 26, .6); border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 12px; cursor: pointer; white-space: nowrap; transition: .15s;
+}
+.mo__soltar:hover { color: var(--ink); border-color: var(--line-strong); }
+
+/* ── la página de papel ────────────────────────────────────────────────── */
+.mo__pagina {
+  position: relative; flex: 1 1 auto; min-height: 0;
+  margin: 0 14px 14px; border-radius: 4px 12px 12px 12px;
+  overflow: hidden; color: var(--tinta);
+  background:
+    radial-gradient(120% 90% at 8% 0%, rgba(154, 100, 7, .09) 0%, transparent 46%),
+    radial-gradient(90% 70% at 100% 100%, rgba(120, 90, 40, .1) 0%, transparent 52%),
+    repeating-linear-gradient(0deg, rgba(60, 40, 10, .028) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(60, 40, 10, .018) 0 1px, transparent 1px 7px),
+    var(--papel);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .55),
+    inset 0 0 40px rgba(120, 90, 40, .12),
+    0 -1px 0 rgba(245, 166, 35, .55),
+    0 12px 30px -18px rgba(0, 0, 0, .8);
+}
+.mo__pagina::before {                            /* canto de páginas apiladas, a la derecha */
+  content: ''; position: absolute; right: 0; top: 10px; bottom: 10px; width: 6px; pointer-events: none; z-index: 3;
+  background: repeating-linear-gradient(0deg, rgba(36, 28, 16, .12) 0 1px, transparent 1px 3px);
+  opacity: .5;
+}
+.est--mostrador .mo__scroll { position: absolute; inset: 0; overflow: auto; background: transparent; scrollbar-gutter: stable; }
+.est--mostrador:not(.est--foco) .mo__scroll { overflow: hidden; }
+.est--mostrador .mo__scroll::-webkit-scrollbar { width: 10px; }
+.est--mostrador .mo__scroll::-webkit-scrollbar-track { background: transparent; }
+.est--mostrador .mo__scroll::-webkit-scrollbar-thumb { background: rgba(36, 28, 16, .28); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+.est--mostrador .mo__scroll { scrollbar-color: rgba(36, 28, 16, .3) transparent; }
+.mo__pag[hidden] { display: none !important; }
+
+.mo__vacio { padding: 60px 30px; text-align: center; font-family: var(--serif); font-style: italic; font-size: 1.1rem; color: var(--tinta-3); }
+
+/* ── índice de destinos: grilla ────────────────────────────────────────── */
+.mo__grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(214px, 1fr)); gap: 12px;
+  padding: 16px 22px 30px 20px;
+}
+.mo__seccion {
+  grid-column: 1 / -1; display: flex; align-items: baseline; gap: 12px; margin: 14px 0 0;
+  padding-bottom: 6px; border-bottom: 1px solid var(--tinta-4);
+  font-family: var(--serif); font-weight: 700; font-size: 1.28rem; letter-spacing: -.01em; color: var(--tinta);
+}
+.mo__seccion:first-child { margin-top: 2px; }
+.mo__seccion span { position: relative; padding-left: 14px; }
+.mo__seccion span::before { content: ''; position: absolute; left: 0; top: .32em; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px rgba(245, 166, 35, .28); }
+.mo__seccion small { font-family: var(--mono); font-weight: 400; font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--tinta-3); }
+
+.mo__card {
+  position: relative; display: flex; flex-direction: column; gap: 9px;
+  margin: 0; padding: 12px 12px 11px; text-align: left; font: inherit; color: var(--tinta); cursor: pointer;
+  background: linear-gradient(180deg, var(--papel-2), #f6f0e2);
+  border: 1px solid rgba(36, 28, 16, .16); border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 1px 2px rgba(36, 28, 16, .1), 0 6px 14px -12px rgba(36, 28, 16, .5);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  will-change: transform;
+}
+.mo__card::after {                               /* esquina doblada */
+  content: ''; position: absolute; right: -1px; top: -1px; width: 14px; height: 14px;
+  background: linear-gradient(225deg, var(--papel) 0 50%, var(--papel-3) 50% 100%);
+  border-radius: 0 8px 0 3px; box-shadow: -1px 1px 2px rgba(36, 28, 16, .12);
+}
+.mo__card:hover, .mo__card:focus-visible {
+  transform: translateY(-4px);
+  border-color: rgba(245, 166, 35, .8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 0 0 1px rgba(245, 166, 35, .55), 0 16px 26px -14px rgba(36, 28, 16, .6);
+  outline: none;
+}
+.mo__card:active { transform: translateY(-1px); }
+
+.mo__card-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mo__emoji {
+  flex: 0 0 auto; width: 40px; height: 40px; display: grid; place-items: center;
+  font-size: 1.45rem; line-height: 1; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0%, var(--papel-3) 100%);
+  box-shadow: inset 0 0 0 1px rgba(36, 28, 16, .12);
+}
+.mo__nom { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.mo__nom b { font-family: var(--serif); font-weight: 700; font-size: 1.08rem; line-height: 1.1; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mo__nom small { font-family: var(--mono); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.mo__precio { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; min-height: 22px; }
+.mo__precio b { font-family: var(--mono); font-weight: 800; font-size: 1.22rem; letter-spacing: -.02em; line-height: 1; color: var(--tinta); }
+.mo__precio small { font-family: var(--mono); font-size: .66rem; color: var(--tinta-3); letter-spacing: .02em; }
+.mo__nivel {
+  margin-left: auto; font-family: var(--mono); font-size: .56rem; letter-spacing: .12em; text-transform: uppercase;
+  padding: 3px 7px 2px; border-radius: 999px; background: var(--tinta-5); color: var(--tinta-2); line-height: 1;
+}
+.mo__precio--oportunidad b { color: var(--verde-tinta); }
+.mo__precio--oportunidad .mo__nivel { background: var(--verde-tinta); color: #eafff5; box-shadow: 0 0 0 3px rgba(15, 122, 86, .14); }
+.mo__precio--bueno b { color: #a8620a; }
+.mo__precio--bueno .mo__nivel { background: var(--amber); color: #1a1206; }
+.mo__precio--caro b { color: var(--rojo-tinta); }
+.mo__precio--caro .mo__nivel { background: rgba(163, 53, 47, .14); color: var(--rojo-tinta); }
+.mo__precio--sin small { font-style: italic; color: var(--tinta-3); }
+
+/* franja de clima: 12 celdas coloreadas por temperatura (--c la escribe el JS) */
+.mo__clima {
+  display: grid; grid-template-columns: 1fr auto; column-gap: 10px; row-gap: 3px; align-items: center;
+  padding: 6px 0 4px; border-top: 1px dashed var(--tinta-4);
+}
+.mo__franja { grid-column: 1; grid-row: 1; display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; height: 13px; }
+.mo__c { display: block; height: 100%; border-radius: 2px; background: var(--c, var(--tinta-5)); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06); }
+.mo__c--nd { background: repeating-linear-gradient(45deg, var(--tinta-4) 0 2px, transparent 2px 5px); box-shadow: none; }
+.mo__c.is-hoy { position: relative; z-index: 1; border-radius: 3px; box-shadow: 0 0 0 1.5px var(--papel-2), 0 0 0 3px var(--tinta); transform: scaleY(1.28); }
+.mo__meses { grid-column: 1; grid-row: 2; display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; font-family: var(--mono); font-size: .5rem; letter-spacing: 0; color: var(--tinta-3); text-align: center; line-height: 1; }
+.mo__thoy { grid-column: 2; grid-row: 1 / 3; align-self: center; text-align: right; font-family: var(--mono); font-size: .6rem; letter-spacing: .06em; text-transform: uppercase; color: var(--tinta-3); white-space: nowrap; }
+.mo__thoy b { display: block; font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em; color: var(--tinta); line-height: 1; margin-top: 2px; }
+
+.mo__tip {
+  margin: 0; font-size: .82rem; line-height: 1.38; color: var(--tinta-2);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.mo__tip em { font-style: normal; font-family: var(--mono); font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ambar-tinta); margin-right: 5px; }
+.mo__tip--vacio { font-style: italic; color: var(--tinta-3); }
+.mo__ir {
+  margin-top: auto; padding-top: 2px; font-family: var(--mono); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ambar-tinta); opacity: .75; transition: opacity .15s, transform .15s;
+}
+.mo__card:hover .mo__ir { opacity: 1; transform: translateX(3px); }
+
+/* ── novedades: lista de notas ─────────────────────────────────────────── */
+.mo__lista { padding: 16px 26px 34px 24px; max-width: 980px; }
+.mo__lista-cab {
+  margin: 0 0 6px; padding: 0 0 8px; border-bottom: 1px solid var(--tinta-4);
+  font-family: var(--mono); font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-3);
+}
+.mo__post {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto 16px; gap: 14px; align-items: center;
+  padding: 12px 8px 12px 4px; margin: 0 -8px 0 -4px; border-radius: 6px;
+  color: var(--tinta); text-decoration: none;
+  border-bottom: 1px dashed var(--tinta-4);
+  transition: background .15s, transform .15s;
+}
+.mo__post:hover { background: rgba(245, 166, 35, .14); }
+.mo__post:hover .mo__ext { color: var(--ambar-tinta); transform: translate(2px, -2px); }
+.mo__post:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+.mo__n { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 1.15rem; color: var(--tinta-3); text-align: right; }
+.mo__post-cuerpo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mo__fuente {
+  align-self: flex-start; font-family: var(--mono); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase;
+  padding: 3px 7px 2px; border-radius: 999px; line-height: 1;
+  background: var(--tinta-5); color: var(--tinta-2);
+}
+.mo__fuente--ratamundo { background: rgba(163, 53, 47, .14); color: var(--rojo-tinta); }
+.mo__fuente--infoviajera { background: rgba(15, 122, 86, .14); color: var(--verde-tinta); }
+.mo__tit { font-family: var(--serif); font-weight: 500; font-size: 1.02rem; line-height: 1.3; letter-spacing: -.005em; }
+.mo__hace { font-family: var(--mono); font-size: .64rem; letter-spacing: .04em; color: var(--tinta-3); white-space: nowrap; }
+.mo__ext { font-family: var(--mono); font-size: .95rem; color: var(--tinta-4); transition: color .15s, transform .15s; }
+
+/* ── responsivo (por tamaño del panel, no de la ventana) ───────────────── */
+@container (max-width: 760px) {
+  .mo__grid { grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 10px; padding: 12px 14px 24px; }
+  .mo__kicker { display: none; }
+  .mo__tabs { margin-left: 0; }
+  .mo__tab { padding: 8px 12px 9px; font-size: .92rem; }
+  .mo__lista { padding: 12px 14px 24px; }
+  .mo__post { grid-template-columns: 24px minmax(0, 1fr) auto; }
+  .mo__ext { display: none; }
+}
+@container (max-width: 480px) {
+  .mo__soltar { display: none; }
+  .mo__grid { grid-template-columns: minmax(0, 1fr); }   /* una columna: dos no entran (la ficha mide ~250px de mínimo) */
+  .mo__card { min-width: 0; }
+  .mo__hace { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mo__tapa, .mo__card, .mo__tab, .mo__post, .mo__ir, .mo__ext { transition: none; }
+  .mo__card:hover { transform: none; }
+}
