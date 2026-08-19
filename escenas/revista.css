@@ -1,0 +1,690 @@
+/* ============================================================================
+   NachoVuela · escena "revista"
+   ----------------------------------------------------------------------------
+   La revista de a bordo: papel marfil bajo la luz de lectura, tapa azul noche
+   con tipografía ámbar. Todo el interior se mide en `em` sobre un tamaño de
+   fuente derivado del ancho de página, así la maqueta nunca se rompe: en una
+   pantalla grande se lee, en un celular se ve chiquita pero entera.
+
+   Variables que escribe el JS:
+     --rv-in     0..1  la revista entra en cuadro
+     --rv-abrir  0..1  la tapa se abre (corre y endereza el libro)
+     --rv-cinta  deg   hamaca del marcador de tela
+     --t (hoja)  0..1  progreso de giro de esa hoja → sombras y barrido
+     --a (hoja)  deg   ángulo de giro
+   ========================================================================== */
+
+.esc--revista{
+  z-index:30;                       /* la última capa: sigue debajo del HUD (40) */
+  pointer-events:none;              /* sólo la cara viva recibe clicks */
+
+  /* --- papel y tintas de la revista --- */
+  --rv-papel:#f0e8d6;
+  --rv-papel-2:#e6dcc6;
+  --rv-tinta:#241c10;
+  --rv-tinta-2:#5c5040;
+  --rv-tinta-3:#8b7d68;
+  --rv-linea:rgba(60,46,24,.16);
+  --rv-linea-2:rgba(60,46,24,.30);
+  --rv-rojo:#a8341f;
+  --rv-ambar:#b1710a;
+  --rv-tapa:#0d1428;
+  --rv-tapa-2:#141d38;
+
+  /* --- geometría de la página --- */
+  --rv-pw:min(35vw, calc(76svh * .705), 420px);
+  --rv-ph:calc(var(--rv-pw) / .705);
+
+  --rv-in:0;
+  --rv-abrir:0;
+  --rv-cinta:0deg;
+}
+
+.revista-escena{
+  position:absolute; inset:0;
+  display:grid; place-items:center;
+  perspective:2600px;
+  perspective-origin:50% 44%;
+  pointer-events:none;              /* sólo la cara viva recibe clicks */
+}
+
+/* --- luz de lectura y sombra sobre la falda ----------------------------- */
+
+.revista-lampara{
+  position:absolute; left:50%; top:38%;
+  width:min(120vw, 1100px); aspect-ratio:1.5;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(50% 50% at 50% 50%,
+    rgba(255,196,110,.20) 0%, rgba(255,170,80,.09) 38%, transparent 72%);
+  opacity:calc(var(--rv-in) * (.45 + var(--rv-abrir) * .55));
+  filter:blur(6px);
+}
+.revista-sombra{
+  position:absolute; left:50%; top:calc(44% + var(--rv-ph) * .52);
+  width:calc(var(--rv-pw) * (1.1 + var(--rv-abrir) * 1.05));
+  height:calc(var(--rv-ph) * .17);
+  transform:translate(-50%,-50%) scaleY(calc(.5 + var(--rv-in) * .5));
+  background:radial-gradient(50% 50% at 50% 50%,
+    rgba(0,0,0,.62) 0%, rgba(0,0,0,.26) 45%, transparent 72%);
+  opacity:calc(var(--rv-in) * .9);
+  filter:blur(10px);
+}
+
+/* --- el libro ------------------------------------------------------------ */
+
+/* Ojo: nada de opacity ni filter acá. Cualquiera de los dos obliga a
+   transform-style:flat y la revista se aplasta. La entrada es sólo transform;
+   el fundido lo hace .esc--on del orquestador. */
+.revista-libro{
+  position:relative;
+  width:calc(var(--rv-pw) * 2); height:var(--rv-ph);
+  transform-style:preserve-3d;
+  transform:
+    translateY(calc((1 - var(--rv-in)) * 34%))
+    rotateX(calc(26deg - var(--rv-abrir) * 19deg))
+    rotateZ(calc((1 - var(--rv-abrir)) * -3.2deg))
+    scale(calc(.84 + var(--rv-in) * .16));
+}
+.revista-libro__in{
+  position:absolute; inset:0;
+  transform-style:preserve-3d;
+  /* cerrada se ve una sola página: el libro está corrido media plana */
+  transform:translateX(calc((1 - var(--rv-abrir)) * -25%));
+}
+
+/* --- caras: geometría y apilado 3D --------------------------------------- */
+
+.revista-hoja{
+  position:absolute; top:0; left:50%;
+  width:var(--rv-pw); height:var(--rv-ph);
+  transform-origin:left center;
+  transform-style:preserve-3d;
+  /* el translateZ va DESPUÉS del giro: sin dar vuelta empuja hacia el ojo,
+     dada vuelta empuja hacia el fondo. La pila se ordena sola. */
+  transform:rotateY(var(--a, 0deg)) translateZ(var(--z, 0px));
+}
+
+.revista-cara,
+.revista-base{
+  position:absolute; inset:0;
+  overflow:hidden;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23g)' opacity='.42'/%3E%3C/svg%3E"),
+    linear-gradient(158deg, var(--rv-papel) 0%, var(--rv-papel-2) 100%);
+  background-blend-mode:soft-light, normal;
+  color:var(--rv-tinta);
+  font-family:var(--sans);
+  font-size:calc(var(--rv-pw) * .0385);
+  line-height:1.42;
+}
+
+.revista-cara{
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  pointer-events:none;
+}
+/* frente = página derecha: lomo a la izquierda, canto a la derecha */
+.revista-cara--frente{
+  transform:translateZ(.3px);
+  border-radius:.14em .85em .85em .14em;
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.5), 1px 0 3px rgba(0,0,0,.25);
+}
+/* dorso = página izquierda: al girar, su izquierda local queda hacia afuera */
+.revista-cara--dorso{
+  transform:rotateY(180deg) translateZ(.3px);
+  border-radius:.85em .14em .14em .85em;
+  box-shadow:inset 1px 0 0 rgba(255,255,255,.5), -1px 0 3px rgba(0,0,0,.25);
+}
+.revista-cara.is-viva{ pointer-events:auto; }
+
+/* Sombra interior del lomo + insinuación de canto en el borde de afuera */
+.revista-cara::before,
+.revista-base::before{
+  content:''; position:absolute; inset:0; z-index:4; pointer-events:none;
+}
+.revista-cara--frente::before,
+.revista-base--der::before{
+  background:
+    linear-gradient(90deg, rgba(48,33,12,.40) 0, rgba(48,33,12,.15) 3.2%,
+                    rgba(48,33,12,.04) 9%, transparent 16%),
+    linear-gradient(270deg, rgba(48,33,12,.13) 0, transparent 4%);
+}
+.revista-cara--dorso::before{
+  background:
+    linear-gradient(270deg, rgba(48,33,12,.40) 0, rgba(48,33,12,.15) 3.2%,
+                    rgba(48,33,12,.04) 9%, transparent 16%),
+    linear-gradient(90deg, rgba(48,33,12,.13) 0, transparent 4%);
+}
+
+/* Barrido de sombra y de luz mientras la hoja gira */
+.revista-luz{
+  position:absolute; inset:0; z-index:6; pointer-events:none;
+  background:linear-gradient(90deg,
+    rgba(6,10,22,.62) 0%, rgba(6,10,22,.14) 52%, rgba(6,10,22,.48) 100%);
+  opacity:0;
+}
+.revista-cara--frente .revista-luz{ opacity:calc(var(--t, 0) * .82); }
+.revista-cara--dorso  .revista-luz{ opacity:calc((1 - var(--t, 0)) * .82); }
+
+.revista-brillo{
+  position:absolute; top:-12%; bottom:-12%; left:-55%; width:48%;
+  z-index:7; pointer-events:none;
+  background:linear-gradient(102deg, transparent 0%,
+    rgba(255,226,170,.55) 48%, transparent 100%);
+  filter:blur(5px);
+  transform:translateX(calc(var(--t, 0) * 330%));
+  /* parábola: pico en la mitad del giro */
+  opacity:calc(var(--t, 0) * (1 - var(--t, 0)) * 3.1);
+}
+
+/* --- planos de base (lo que queda debajo de la pila) --------------------- */
+
+.revista-base{ pointer-events:none; }
+/* La media plana izquierda no es papel: es la mesa. Con la revista cerrada no
+   hay nada a la izquierda de la tapa, y una vez abierta queda tapada por las
+   hojas dadas vuelta. Sólo aporta la sombra del lomo contra la noche. */
+.revista-base--izq{
+  left:0; right:auto; width:var(--rv-pw);
+  transform:translateZ(var(--rv-zbase, -10px));
+  border-radius:.85em .14em .14em .85em;
+  background:linear-gradient(90deg,
+    rgba(3,6,14,0) 0%, rgba(3,6,14,.42) 72%, rgba(3,6,14,.66) 100%);
+  background-blend-mode:normal;
+  box-shadow:none;
+}
+.revista-base--der{
+  left:var(--rv-pw); right:auto; width:var(--rv-pw);
+  transform:translateZ(-.7px);
+  border-radius:.14em .85em .85em .14em;
+  background:linear-gradient(158deg, var(--rv-tapa-2), var(--rv-tapa));
+  background-blend-mode:normal;
+}
+.revista-base--der.is-viva{ pointer-events:auto; }
+
+.revista-contra{
+  position:absolute; inset:0; z-index:2;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:.5em; color:var(--tiza-dim); text-align:center;
+}
+.revista-contra img{ opacity:.85; }
+.revista-contra span{
+  font-family:var(--serif); font-size:1.05em; color:var(--tiza);
+  letter-spacing:.01em;
+}
+.revista-contra small{
+  font-family:var(--mono); font-size:.54em; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--ink-faint);
+}
+
+/* --- marcador de tela ---------------------------------------------------- */
+
+.revista-cinta{
+  position:absolute; top:calc(var(--rv-ph) * -.012);
+  left:var(--rv-pw);
+  width:calc(var(--rv-pw) * .03);
+  height:calc(var(--rv-ph) * 1.06);
+  /* queda en el margen del lomo: el texto de la página arranca recién en 2.5em */
+  margin-left:calc(var(--rv-pw) * .028);
+  transform-origin:top center;
+  transform:translateZ(var(--rv-ztop, 12px)) rotate(var(--rv-cinta, 0deg));
+  background:linear-gradient(96deg,
+    #5e0d18 0%, #93202f 26%, #b53344 48%, #8c1a27 72%, #5e0d18 100%);
+  background-color:#8c1a27;
+  box-shadow:1px 0 6px rgba(0,0,0,.45);
+  /* la punta de la cinta, apenas escotada */
+  clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 96.5%, 0 100%);
+  opacity:calc(var(--rv-abrir) * .92);
+  pointer-events:none;
+}
+
+/* ============================================================================
+   TIPOGRAFÍA Y MAQUETA DE PÁGINA
+   ========================================================================== */
+
+.revista-pag{
+  position:absolute; inset:0; z-index:2;
+  display:flex; flex-direction:column;
+  padding:2em 1.5em 2.9em 2.5em;      /* margen ancho del lado del lomo */
+}
+.revista-cara--dorso .revista-pag{ padding:2em 2.5em 2.9em 1.5em; }
+
+/* Cornisa */
+.revista-cab{
+  display:flex; align-items:baseline; justify-content:space-between; gap:1em;
+  font-family:var(--mono); font-size:.5em; letter-spacing:.24em;
+  text-transform:uppercase; color:var(--rv-tinta-3);
+  padding-bottom:.9em; margin-bottom:1.4em;
+  border-bottom:1px solid var(--rv-linea);
+  flex:0 0 auto;
+}
+.revista-cab span:last-child{ color:var(--rv-ambar); }
+
+/* Folio */
+.revista-folio{
+  position:absolute; bottom:1.3em; z-index:5;
+  display:flex; align-items:center; gap:.8em;
+  font-family:var(--mono); font-size:.52em; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--rv-tinta-3);
+}
+.revista-folio b{
+  font-weight:800; color:var(--rv-tinta); font-size:1.15em; letter-spacing:.04em;
+}
+.revista-cara--frente .revista-folio{ right:1.5em; flex-direction:row-reverse; }
+.revista-cara--dorso  .revista-folio{ left:1.5em; }
+
+.revista-h3{
+  margin:0 0 .6em;
+  font-family:var(--mono); font-size:.54em; font-weight:700;
+  letter-spacing:.22em; text-transform:uppercase; color:var(--rv-tinta-2);
+  display:flex; align-items:baseline; gap:.7em; flex-wrap:wrap;
+}
+.revista-h3 em{
+  font-family:var(--sans); font-style:normal; font-weight:500;
+  letter-spacing:.04em; text-transform:none; color:var(--rv-tinta-3);
+  font-size:.95em;
+}
+.revista-nota{
+  margin:.3em 0 0;
+  font-size:.72em; line-height:1.5; color:var(--rv-tinta-3); font-style:italic;
+}
+.revista-bloque{ margin-bottom:1.35em; }
+
+/* --- TAPA ---------------------------------------------------------------- */
+
+.revista-cara--tapa{
+  background:
+    radial-gradient(120% 80% at 26% 12%, rgba(255,179,64,.16) 0%, transparent 58%),
+    linear-gradient(158deg, var(--rv-tapa-2) 0%, var(--rv-tapa) 62%, #070c1a 100%);
+  background-blend-mode:normal, normal;
+  color:var(--tiza);
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.14), 2px 0 12px rgba(0,0,0,.55);
+}
+.revista-tapa{
+  position:absolute; inset:0; z-index:2;
+  display:flex; flex-direction:column;
+  padding:2.2em 1.9em 1.9em 2.2em;
+}
+.revista-tapa__marca{
+  display:flex; align-items:center; gap:.55em;
+  font-family:var(--serif); font-size:1.05em; color:var(--tiza);
+  padding-bottom:1em; border-bottom:1px solid rgba(255,179,64,.28);
+}
+.revista-tapa__marca img{ width:2.1em; height:2.1em; }
+.revista-tapa__marca em{ font-style:italic; color:var(--neon); }
+.revista-tapa__et{
+  margin-top:1.5em;
+  font-family:var(--mono); font-size:.5em; letter-spacing:.28em;
+  text-transform:uppercase; color:var(--neon-2);
+}
+.revista-tapa__tit{
+  margin:.35em 0 0;
+  font-family:var(--serif); font-weight:900; font-size:2.55em; line-height:.94;
+  letter-spacing:-.025em; color:var(--tiza);
+  text-shadow:0 2px 22px rgba(255,179,64,.22);
+}
+.revista-tapa__tit em{
+  display:block; font-style:italic; font-weight:400;
+  color:var(--neon); margin-left:.06em;
+}
+.revista-tapa__baj{
+  margin:1em 0 0; font-size:.78em; line-height:1.5; color:var(--tiza-dim);
+  max-width:16em;
+}
+.revista-tapa__baj b{ color:var(--neon-2); font-weight:700; }
+.revista-tapa__pie{
+  margin-top:auto; display:flex; flex-direction:column; gap:.8em;
+  font-family:var(--mono); font-size:.46em; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--ink-faint);
+}
+.revista-barras{ display:flex; align-items:flex-end; gap:2px; height:1.9em; }
+.revista-barras i{ display:block; height:100%; background:rgba(244,239,226,.45); }
+
+/* --- PÁGINA DE DESTINO (izquierda) --------------------------------------- */
+
+.revista-dest{ display:flex; flex-direction:column; flex:1; min-height:0; }
+.revista-dest__marca{
+  display:flex; align-items:center; gap:.7em; margin-bottom:.5em;
+}
+.revista-dest__emoji{
+  font-size:1.9em; line-height:1;
+  filter:drop-shadow(0 2px 4px rgba(60,40,10,.25));
+}
+.revista-dest__region{
+  font-family:var(--mono); font-size:.5em; letter-spacing:.24em;
+  text-transform:uppercase; color:var(--rv-rojo);
+  border:1px solid rgba(168,52,31,.35); border-radius:99px;
+  padding:.45em .9em;
+}
+.revista-dest__nombre{
+  margin:.1em 0 0;
+  font-family:var(--serif); font-weight:900; font-size:2.05em; line-height:1.0;
+  letter-spacing:-.028em; color:var(--rv-tinta);
+  overflow-wrap:anywhere; hyphens:auto;
+}
+.revista-dest__pais{
+  margin:.5em 0 0;
+  font-family:var(--serif); font-style:italic; font-size:.92em;
+  color:var(--rv-tinta-2);
+}
+.revista-codes{
+  list-style:none; margin:1em 0 0; padding:0;
+  display:flex; flex-wrap:wrap; gap:.4em;
+}
+.revista-codes li{
+  display:flex; flex-direction:column; gap:.1em;
+  border:1px solid var(--rv-linea-2); border-radius:.25em;
+  padding:.35em .6em; background:rgba(255,255,255,.28);
+}
+.revista-codes b{
+  font-family:var(--mono); font-size:.66em; font-weight:800;
+  letter-spacing:.1em; color:var(--rv-tinta);
+}
+.revista-codes span{
+  font-size:.52em; color:var(--rv-tinta-3); letter-spacing:.02em;
+  white-space:nowrap;
+}
+
+.revista-precio{
+  margin-top:auto; padding-top:1.1em;
+  border-top:2px solid var(--rv-tinta);
+}
+.revista-precio__et{
+  font-family:var(--mono); font-size:.5em; letter-spacing:.24em;
+  text-transform:uppercase; color:var(--rv-tinta-3);
+}
+.revista-precio__n{
+  margin:.25em 0 0; display:flex; align-items:baseline; gap:.35em;
+}
+.revista-precio__n b{
+  font-family:var(--serif); font-weight:900; font-size:2.2em; line-height:1;
+  letter-spacing:-.03em; color:var(--rv-tinta);
+  font-variant-numeric:tabular-nums;
+}
+.revista-precio__n i{
+  font-style:normal; font-family:var(--mono); font-size:.58em;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--rv-tinta-3);
+}
+.revista-precio__d{
+  margin:.35em 0 0; font-size:.74em; color:var(--rv-tinta-2);
+  font-variant-numeric:tabular-nums;
+}
+.revista-precio__d b{ color:var(--rv-tinta); font-weight:700; }
+.revista-nivel{
+  display:inline-block; margin-top:.7em;
+  font-family:var(--mono); font-size:.48em; letter-spacing:.2em;
+  text-transform:uppercase; padding:.45em .85em; border-radius:99px;
+  background:rgba(60,46,24,.10); color:var(--rv-tinta-2);
+  border:1px solid var(--rv-linea-2);
+}
+.revista-nivel.is-oportunidad{
+  background:rgba(20,120,80,.14); color:#1d6b4c; border-color:rgba(20,120,80,.35);
+}
+.revista-nivel.is-bueno{
+  background:rgba(20,120,80,.10); color:#2c7a5c; border-color:rgba(20,120,80,.28);
+}
+.revista-nivel.is-caro{
+  background:rgba(168,52,31,.12); color:var(--rv-rojo); border-color:rgba(168,52,31,.32);
+}
+.revista-precio--vacio{ border-top-width:1px; border-top-style:dashed; }
+
+/* --- PÁGINA DE DESTINO (derecha: clima, tip, aerolíneas) ----------------- */
+
+.revista-ficha{ display:flex; flex-direction:column; flex:1; min-height:0; }
+
+.revista-clima__grilla{
+  list-style:none; margin:0; padding:0;
+  display:grid; grid-template-columns:repeat(12, 1fr); gap:.2em;
+  align-items:end;
+}
+.revista-clima__col{
+  display:flex; flex-direction:column; align-items:center; gap:.25em;
+  min-width:0;
+}
+.revista-clima__t{
+  font-family:var(--mono); font-size:.46em; font-weight:700;
+  color:var(--rv-tinta-2); font-variant-numeric:tabular-nums;
+}
+.revista-clima__pista{
+  width:100%; height:4em;
+  display:flex; align-items:flex-end;
+  background:linear-gradient(180deg, transparent 60%, rgba(60,46,24,.07));
+  border-bottom:1px solid var(--rv-linea);
+}
+.revista-clima__pista i{
+  display:block; width:100%; border-radius:.16em .16em 0 0;
+  background:var(--rv-tinta-3);
+  box-shadow:inset 0 -.5em .7em rgba(0,0,0,.12);
+}
+.revista-clima__m{
+  font-family:var(--mono); font-size:.46em; letter-spacing:.02em;
+  color:var(--rv-tinta-3); text-transform:uppercase;
+}
+.revista-clima__col.is-vacio i{ background:var(--rv-linea-2); }
+.revista-clima__col.is-hoy .revista-clima__t{ color:var(--rv-rojo); font-weight:800; }
+.revista-clima__col.is-hoy .revista-clima__m{
+  color:var(--rv-papel); background:var(--rv-rojo);
+  border-radius:99px; padding:.1em .42em;
+}
+.revista-clima__pie{
+  margin:.65em 0 0; font-size:.55em; color:var(--rv-tinta-3);
+  letter-spacing:.02em;
+}
+.revista-clima__pie b{ color:var(--rv-tinta-2); }
+
+.revista-tip{
+  border-left:2px solid var(--rv-ambar);
+  padding:.15em 0 .15em .8em;
+}
+.revista-tip__et{
+  font-family:var(--mono); font-size:.47em; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--rv-ambar);
+}
+.revista-tip__txt{
+  margin:.25em 0 0;
+  font-family:var(--serif); font-style:italic; font-size:.85em; line-height:1.4;
+  color:var(--rv-tinta);
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.revista-aero__lista{ list-style:none; margin:0; padding:0; }
+.revista-aero__lista li{
+  display:flex; align-items:baseline; justify-content:space-between; gap:.8em;
+  padding:.32em 0; border-bottom:1px dotted var(--rv-linea-2);
+}
+.revista-aero__lista b{
+  font-size:.72em; font-weight:600; color:var(--rv-tinta); white-space:nowrap;
+}
+.revista-aero__lista span{
+  font-size:.6em; color:var(--rv-tinta-3); text-align:right;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+.revista-btn{
+  margin-top:auto; align-self:flex-start;
+  display:inline-flex; align-items:center; gap:.7em;
+  font-family:var(--mono); font-size:.55em; font-weight:700;
+  letter-spacing:.18em; text-transform:uppercase;
+  color:var(--rv-papel); background:var(--rv-tinta);
+  border:0; border-radius:99px; padding:.95em 1.5em;
+  cursor:pointer; transition:background .25s, transform .25s, box-shadow .25s;
+  box-shadow:0 2px 0 rgba(60,46,24,.35);
+}
+.revista-btn i{ font-style:normal; transition:transform .25s; }
+.revista-btn:hover{ background:var(--rv-rojo); box-shadow:0 3px 0 rgba(120,30,16,.4); }
+.revista-btn:hover i{ transform:translateX(.25em); }
+.revista-btn:active{ transform:translateY(1px); box-shadow:0 1px 0 rgba(60,46,24,.35); }
+.revista-btn:focus-visible{ outline:2px solid var(--rv-ambar); outline-offset:3px; }
+
+/* --- NOTICIAS: recortes -------------------------------------------------- */
+
+.revista-seccion{ display:flex; flex-direction:column; flex:1; min-height:0; }
+.revista-seccion--corrida{ justify-content:flex-start; }
+.revista-seccion__et{
+  font-family:var(--mono); font-size:.48em; letter-spacing:.26em;
+  text-transform:uppercase; color:var(--rv-rojo);
+}
+.revista-seccion__tit{
+  margin:.15em 0 0;
+  font-family:var(--serif); font-weight:900; font-size:1.85em; line-height:.98;
+  letter-spacing:-.028em; color:var(--rv-tinta);
+}
+.revista-seccion__tit em{
+  display:block; font-style:italic; font-weight:400; color:var(--rv-rojo);
+}
+.revista-seccion__baj{
+  margin:.7em 0 1.1em; font-size:.7em; line-height:1.5; color:var(--rv-tinta-2);
+  max-width:20em;
+  padding-bottom:1em; border-bottom:1px solid var(--rv-linea);
+}
+
+.revista-recortes{ list-style:none; margin:0; padding:0; display:grid; gap:.75em; }
+.revista-recorte{ transform:rotate(var(--rot, 0deg)); }
+.revista-recorte__a{
+  display:block; text-decoration:none; color:inherit;
+  background:rgba(255,255,255,.42);
+  border:1px solid var(--rv-linea);
+  border-left:2px solid var(--rv-rojo);
+  padding:.6em .75em .5em;
+  box-shadow:0 1px 3px rgba(60,46,24,.14);
+  transition:background .22s, box-shadow .22s, transform .22s;
+  /* recorte con el borde de abajo desprolijo, como arrancado */
+  clip-path:polygon(0 0, 100% 0, 100% 94%, 88% 100%, 62% 95%, 34% 100%, 11% 96%, 0 100%);
+}
+.revista-cara.is-viva .revista-recorte__a{ cursor:pointer; }
+.revista-cara.is-viva .revista-recorte__a:hover{
+  background:rgba(255,255,255,.75);
+  box-shadow:0 3px 10px rgba(60,46,24,.2);
+  transform:translateY(-1px);
+}
+.revista-recorte__a:focus-visible{ outline:2px solid var(--rv-ambar); outline-offset:2px; }
+.revista-recorte__fuente{
+  font-family:var(--mono); font-size:.45em; font-weight:700;
+  letter-spacing:.22em; text-transform:uppercase; color:var(--rv-rojo);
+}
+.revista-recorte__tit{
+  margin:.2em 0 .35em;
+  font-family:var(--serif); font-weight:600; font-size:.85em; line-height:1.22;
+  letter-spacing:-.012em; color:var(--rv-tinta);
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+  overflow:hidden; overflow-wrap:anywhere;
+}
+.revista-recorte__pie{
+  display:flex; align-items:center; justify-content:space-between; gap:.6em;
+  font-family:var(--mono); font-size:.44em; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--rv-tinta-3);
+  padding-bottom:.35em;
+}
+.revista-recorte__pie i{ font-style:normal; color:var(--rv-ambar); font-size:1.3em; }
+
+/* --- NOTICIAS: colofón y anotaciones ------------------------------------- */
+
+.revista-colofon{ display:flex; flex-direction:column; flex:1; min-height:0; }
+.revista-fuentes{ list-style:none; margin:0; padding:0; }
+.revista-fuentes li{
+  padding:.42em 0; border-bottom:1px dotted var(--rv-linea-2);
+  font-family:var(--serif); font-size:.88em; color:var(--rv-tinta);
+}
+.revista-fuentes li::before{ content:'— '; color:var(--rv-rojo); }
+.revista-colofon__pie{
+  margin:1em 0 0;
+  font-family:var(--mono); font-size:.5em; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--rv-tinta-3);
+}
+.revista-colofon__sello{
+  margin-top:auto; align-self:flex-start;
+  font-family:var(--serif); font-weight:900; font-size:1.6em;
+  letter-spacing:-.04em; color:var(--rv-papel);
+  background:var(--rv-tinta); border-radius:50%;
+  width:2.2em; height:2.2em; display:grid; place-items:center;
+  opacity:.9;
+}
+.revista-notas{ display:flex; flex-direction:column; flex:1; min-height:0; }
+.revista-notas__renglones{
+  flex:1; margin:.6em 0 .8em;
+  background:repeating-linear-gradient(180deg,
+    transparent 0, transparent 1.55em, var(--rv-linea) 1.55em, var(--rv-linea) calc(1.55em + 1px));
+}
+
+/* --- CIERRE: buen viaje -------------------------------------------------- */
+
+.revista-cara--fin{
+  background:
+    radial-gradient(90% 60% at 50% 32%, rgba(255,196,110,.16) 0%, transparent 68%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23g)' opacity='.42'/%3E%3C/svg%3E"),
+    linear-gradient(158deg, var(--rv-papel) 0%, var(--rv-papel-2) 100%);
+  background-blend-mode:normal, soft-light, normal;
+}
+.revista-cierre{
+  position:absolute; inset:0; z-index:2;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:.9em; padding:2.5em 2em; text-align:center;
+}
+.revista-cierre__et{
+  font-family:var(--mono); font-size:.48em; letter-spacing:.28em;
+  text-transform:uppercase; color:var(--rv-tinta-3);
+}
+.revista-cierre__txt{
+  margin:0;
+  font-family:var(--serif); font-weight:400; font-size:1.85em; line-height:1.08;
+  letter-spacing:-.025em; color:var(--rv-tinta);
+}
+.revista-cierre__txt em{
+  display:block; font-style:italic; font-weight:900; color:var(--rv-rojo);
+}
+.revista-cierre__txt b{
+  display:block; margin-top:.25em; font-weight:400; color:var(--rv-ambar);
+}
+.revista-cierre__linea{
+  width:3.5em; height:2px; background:var(--rv-tinta); opacity:.5;
+}
+.revista-cierre__pie{
+  margin:0; font-size:.62em; font-style:italic; color:var(--rv-tinta-3);
+  font-family:var(--serif);
+}
+
+/* --- pie de escena ------------------------------------------------------- */
+
+.revista-pie{
+  position:absolute; left:50%; bottom:4.5%;
+  transform:translateX(-50%);
+  margin:0;
+  font-family:var(--mono); font-size:.62rem; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--ink-faint);
+  white-space:nowrap; pointer-events:none;
+  opacity:calc(var(--rv-in) * (1 - var(--rv-abrir)));
+}
+
+/* ============================================================================
+   RESPONSIVE Y ACCESIBILIDAD
+   ========================================================================== */
+
+@media (max-width:900px){
+  .esc--revista{ --rv-pw:min(44vw, calc(58svh * .705)); }
+  .revista-cara, .revista-base{ font-size:calc(var(--rv-pw) * .047); }
+  .revista-pag{ padding:1.7em 1.2em 2.6em 1.9em; }
+  .revista-cara--dorso .revista-pag{ padding:1.7em 1.9em 2.6em 1.2em; }
+  .revista-cara--frente .revista-folio{ right:1.2em; }
+  .revista-cara--dorso  .revista-folio{ left:1.2em; }
+  .revista-codes li:nth-child(n+4){ display:none; }
+  .revista-aero__lista li:nth-child(n+5){ display:none; }
+  .revista-pie{ font-size:.55rem; bottom:3%; }
+}
+
+@media (max-width:520px){
+  .esc--revista{ --rv-pw:min(46vw, calc(54svh * .705)); }
+  .revista-recorte__tit{ -webkit-line-clamp:2; }
+  .revista-tip__txt{ -webkit-line-clamp:3; }
+}
+
+/* Menos movimiento: sin brillos que barren, sin hamaca, entrada plana */
+.revista--calmo .revista-brillo{ display:none; }
+.revista--calmo .revista-cinta{ transform:translateZ(var(--rv-ztop, 12px)); }
+.revista--calmo .revista-btn,
+.revista--calmo .revista-recorte__a{ transition:none; }
+
+@media (prefers-reduced-motion: reduce){
+  .revista-brillo{ display:none; }
+  .revista-cinta{ transform:translateZ(var(--rv-ztop, 12px)); }
+  .revista-btn, .revista-recorte__a{ transition:none; }
+}

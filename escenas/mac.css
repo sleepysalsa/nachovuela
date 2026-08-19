@@ -1,0 +1,423 @@
+/* ============================================================================
+   NachoVuela · escena "mac" — la MacBook Air en el regazo (POV primera persona)
+   ----------------------------------------------------------------------------
+   Geometría: .mac-nb es una LÍNEA (alto 0) que representa la BISAGRA.
+     · la base cuelga hacia el espectador  →  rotateX(90deg), origen en su borde
+       superior (o sea, en la bisagra).
+     · la tapa sube desde la bisagra       →  transform-origin 50% 100% y
+       rotateX(-90deg) cerrada → rotateX(0) abierta.
+     · el conjunto se inclina con rotateX(cam) para que la base se vea en escorzo,
+       como una notebook mirada desde arriba.
+   Todo lo que se mueve por scroll lo escribe mac.js (transform / opacity).
+   ========================================================================== */
+
+.esc--mac{
+  z-index:10;                                /* sobre la terminal, bajo los carteles */
+  pointer-events:none;                       /* sólo la pantalla abierta recibe clics */
+  --mac-w:  min(720px, 72vw, 70vh);          /* ancho de la notebook */
+  --mac-d:  calc(var(--mac-w) * .665);       /* profundidad del deck */
+  --mac-h:  calc(var(--mac-w) * .645);       /* alto de la tapa */
+  --mac-bz: calc(var(--mac-w) * .017);       /* marco de la pantalla */
+  --mac-al: calc(var(--mac-w) * .012);       /* radio "aluminio" */
+}
+@media (max-width:820px){
+  .esc--mac{ --mac-w: min(94vw, 56vh); }
+}
+/* con la tapa abierta la escena pasa al frente para que los clics lleguen */
+.esc--mac.mac--usable{ z-index:12; }
+
+/* ============================ EL REGAZO ================================== */
+.mac-regazo{
+  position:absolute; left:50%; bottom:-1%;
+  width:min(1600px, 172%); height:54%;
+  transform:translateX(-50%);
+  pointer-events:none;
+}
+.mac-pierna{
+  position:absolute; top:0; bottom:0; width:46%;
+  clip-path:polygon(29% 0, 69% 0, 100% 100%, 0 100%);
+  background:
+    repeating-linear-gradient(104deg, rgba(255,255,255,.018) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #151b2b 0%, #0f1421 40%, #0a0e18 74%, #06080e 100%);
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, rgba(0,0,0,.65) 22%, #000 46%);
+          mask-image:linear-gradient(180deg, transparent 0, rgba(0,0,0,.65) 22%, #000 46%);
+  box-shadow:inset 0 0 calc(var(--mac-w)*.12) rgba(0,0,0,.55);
+}
+.mac-pierna--i{ left:1%;  }
+.mac-pierna--d{ right:1%; transform:scaleX(-1); }
+/* costura interna + filo de luz en el borde de afuera */
+.mac-pierna::after{
+  content:''; position:absolute; inset:0;
+  background:
+    linear-gradient(97deg, transparent 60%, rgba(160,190,255,.05) 70%, transparent 77%),
+    linear-gradient(263deg, transparent 74%, rgba(150,180,240,.075) 86%, transparent 94%);
+}
+/* la luz de la pantalla derramada sobre los jeans (la enciende mac.js) */
+.mac-regazo__luz{
+  position:absolute; left:16%; right:16%; top:-6%; height:66%;
+  opacity:0; mix-blend-mode:screen; pointer-events:none;
+  background:radial-gradient(58% 62% at 50% 0%, rgba(150,186,255,.20) 0%,
+             rgba(120,150,225,.07) 45%, transparent 72%);
+}
+
+/* ============================ LA NOTEBOOK ================================ */
+.mac-rig{
+  position:absolute; inset:0;
+  perspective:1500px;
+  perspective-origin:50% 30%;
+  opacity:0;
+}
+.mac-nb{
+  position:absolute; left:50%; top:51%;
+  width:var(--mac-w); height:0;
+  margin-left:calc(var(--mac-w) / -2);
+  transform-style:preserve-3d;
+  transform:translateY(40vh) rotateX(-27deg);   /* mac.js lo reescribe */
+}
+
+/* sombra proyectada sobre el regazo, en el plano del deck */
+.mac-sombra{
+  position:absolute; top:0; left:-16%;
+  width:132%; height:calc(var(--mac-d) * 1.55);
+  transform-origin:50% 0%;
+  transform:rotateX(90deg) translateZ(-6px) translateY(-8%);
+  background:radial-gradient(50% 50% at 50% 52%, rgba(0,0,0,.82) 0%,
+             rgba(0,0,0,.42) 44%, rgba(0,0,0,0) 74%);
+}
+
+/* ------------------------------ la base --------------------------------- */
+.mac-base{
+  position:absolute; top:0; left:0; width:100%; height:var(--mac-d);
+  transform-origin:50% 0%;
+  transform:rotateX(90deg) translateZ(-2px);
+  border-radius:calc(var(--mac-al)*.5) calc(var(--mac-al)*.5) calc(var(--mac-al)*2.2) calc(var(--mac-al)*2.2);
+  background:
+    linear-gradient(105deg, rgba(255,255,255,.05) 0%, transparent 26%, transparent 74%, rgba(255,255,255,.035) 100%),
+    linear-gradient(180deg, #1b2130 0%, #232a3b 38%, #2b3346 78%, #39415580 96%, #454e64 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 calc(var(--mac-w)*-.004) 0 rgba(255,255,255,.30),
+    0 calc(var(--mac-w)*.02) calc(var(--mac-w)*.05) rgba(0,0,0,.55);
+}
+/* chaflán del borde delantero: la línea de luz mecanizada */
+.mac-canto{
+  position:absolute; left:3%; right:3%; bottom:calc(var(--mac-w)*.002);
+  height:calc(var(--mac-w)*.0045); border-radius:99px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.55) 18%,
+             rgba(255,255,255,.75) 50%, rgba(255,255,255,.55) 82%, transparent 100%);
+  opacity:.75;
+}
+/* muesca para abrir la tapa */
+.mac-muesca{
+  position:absolute; left:44%; width:12%; bottom:0; height:2.4%;
+  border-radius:99px 99px 0 0;
+  background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.15));
+}
+/* parlantes */
+.mac-rejilla{
+  position:absolute; top:9%; height:37%; width:7.6%;
+  border-radius:calc(var(--mac-w)*.004);
+  background-image:radial-gradient(circle, rgba(0,0,0,.5) 34%, transparent 38%);
+  background-size:calc(var(--mac-w)*.0092) calc(var(--mac-w)*.0092);
+  opacity:.6;
+}
+.mac-rejilla--i{ left:2.6%; }
+.mac-rejilla--d{ right:2.6%; }
+
+/* teclado: teclas insinuadas, no legibles — se leen por la luz */
+.mac-teclado{
+  position:absolute; left:12.4%; right:12.4%; top:7.5%; height:39%;
+  display:flex; flex-direction:column; gap:1.4%;
+  padding:1.1%;
+  border-radius:calc(var(--mac-w)*.006);
+  background:linear-gradient(180deg, rgba(0,0,0,.42), rgba(0,0,0,.26));
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.35);
+}
+.mac-krow{ display:flex; flex:1; gap:1%; }
+.mac-krow--fn{ flex:.62; }
+.mac-key{
+  flex:1; min-width:0;
+  border-radius:calc(var(--mac-w)*.0035);
+  background:linear-gradient(180deg, #2f3648 0%, #232936 58%, #171c27 100%);
+  box-shadow:
+    inset 0 calc(var(--mac-w)*.0012) 0 rgba(255,255,255,.13),
+    0 calc(var(--mac-w)*.0014) calc(var(--mac-w)*.0022) rgba(0,0,0,.55);
+}
+/* trackpad */
+.mac-trackpad{
+  position:absolute; left:31%; width:38%; top:54.5%; height:33%;
+  border-radius:calc(var(--mac-w)*.008);
+  background:linear-gradient(180deg, #232a39 0%, #1b212d 60%, #161b25 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.055),
+    inset 0 calc(var(--mac-w)*.0022) calc(var(--mac-w)*.007) rgba(0,0,0,.5),
+    0 0 calc(var(--mac-w)*.01) rgba(0,0,0,.3);
+}
+/* la luz de la pantalla cayendo sobre el aluminio (la enciende mac.js) */
+.mac-deckluz{
+  position:absolute; inset:0; opacity:0; pointer-events:none;
+  border-radius:inherit; mix-blend-mode:screen;
+  background:linear-gradient(180deg, rgba(146,182,255,.24) 0%, rgba(146,182,255,.09) 34%,
+             rgba(146,182,255,.02) 62%, transparent 82%);
+}
+
+/* ------------------------------ la bisagra ------------------------------- */
+.mac-lomo{
+  position:absolute; left:3.4%; right:3.4%; bottom:0;
+  height:calc(var(--mac-w)*.022);
+  transform-origin:50% 100%;
+  transform:rotateX(-90deg);                 /* mac.js lo acompaña con la tapa */
+  border-radius:calc(var(--mac-w)*.004) calc(var(--mac-w)*.004) 0 0;
+  background:linear-gradient(180deg, #454d61 0%, #2a3140 34%, #141922 72%, #080b11 100%);
+  box-shadow:0 0 calc(var(--mac-w)*.02) rgba(0,0,0,.65);
+}
+
+/* ------------------------------- la tapa --------------------------------- */
+.mac-tapa{
+  position:absolute; left:0; bottom:0; width:100%; height:var(--mac-h);
+  transform-origin:50% 100%;
+  transform:rotateX(-90deg);                 /* cerrada por defecto */
+  transform-style:preserve-3d;
+}
+/* dorso de aluminio (lo que se ve con la tapa cerrada) */
+.mac-tapa__dorso{
+  position:absolute; inset:0;
+  transform:translateZ(-.6px) rotateY(180deg);
+  backface-visibility:hidden;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:calc(var(--mac-al)*1.4) calc(var(--mac-al)*1.4) calc(var(--mac-al)*.5) calc(var(--mac-al)*.5);
+  background:
+    linear-gradient(196deg, rgba(255,255,255,.10) 0%, transparent 28%, transparent 72%, rgba(255,255,255,.045) 100%),
+    linear-gradient(178deg, #39415580 0%, #2a3142 26%, #1d2330 62%, #12161f 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07), inset 0 0 calc(var(--mac-w)*.06) rgba(0,0,0,.45);
+}
+.mac-marca{
+  transform:scaleX(-1);                       /* el dorso está espejado */
+  font-family:var(--serif); font-weight:600;
+  font-size:calc(var(--mac-w)*.048); letter-spacing:-.02em;
+  color:rgba(244,239,226,.42);
+  text-shadow:0 0 calc(var(--mac-w)*.035) rgba(255,179,64,.30);
+}
+.mac-marca em{ font-style:italic; font-weight:400; color:rgba(255,179,64,.62); }
+
+/* cara interna: marco + pantalla */
+.mac-tapa__cara{
+  position:absolute; inset:0;
+  transform:translateZ(.6px);
+  backface-visibility:hidden;
+  border-radius:calc(var(--mac-al)*1.4) calc(var(--mac-al)*1.4) calc(var(--mac-al)*.5) calc(var(--mac-al)*.5);
+  background:linear-gradient(180deg, #0b0e15 0%, #070a10 60%, #04060b 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.055),
+    0 calc(var(--mac-w)*.01) calc(var(--mac-w)*.04) rgba(0,0,0,.6);
+}
+.mac-camara{
+  position:absolute; left:50%; top:calc(var(--mac-bz)*.3);
+  width:calc(var(--mac-w)*.0045); height:calc(var(--mac-w)*.0045);
+  margin-left:calc(var(--mac-w)*-.00225);
+  border-radius:50%; background:#1b2434;
+  box-shadow:0 0 0 1px rgba(255,255,255,.05);
+}
+
+/* ============================ LA PANTALLA ================================ */
+.mac-scr{
+  position:absolute; inset:var(--mac-bz);
+  overflow:hidden;
+  border-radius:calc(var(--mac-w)*.005);
+  background:#04060b;
+  box-shadow:inset 0 0 calc(var(--mac-w)*.06) rgba(0,0,0,.85);
+}
+/* destello del encendido */
+.mac-scr__flash{
+  position:absolute; inset:0; opacity:0; pointer-events:none; mix-blend-mode:screen;
+  background:radial-gradient(140% 92% at 50% 50%, rgba(216,233,255,.95) 0%,
+             rgba(126,166,255,.34) 40%, transparent 74%);
+}
+/* reflejo diagonal sobre el vidrio */
+.mac-scr__vidrio{
+  position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(114deg,
+    rgba(255,255,255,.085) 0%, rgba(255,255,255,.030) 13%, rgba(255,255,255,.006) 27%,
+    transparent 40%, transparent 62%,
+    rgba(255,255,255,.045) 73%, rgba(255,255,255,.012) 83%, transparent 93%);
+}
+
+/* --------- la interfaz, diseñada a 760px lógicos y escalada por JS -------- */
+.mac-scr__ui{
+  position:absolute; left:0; top:0;
+  width:760px; height:481px;
+  transform-origin:0 0; transform:scale(.9);
+  opacity:0;
+  display:flex; flex-direction:column;
+  font-family:var(--sans); color:var(--ink);
+  background:
+    radial-gradient(640px 340px at 80% -14%, rgba(46,64,110,.42) 0%, transparent 62%),
+    radial-gradient(540px 320px at 6% 2%, rgba(245,166,35,.11) 0%, transparent 58%),
+    linear-gradient(180deg, #0d1223 0%, #080b16 100%);
+}
+/* los clics sólo cuando la tapa está abierta */
+.esc--mac.mac--usable .mac-scr__ui{ pointer-events:auto; }
+
+/* barra superior */
+.mac-top{
+  flex:0 0 auto; display:flex; align-items:center; gap:12px;
+  height:38px; padding:0 18px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(9,13,24,.92), rgba(9,13,24,.35));
+}
+.mac-top__marca{ font-family:var(--serif); font-size:15px; font-weight:600; letter-spacing:-.015em; }
+.mac-top__marca em{ font-style:italic; font-weight:400; color:var(--neon); }
+.mac-top__tag{
+  font-family:var(--mono); font-size:8.5px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--ink-faint);
+  padding-left:12px; border-left:1px solid var(--line);
+}
+.mac-top__estado{
+  margin-left:auto; display:flex; align-items:center; gap:6px;
+  font-family:var(--mono); font-size:8.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-dim);
+}
+.mac-top__estado i{
+  width:5px; height:5px; border-radius:50%; background:var(--green);
+  box-shadow:0 0 8px var(--green); animation:mac-latir 2.6s ease-in-out infinite;
+}
+@keyframes mac-latir{ 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* cuerpo */
+.mac-cuerpo{
+  flex:1; min-height:0;
+  display:flex; flex-direction:column; gap:11px;
+  padding:14px 18px 16px;
+}
+
+/* --------------------------- el buscador -------------------------------- */
+.mac-form{ display:grid; grid-template-columns:1.5fr 1fr .58fr .58fr; gap:9px 10px; }
+.mac-campo{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+.mac-campo>span{
+  font-family:var(--mono); font-size:8.5px; letter-spacing:.17em;
+  text-transform:uppercase; color:var(--ink-faint);
+}
+.mac-sel,.mac-num{
+  width:100%; height:32px; padding:0 10px;
+  appearance:none; -webkit-appearance:none;
+  background:rgba(23,31,52,.75);
+  border:1px solid var(--line-strong); border-radius:8px;
+  color:var(--ink); font-family:var(--sans); font-size:12.5px; font-weight:500;
+  outline:none; cursor:pointer;
+  transition:border-color .18s, background .18s;
+}
+.mac-sel{
+  padding-right:26px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1.2 1.4 5 5.1l3.8-3.7' fill='none' stroke='%23ffb340' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center;
+  text-overflow:ellipsis;
+}
+.mac-sel option{ background:#141b30; color:#f3efe4; }
+.mac-num{ text-align:center; font-family:var(--mono); font-weight:700; letter-spacing:.02em; }
+.mac-num::-webkit-outer-spin-button,
+.mac-num::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+.mac-num{ -moz-appearance:textfield; }
+.mac-sel:hover,.mac-num:hover{ border-color:rgba(255,179,64,.4); }
+.mac-sel:focus,.mac-num:focus{
+  border-color:var(--neon); background:rgba(30,40,66,.9);
+  box-shadow:0 0 0 3px rgba(255,179,64,.14);
+}
+.mac-btn{
+  grid-column:1 / -1; height:38px;
+  display:flex; align-items:center; justify-content:center; gap:9px;
+  border:none; border-radius:9px; cursor:pointer;
+  font-family:var(--sans); font-size:13px; font-weight:700; letter-spacing:.005em;
+  color:#241804;
+  background:linear-gradient(180deg, var(--neon-2) 0%, var(--neon) 62%, #f09a1e 100%);
+  box-shadow:0 8px 20px -10px rgba(255,179,64,.85), inset 0 1px 0 rgba(255,255,255,.5);
+  transition:filter .18s, transform .12s, box-shadow .18s;
+}
+.mac-btn span{ font-size:12px; transform:translateY(-.5px); }
+.mac-btn:hover{ filter:brightness(1.07); box-shadow:0 10px 24px -10px rgba(255,179,64,1); }
+.mac-btn:active{ transform:translateY(1px); }
+
+/* --------------------------- los resultados ----------------------------- */
+.mac-meta{
+  flex:0 0 auto;
+  display:flex; flex-wrap:wrap; align-items:center; gap:3px 14px;
+  font-family:var(--mono); font-size:8.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-faint);
+  min-height:11px;
+}
+.mac-meta b{ color:var(--neon-2); font-weight:700; }
+.mac-meta__ym{ margin-left:auto; color:var(--ink-dim); }
+
+.mac-res{
+  flex:1; min-height:0; overflow:hidden;
+  display:flex; flex-direction:column; gap:5px;
+}
+.mac-fila{
+  display:grid; grid-template-columns:58px 1fr 72px 96px 56px;
+  align-items:center; gap:10px;
+  height:40px; padding:0 11px; flex:0 0 auto;
+  text-align:left; cursor:pointer; color:var(--ink);
+  font-family:var(--sans);
+  background:rgba(20,27,48,.6);
+  border:1px solid var(--line); border-radius:9px;
+  transition:background .18s, border-color .18s, transform .18s;
+}
+.mac-fila:hover{
+  background:rgba(33,44,74,.9); border-color:rgba(255,179,64,.45);
+  transform:translateX(2px);
+}
+.mac-fila:active{ transform:translateX(2px) scale(.995); }
+.mac-fila--top{
+  border-color:rgba(255,179,64,.35);
+  background:linear-gradient(90deg, rgba(255,179,64,.13) 0%, rgba(20,27,48,.62) 44%);
+}
+.mac-fila__cod{
+  display:flex; align-items:center; gap:5px;
+  font-family:var(--mono); font-size:11.5px; font-weight:800; letter-spacing:.06em;
+  color:var(--neon-2);
+}
+.mac-tag{
+  font-family:var(--mono); font-style:normal; font-size:7px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--blue);
+  border:1px solid rgba(110,168,255,.35); border-radius:4px; padding:1px 3px;
+}
+.mac-fila__fx{ display:flex; align-items:center; gap:8px; font-size:12px; min-width:0; }
+.mac-fila__fx b{ font-weight:600; white-space:nowrap; }
+.mac-fila__fx i{ font-style:normal; color:var(--ink-faint); font-size:11px; }
+.mac-fila__n{
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.05em;
+  color:var(--ink-dim); text-align:right; white-space:nowrap;
+}
+.mac-fila__mi{
+  font-family:var(--mono); font-size:13px; font-weight:800;
+  text-align:right; white-space:nowrap; color:var(--ink);
+}
+.mac-fila__mi small{ font-size:8px; font-weight:500; color:var(--ink-faint); margin-left:3px; }
+.mac-fila__go{
+  font-family:var(--mono); font-size:8.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--neon); text-align:right; white-space:nowrap;
+  opacity:.72; transition:opacity .18s;
+}
+.mac-fila:hover .mac-fila__go{ opacity:1; }
+
+/* vacío digno */
+.mac-vacio{
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:8px; text-align:center;
+  padding:14px 34px;
+  border:1px dashed var(--line); border-radius:12px;
+  background:radial-gradient(70% 90% at 50% 0%, rgba(46,64,110,.18), transparent 70%);
+}
+.mac-vacio__ic{ font-size:19px; color:var(--neon); opacity:.55; }
+.mac-vacio b{ font-family:var(--serif); font-size:14.5px; font-weight:600; }
+.mac-vacio p{ font-size:11px; line-height:1.55; color:var(--ink-dim); max-width:460px; }
+.mac-vacio em{ font-style:normal; color:var(--neon-2); }
+
+/* ------------------------------ cartelito -------------------------------- */
+.mac-pista{ opacity:0; }
+
+/* ============================ ACCESIBILIDAD ============================== */
+@media (prefers-reduced-motion: reduce){
+  .mac-top__estado i{ animation:none; }
+  .mac-fila, .mac-btn, .mac-sel, .mac-num{ transition:none; }
+  .mac-fila:hover{ transform:none; }
+}

@@ -1,0 +1,307 @@
+/* ============================================================================
+   NachoVuela · La Terminal — carteles split-flap (PARTIDAS y LLEGADAS)
+   ----------------------------------------------------------------------------
+   Un mueble colgado en lo alto: marco metálico, tornillos, luz cálida que cae
+   desde arriba y su propia sombra. Adentro, fichas que giran.
+
+   Toda la escala del cartel cuelga de UN font-size (en .board-mueble): así el
+   cartel se achica entero en pantallas chicas sin romperse ni desbordar.
+   Ancho de una fila = 56 fichas · 1.08em + 4 huecos · 1.1em + bordes ≈ 68.6em
+   ========================================================================== */
+
+/* Raíces de las dos escenas: por encima de la mac, muy por debajo del HUD (40).
+   pointer-events:none para no tapar los clics de la escena de abajo mientras
+   los tramos se solapan; las filas se reactivan solas más abajo. */
+.esc--partidas{ z-index:15; pointer-events:none; }
+.esc--llegadas{ z-index:20; pointer-events:none; }
+
+.board-escena, .board-escena *{ box-sizing:border-box; }
+
+.board-escena{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none;                 /* solo las filas escuchan el mouse */
+  --luz:1;
+}
+
+/* ── El mueble ─────────────────────────────────────────────────────────── */
+.board-mueble{
+  position:relative;
+  font-size:clamp(6px, calc(min(1180px, 93vw) / 69), 17px);
+  transform-origin:50% 26%;
+  transform-style:preserve-3d;
+  will-change:transform, opacity;
+  backface-visibility:hidden;
+}
+
+/* Los tirantes que lo sostienen del techo de la terminal */
+.board-tirante{
+  position:absolute; top:-14em; height:14em; width:.22em;
+  background:linear-gradient(180deg, transparent, #3a4256 30%, #262c3a);
+  box-shadow:0 0 .6em rgba(0,0,0,.6);
+}
+.board-tirante--izq{ left:16%; }
+.board-tirante--der{ right:16%; }
+
+/* La luz cálida que lo baña desde arriba */
+.board-luz{
+  position:absolute; left:50%; top:-6.5em; width:128%; height:12em;
+  transform:translateX(-50%);
+  background:
+    radial-gradient(52% 100% at 50% 0%, rgba(255,196,120,.30), transparent 72%),
+    radial-gradient(26% 60% at 50% 0%, rgba(255,225,180,.22), transparent 70%);
+  opacity:var(--luz,1);
+  filter:blur(.35em);
+  pointer-events:none;
+}
+
+/* Marco metálico + tornillos */
+.board-marco{
+  position:relative;
+  padding:.6em;
+  border-radius:.62em;
+  background:
+    linear-gradient(180deg,#39404f 0%, #232936 8%, #171c27 46%, #0f131c 100%);
+  box-shadow:
+    inset 0 .06em 0 rgba(255,255,255,.16),
+    inset 0 -.06em 0 rgba(0,0,0,.7),
+    inset .06em 0 0 rgba(255,255,255,.05),
+    0 1.4em 3.2em rgba(0,0,0,.75),
+    0 .35em 1em rgba(0,0,0,.55);
+}
+.board-torn{
+  position:absolute; width:.44em; height:.44em; border-radius:50%;
+  background:radial-gradient(60% 60% at 35% 30%, #7d8699, #2b313d 70%, #12161f);
+  box-shadow:0 .05em .1em rgba(0,0,0,.8), inset 0 .03em 0 rgba(255,255,255,.35);
+}
+.board-torn--a{ left:.55em;  top:.55em; }
+.board-torn--b{ right:.55em; top:.55em; }
+.board-torn--c{ left:.55em;  bottom:.55em; }
+.board-torn--d{ right:.55em; bottom:.55em; }
+
+/* Sombra propia sobre la pared */
+.board-sombra{
+  position:absolute; left:6%; right:6%; bottom:-2.4em; height:2.8em;
+  background:radial-gradient(50% 100% at 50% 0%, rgba(0,0,0,.8), transparent 72%);
+  filter:blur(.5em);
+  pointer-events:none;
+}
+
+/* ── El panel oscuro ───────────────────────────────────────────────────── */
+.board-panel{
+  position:relative; overflow:hidden;
+  max-width:100%;
+  padding:1.05em 1.25em .9em;
+  border-radius:.34em;
+  background:
+    linear-gradient(180deg, rgba(255,190,110,.09), rgba(255,190,110,.02) 22%, transparent 46%),
+    linear-gradient(180deg, #0d111a 0%, #090c14 60%, #070911 100%);
+  box-shadow:
+    inset 0 0 0 .06em rgba(0,0,0,.9),
+    inset 0 .9em 2.4em rgba(0,0,0,.55);
+}
+/* Reflejo del vidrio que lo cubre */
+.board-vidrio{
+  position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(104deg,
+    rgba(255,255,255,.055) 0%, rgba(255,255,255,.012) 22%,
+    transparent 44%, transparent 76%, rgba(255,255,255,.03) 100%);
+}
+
+/* ── Encabezado: título + reloj ────────────────────────────────────────── */
+.board-head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:1.2em;
+  padding:0 .15em .62em;
+  border-bottom:.06em solid rgba(120,140,190,.18);
+}
+.board-head__tit{
+  margin:0;
+  display:flex; align-items:baseline; gap:.5em;
+  font-family:var(--mono); font-weight:800;
+  font-size:1.45em; line-height:1; letter-spacing:.2em;
+  color:var(--neon);
+  text-shadow:0 0 .9em rgba(255,179,64,.4);
+}
+.board-head__tit em{
+  font-style:normal; font-size:.42em; letter-spacing:.34em;
+  color:var(--ink-faint); text-shadow:none;
+}
+.board-avion{ font-size:.72em; color:var(--neon-2); transform:translateY(-.05em); }
+
+.board-reloj{ display:flex; align-items:center; gap:.7em; }
+.board-reloj__lbl{
+  font-family:var(--mono); font-size:.62em; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--ink-faint);
+}
+.board-reloj__caja{ display:flex; align-items:center; }
+.board-dosp{
+  font-family:var(--mono); font-weight:700; font-size:.95em;
+  color:var(--neon); padding:0 .12em; transform:translateY(-.06em);
+}
+
+/* ── La grilla ─────────────────────────────────────────────────────────── */
+.board-tabla{ --fw:1.08em; }
+
+.board-cab,
+.board-fila{
+  display:grid;
+  grid-template-columns:
+    calc(var(--c1) * var(--fw)) calc(var(--c2) * var(--fw)) calc(var(--c3) * var(--fw))
+    calc(var(--c4) * var(--fw)) calc(var(--c5) * var(--fw));
+  gap:0 1.1em;
+  align-items:center;
+}
+.board-cab{
+  padding:.6em .15em .45em;
+  border-bottom:.06em solid rgba(120,140,190,.12);
+}
+.board-cab span{
+  font-family:var(--mono); font-size:.64em; font-weight:600;
+  letter-spacing:.28em; text-transform:uppercase; color:var(--ink-faint);
+  white-space:nowrap; overflow:hidden;
+}
+.board-cab .board-c--mi{ text-align:right; }
+
+.board-filas{ padding-top:.25em; }
+
+/* Cada fila aparece sola a medida que el scroll "carga" el cartel:
+   --rp lo escribe update(), --i es el número de fila, --n el total. */
+.board-fila{
+  --t:clamp(0, calc(var(--rp, 0) * var(--n, 1) - var(--i, 0)), 1);
+  position:relative;
+  width:100%; margin:0; padding:.3em .15em;
+  border:0; border-bottom:.06em solid rgba(120,140,190,.07);
+  background:transparent; text-align:left; cursor:pointer;
+  font:inherit; color:inherit;
+  pointer-events:auto;
+  opacity:var(--t);
+  transform:translate3d(calc((1 - var(--t)) * -1.1em), 0, 0);
+}
+.board-fila--vacia{
+  grid-template-columns:1fr;
+  cursor:default; pointer-events:none;
+  justify-items:center;
+}
+.board-fila:hover,
+.board-fila:focus-visible{
+  outline:none;
+  background:linear-gradient(90deg, rgba(255,179,64,.16), rgba(255,179,64,.03) 55%, transparent);
+  box-shadow:inset .16em 0 0 var(--neon);
+}
+.board-fila:hover .board-flap__c,
+.board-fila:focus-visible .board-flap__c{ text-shadow:0 0 .7em rgba(244,239,226,.35); }
+.board-fila:hover .board-fila__flecha,
+.board-fila:focus-visible .board-fila__flecha{ opacity:1; transform:translate(0,-50%); }
+.board-fila__flecha{
+  position:absolute; right:-.75em; top:50%;
+  transform:translate(-.4em,-50%);
+  font-family:var(--mono); font-size:1.1em; color:var(--neon);
+  opacity:0; transition:opacity .2s ease, transform .2s ease;
+  pointer-events:none;
+}
+
+.board-celda{ display:flex; white-space:nowrap; min-width:0; }
+
+/* ── La ficha (split-flap) ─────────────────────────────────────────────── */
+.board-flap{
+  position:relative; display:inline-block; flex:0 0 auto;
+  width:1.02em; height:1.5em; margin-right:.06em;
+  border-radius:.1em;
+  perspective:5em;
+  background:linear-gradient(180deg,
+    #1c2230 0%, #141924 48%, #0c1017 50%, #181d29 100%);
+  box-shadow:
+    0 .05em .09em rgba(0,0,0,.65),
+    inset 0 .04em 0 var(--flap-luz),
+    inset 0 -.04em 0 rgba(0,0,0,.55);
+  contain:layout paint style;
+}
+/* La bisagra del medio: la línea que parte la letra al mango */
+.board-flap::after{
+  content:''; position:absolute; left:0; right:0; top:50%;
+  height:.07em; margin-top:-.035em; z-index:3;
+  background:var(--flap-borde); opacity:.9;
+}
+.board-flap__c{
+  position:absolute; inset:0; z-index:2;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-weight:700; font-size:.95em; line-height:1;
+  color:var(--tiza);
+  text-shadow:0 0 .4em rgba(244,239,226,.18);
+}
+/* La mitad que cae: gira sobre la bisagra mientras la ficha busca su letra */
+.board-flap__l{
+  position:absolute; left:0; right:0; top:0; height:50%; z-index:4;
+  border-radius:.1em .1em 0 0;
+  background:linear-gradient(180deg, #232a3c 0%, #11151e 100%);
+  box-shadow:0 .14em .2em rgba(0,0,0,.6);
+  transform-origin:50% 100%;
+  backface-visibility:hidden;
+  opacity:0;
+}
+.board-flap--gira .board-flap__l{
+  opacity:1;
+  will-change:transform;
+  animation:board-clac 74ms linear infinite;
+}
+@keyframes board-clac{
+  0%{ transform:rotateX(0deg); }
+  100%{ transform:rotateX(-88deg); }
+}
+
+/* ── Color por columna ─────────────────────────────────────────────────── */
+.board-c--dest  .board-flap__c{ color:var(--tiza); }
+.board-c--vuelo .board-flap__c,
+.board-c--sale  .board-flap__c{ color:var(--tiza-dim); }
+.board-c--mi    .board-flap__c{
+  color:var(--neon-2); font-weight:800;
+  text-shadow:0 0 .5em rgba(255,212,121,.35);
+}
+.board-c--est   .board-flap__c{ color:var(--tiza-dim); }
+.board-est--verde .board-flap__c{ color:var(--green); text-shadow:0 0 .55em rgba(52,224,161,.45); }
+.board-est--rojo  .board-flap__c{ color:var(--red);   text-shadow:0 0 .55em rgba(255,90,110,.4); }
+.board-est--tiza  .board-flap__c{ color:var(--tiza-dim); text-shadow:none; }
+.board-est--late{ animation:board-late 1.7s steps(1, end) infinite; }
+@keyframes board-late{ 0%,62%{ opacity:1 } 63%,100%{ opacity:.34 } }
+.board-c--vacia .board-flap__c{ color:var(--ink-faint); }
+
+/* ── Pie del cartel ────────────────────────────────────────────────────── */
+.board-pie{
+  display:flex; align-items:center; gap:.6em;
+  margin-top:.6em; padding-top:.55em;
+  border-top:.06em solid rgba(120,140,190,.12);
+  font-family:var(--mono); font-size:.6em; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-faint);
+}
+.board-pie__led{
+  width:.5em; height:.5em; border-radius:50%;
+  background:var(--green); box-shadow:0 0 .8em var(--green);
+  animation:board-late 2.4s ease-in-out infinite;
+}
+.board-pie__hint{ margin-left:auto; color:rgba(255,179,64,.55); }
+
+/* ── Pantallas chicas: se caen VUELO y SALE, y el destino se acorta ────── */
+@media (max-width:760px){
+  /* 39 fichas · 1.08em + 1 hueco + bordes ≈ 47.1em de ancho de fila */
+  .board-mueble{ font-size:clamp(5.5px, calc(94vw / 48), 15px); }
+  .board-panel{ padding:.9em 1em .8em; }
+  .board-cab,
+  .board-fila{
+    grid-template-columns:
+      calc(var(--c1) * var(--fw)) calc(var(--c4) * var(--fw)) calc(var(--c5) * var(--fw));
+    gap:0 .9em;
+  }
+  .board-fila--vacia{ grid-template-columns:1fr; }
+  .board-c--vuelo, .board-c--sale{ display:none; }
+  .board-head__tit{ font-size:1.25em; letter-spacing:.14em; }
+  .board-reloj__lbl{ display:none; }
+  .board-pie__hint{ display:none; }
+  .board-tirante{ display:none; }
+}
+
+/* ── Menos movimiento: el cartel se queda quieto ───────────────────────── */
+@media (prefers-reduced-motion: reduce){
+  .board-flap--gira .board-flap__l{ animation:none; opacity:0; }
+  .board-est--late, .board-pie__led{ animation:none; }
+  .board-fila__flecha{ transition:none; }
+}

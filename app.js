@@ -86,8 +86,7 @@ function setupLock(){
 }
 
 /* ---------- init ---------- */
-async function init(){
-  setupLock();
+async function cargarDatos(){
   [state.latest, state.clima, state.destinos, state.config, state.busqueda,
    state.meta, state.ofertas] = await Promise.all([
     loadJSON('data/latest.json'),
@@ -98,7 +97,11 @@ async function init(){
     loadJSON('data/meta.json'),
     loadJSON('data/ofertas.json'),
   ]);
+}
 
+async function init(){
+  setupLock();
+  await cargarDatos();
   setupTabs();
   setupFilters();
   setupSheet();
@@ -1259,7 +1262,7 @@ function registerSW(){
   }
 }
 
-init();
+if (!window.NV_CINE) init();
 
 /* ================= ARMADOR ida y vuelta (elegí día por día) ================= */
 function armadorCodes(destKey, ym){
@@ -1398,3 +1401,27 @@ function armadorEntradaBlock(destKey){
     <div class="diaslinks">${btns}</div>
     <p class="hint" style="margin-top:8px">Elegís tu día de ida y tu día de vuelta en dos calendarios, y te suma el total al instante.</p></div>`;
 }
+
+
+/* ================= Puente para la experiencia cinematográfica =================
+   La capa visual nueva (cine.js + escenas/) reutiliza este mismo cerebro:
+   datos, cálculos de millas vs plata, links a Smiles/Despegar y las hojas del
+   Armador y de cada destino. Nada de esa lógica se duplica allá. */
+window.NV = {
+  state, cargarDatos, setupSheet, closeSheet, setupLock,
+  // datos derivados
+  bDestinos, vueltasDestino, destinosConVuelta, mesesVuelta,
+  calcularCombos, mejorArmado, armadoTxt, cashLeg, cashRefDestino, cpp,
+  valorMilla, valorMillaTxt, idaDaysUnion, diasEntre,
+  // hojas (modales) que ya existen
+  openDestino, openArmador, openArmadoSheet, openEditor,
+  // helpers de formato
+  fmtMiles, fmtUSD, ymLabel, dateLabel, haceCuanto, durTxt, escTxt,
+  cashTipoTxt, nivelLabel,
+  // links
+  smilesURL, smilesRoundURL, smilesOneWayURL,
+  despegarDayURL, googleFlightsURL, kayakURL, aviasalesDayURL,
+  // constantes
+  MONTHS, MONTHS_LONG, DOW, PIN_HASH,
+  registerSW,
+};

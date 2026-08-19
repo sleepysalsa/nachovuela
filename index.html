@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#080b16">
-<title>NachoVuela — tu radar de vuelos</title>
+<meta name="theme-color" content="#070a13">
+<title>NachoVuela — la terminal</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="assets/logo-mark.svg">
 <link rel="apple-touch-icon" href="assets/logo-mark.svg">
@@ -15,11 +15,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="cine.css">
+<link rel="stylesheet" href="escenas/terminal.css">
+<link rel="stylesheet" href="escenas/mac.css">
+<link rel="stylesheet" href="escenas/board.css">
+<link rel="stylesheet" href="escenas/revista.css">
 </head>
-<body>
-<div class="grain" aria-hidden="true"></div>
+<body class="cine">
 
-<!-- Pantalla de ingreso -->
+<!-- Puerta de entrada -->
 <div class="lock" id="lock" hidden>
   <div class="lock__box">
     <img src="assets/logo-mark.svg" alt="" width="84" height="84" class="lock__logo">
@@ -33,144 +37,32 @@
   </div>
 </div>
 
-<header class="topbar">
-  <div class="brand">
-    <img src="assets/logo-mark.svg" alt="" class="brand__mark" width="40" height="40">
-    <div class="brand__text">
-      <span class="brand__name">Nacho<em>Vuela</em></span>
-      <span class="brand__tag">radar de oportunidades</span>
-    </div>
+<!-- El viaje: su altura es el tiempo del relato -->
+<div id="viaje">
+  <!-- El escenario queda fijo; lo que cambia es el momento -->
+  <div id="escenario">
+    <!-- las escenas se insertan acá -->
   </div>
-  <div class="topbar__status" id="scanStatus">
-    <span class="pulse"></span>
-    <span id="scanStatusText">cargando…</span>
-  </div>
+</div>
+
+<!-- Barra fija: logo + estado del radar + guía de scroll -->
+<header class="hud">
+  <a class="hud__marca" href="#" id="hudTop">
+    <img src="assets/logo-mark.svg" alt="" width="34" height="34">
+    <span>Nacho<em>Vuela</em></span>
+  </a>
+  <div class="hud__estado" id="hudEstado"></div>
 </header>
 
-<nav class="tabs" id="tabs">
-  <button class="tab is-active" data-view="buscar">Buscar</button>
-  <button class="tab" data-view="vueltas">Vueltas</button>
-  <button class="tab" data-view="radar">Radar</button>
-  <button class="tab" data-view="destinos">Destinos</button>
-</nav>
+<div class="guia" id="guia" aria-hidden="true">
+  <span class="guia__txt">scrolleá</span>
+  <span class="guia__flecha"></span>
+</div>
 
-<main id="app">
-  <!-- BUSCAR (inicio) -->
-  <section class="view is-active" id="view-buscar">
-    <div class="finder">
-      <div class="finder__head">
-        <h1 class="finder__title">¿A dónde cazamos?</h1>
-        <p class="finder__sub">Armá tu viaje: elegí destino, cuándo salir y cuántas noches. Te muestro las mejores combinaciones ida + vuelta en millas.</p>
-        <button class="finder__edit" id="editTripsBtn" type="button">✏️ Configurar qué rastrillar</button>
-      </div>
-      <form class="finder__form" id="finderForm" autocomplete="off">
-        <label class="fld">
-          <span class="fld__lbl">Destino</span>
-          <select class="fld__in" id="fDest"></select>
-        </label>
+<!-- Riel de capítulos: dónde estás en el relato -->
+<nav class="riel" id="riel" aria-label="Momentos"></nav>
 
-        <label class="fld">
-          <span class="fld__lbl">Salir desde</span>
-          <select class="fld__in" id="fOrig"></select>
-        </label>
-
-        <label class="fld">
-          <span class="fld__lbl">Mes de salida</span>
-          <select class="fld__in" id="fMes"></select>
-        </label>
-
-        <div class="fld fld--range">
-          <span class="fld__lbl">Días de viaje (noches)</span>
-          <div class="rangebox">
-            <input type="number" class="fld__in fld__num" id="fNochesMin" min="1" max="120" value="10" inputmode="numeric">
-            <span class="rangebox__to">a</span>
-            <input type="number" class="fld__in fld__num" id="fNochesMax" min="1" max="120" value="20" inputmode="numeric">
-            <span class="rangebox__u">noches</span>
-          </div>
-        </div>
-
-        <div class="fld fld--full">
-          <span class="fld__lbl">Salida: ¿algún día en particular?</span>
-          <div class="daypick" id="fDiasIda"></div>
-        </div>
-
-        <div class="fld fld--full">
-          <span class="fld__lbl">Preferencia de escalas</span>
-          <div class="segbtns" id="fEscalas">
-            <button type="button" class="segbtn is-active" data-esc="todos">Cualquiera</button>
-            <button type="button" class="segbtn" data-esc="directo">Evitar conexión por Brasil</button>
-          </div>
-          <p class="fld__hint">Las escalas exactas de cada vuelo las confirmás al abrir el día en Smiles. Acá puedo evitar los días que solo salen conectando por Brasil (GOL).</p>
-        </div>
-
-        <button type="submit" class="finder__go" id="fGo">Buscar combinaciones ✈</button>
-      </form>
-    </div>
-
-    <div class="results" id="finderResults"></div>
-    <div id="ideasWrap"></div>
-  </section>
-
-  <!-- VUELTAS (solo regreso → EZE) -->
-  <section class="view" id="view-vueltas">
-    <div class="finder__head">
-      <h1 class="finder__title">Cazar la vuelta primero</h1>
-      <p class="finder__sub">A veces la vuelta regalada aparece antes que la ida. Elegí destino y mes de regreso, y mirá los días más baratos volviendo a Ezeiza.</p>
-    </div>
-    <div class="vueltas__form" id="vueltasForm">
-      <label class="fld">
-        <span class="fld__lbl">Volver desde</span>
-        <select class="fld__in" id="vDest"></select>
-      </label>
-      <label class="fld">
-        <span class="fld__lbl">Mes de regreso</span>
-        <select class="fld__in" id="vMes"></select>
-      </label>
-    </div>
-    <div class="results" id="vueltasResults"></div>
-  </section>
-
-  <!-- RADAR -->
-  <section class="view" id="view-radar">
-    <div class="hero">
-      <div class="hero__radar" aria-hidden="true">
-        <div class="radar-ring r1"></div>
-        <div class="radar-ring r2"></div>
-        <div class="radar-ring r3"></div>
-        <div class="radar-sweep"></div>
-        <div class="radar-cross v"></div>
-        <div class="radar-cross h"></div>
-      </div>
-      <div class="hero__content" id="heroTop">
-        <p class="hero__kicker">mejor oportunidad ahora</p>
-        <div class="hero__skeleton">Rastreando el cielo…</div>
-      </div>
-    </div>
-
-    <div class="statstrip" id="statStrip"></div>
-
-    <div class="section-head">
-      <h2>Radar de rutas</h2>
-      <div class="filters" id="radarFilters">
-        <button class="chip-filter is-active" data-flt="todos">Todas</button>
-        <button class="chip-filter" data-flt="oportunidad">🟢 Oportunidades</button>
-        <button class="chip-filter" data-flt="eeuu">EE.UU.</button>
-        <button class="chip-filter" data-flt="europa">Europa</button>
-      </div>
-    </div>
-    <div class="cards" id="radarCards"></div>
-    <div id="ofertasWrap"></div>
-  </section>
-
-  <!-- DESTINOS -->
-  <section class="view" id="view-destinos">
-    <div class="section-head"><h2>Explorar destinos</h2>
-      <p class="section-sub">Precios promedio, temporada alta y clima — busques o no un viaje puntual.</p>
-    </div>
-    <div class="dest-grid" id="destGrid"></div>
-  </section>
-</main>
-
+<!-- Hoja reutilizada de la app: Armador y fichas de destino -->
 <div class="sheet" id="sheet" aria-hidden="true">
   <div class="sheet__backdrop" data-close></div>
   <div class="sheet__panel" role="dialog" aria-modal="true">
@@ -179,11 +71,13 @@
   </div>
 </div>
 
-<footer class="foot">
-  <span>NachoVuela · hecho para cazar millas ✈️</span>
-  <span id="footScan"></span>
-</footer>
-
+<script>window.NV_CINE = true;</script>
 <script src="app.js"></script>
+<script src="cine.js"></script>
+<script src="escenas/terminal.js"></script>
+<script src="escenas/mac.js"></script>
+<script src="escenas/board.js"></script>
+<script src="escenas/revista.js"></script>
+<script src="arranque.js"></script>
 </body>
 </html>
