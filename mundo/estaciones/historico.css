@@ -1,0 +1,404 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NachoVuela · mundo/estaciones/historico.css — la pizarra de cotizaciones.
+
+   El <section class="est est--historico"> vive en dos estados:
+     LEJOS  → un monitor de información de aeropuerto: barra ámbar, un titular
+              enorme ("3 rutas bajaron hoy") y tres contadores. Todo en unidades
+              de contenedor (cqw/cqh) para que escale con la distancia.
+     CERCA  → tres secciones que scrollean adentro, medidas en px porque acá se
+              lee: qué se movió, cómo viene cada ruta y las mejores ventanas.
+   El fundido lo maneja --zoom (lo escribe la cámara) solo cuando ESTA estación
+   es la enfocada (body[data-enfocada="historico"]).
+
+   Nada de filter:blur ni feTurbulence: el "vidrio" del monitor son gradientes
+   planos y una sola sombra interior.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.est.est--historico {
+  container-type: size;
+  background: #05070f;
+  border: 1px solid rgba(245, 166, 35, .30);
+  border-radius: 10px;
+  box-shadow:
+    0 30px 80px -30px rgba(0, 0, 0, .95),
+    inset 0 0 0 1px rgba(255, 255, 255, .04),
+    inset 0 2px 0 rgba(255, 255, 255, .06);
+  overflow: hidden;
+  --fondo: #070a14;
+  --fondo-2: #0b1020;
+  --fondo-3: #10162a;
+  --raya: rgba(120, 140, 190, .16);
+  --raya-2: rgba(120, 140, 190, .30);
+  --amb: #f5a623;
+  --amb-lt: #ffd479;
+  --ver: #34e0a1;
+  --roj: #ff5a6e;
+  --txt: #eef2ff;
+  --txt-2: #9aa6c4;
+  --txt-3: #5f6a86;
+  color: var(--txt);
+}
+.est.est--historico.est--mirando { box-shadow: 0 0 0 2px var(--amb), 0 30px 80px -30px rgba(0, 0, 0, .95); }
+
+.hi { position: absolute; inset: 0; background: var(--fondo); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEJOS · el monitor visto desde la butaca
+   ═══════════════════════════════════════════════════════════════════════════ */
+.hi__lejos {
+  position: absolute; inset: 0; z-index: 2;
+  opacity: 1; transition: opacity .2s linear;
+  user-select: none;
+}
+body[data-enfocada="historico"] .est--historico .hi__lejos { opacity: calc(1.45 - var(--zoom, 0) * 2.2); }
+.est--foco .hi__lejos { opacity: 0; pointer-events: none; }
+
+.hi__marco {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 3.2cqh 4cqw;
+  background:
+    linear-gradient(180deg, rgba(245, 166, 35, .07) 0%, transparent 26%),
+    linear-gradient(180deg, #0a0f1e 0%, #070a14 55%, #05070f 100%);
+}
+
+/* barra superior tipo "vuelo · estado" */
+.hi__barra {
+  display: flex; align-items: center; gap: 1.6cqw; width: 100%;
+  font-family: var(--mono); font-size: 2.7cqw; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--amb-lt);
+  padding-bottom: 2.4cqh; border-bottom: max(1px, .22cqh) solid rgba(245, 166, 35, .34);
+}
+.hi__barra b { margin-left: auto; color: var(--txt-3); font-weight: 500; letter-spacing: .12em; }
+.hi__led {
+  width: 1.7cqw; height: 1.7cqw; border-radius: 50%; background: var(--ver); flex: none;
+  box-shadow: 0 0 0 .5cqw rgba(52, 224, 161, .18);
+  animation: hiLed 2.4s steps(1, end) infinite;
+}
+@keyframes hiLed { 0%, 74% { opacity: 1 } 75%, 100% { opacity: .28 } }
+
+.hi__titular {
+  margin-top: 3.4cqh; width: 100%;
+  font-family: var(--serif); font-weight: 900; font-size: 7.6cqw; line-height: 1.02;
+  letter-spacing: -.02em; text-align: left; color: var(--txt);
+}
+.hi__titular--baja { color: var(--ver); }
+.hi__titular--suba { color: var(--roj); }
+.hi__titular--min { color: var(--amb-lt); }
+.hi__titular--nd { color: var(--txt-3); font-style: italic; font-weight: 400; font-size: 5.4cqw; }
+
+.hi__sub {
+  width: 100%; margin-top: 1.4cqh;
+  font-family: var(--mono); font-size: 3.1cqw; font-weight: 500; color: var(--txt-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.hi__conts {
+  display: flex; gap: 2.4cqw; width: 100%; margin-top: auto; padding-top: 2cqh;
+  font-family: var(--mono); text-transform: uppercase; letter-spacing: .1em;
+}
+.hi__conts span {
+  flex: 1; display: flex; flex-direction: column; gap: .4cqh;
+  padding: 1.6cqh 1.4cqw; border-radius: .8cqw;
+  background: var(--fondo-2); box-shadow: inset 0 0 0 max(1px, .12cqh) var(--raya);
+  font-size: 2.35cqw; color: var(--txt-3); line-height: 1.15;
+}
+.hi__conts b { font-size: 5.2cqw; font-weight: 800; letter-spacing: -.02em; color: var(--txt); }
+.hi__conts .is-min b { color: var(--ver); }
+
+/* tira de micro-sparklines: "acá adentro hay serie de tiempo" */
+.hi__tira { display: flex; gap: 1.1cqw; width: 100%; margin-top: 2.6cqh; }
+.hi__micro {
+  flex: 1; height: 14cqh; border-radius: .5cqw; overflow: hidden;
+  background: var(--fondo-2); box-shadow: inset 0 0 0 max(1px, .1cqh) var(--raya);
+}
+.hi__micro .hi__spark { width: 100%; height: 100%; }
+
+.hi__pie {
+  width: 100%; margin-top: 2cqh;
+  font-family: var(--mono); font-size: 2.2cqw; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--txt-3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPARKLINES (los mismos lejos y cerca, cambia el tamaño)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.hi__spark { display: block; overflow: visible; }
+.hi__sparkArea { fill: currentColor; opacity: .13; stroke: none; }
+.hi__sparkLinea { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.hi__sparkPiso { stroke: rgba(245, 166, 35, .8); stroke-width: 1.2; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.hi__sparkFin { fill: currentColor; }
+.hi__spark--min { color: var(--ver); }
+.hi__spark--cerca { color: #8ee9c4; }
+.hi__spark--medio { color: var(--amb); }
+.hi__spark--caro { color: var(--roj); }
+.hi__spark--nd { color: var(--txt-3); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CERCA · el panel usable
+   ═══════════════════════════════════════════════════════════════════════════ */
+.hi__cerca {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none;
+  background: var(--fondo);
+  font-family: var(--sans);
+}
+body[data-enfocada="historico"] .est--historico .hi__cerca { opacity: calc(var(--zoom, 0) * 2.2 - .9); }
+.est--foco .hi__cerca { opacity: 1; pointer-events: auto; }
+/* lo pesado (46 sparklines + tablas) no se dibuja mientras el monitor está lejos */
+.est--lejos .hi__cerca { content-visibility: hidden; }
+
+.hi__cargando {
+  margin: auto; font-family: var(--mono); font-size: .8rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--txt-3);
+}
+.hi__cargando code { color: var(--amb); text-transform: none; letter-spacing: 0; }
+
+/* ── cabecera fija ─────────────────────────────────────────────────────── */
+.hi__cab {
+  flex: none; display: flex; align-items: center; gap: 16px;
+  padding: 0 16px; height: 54px;
+  border-bottom: 1px solid rgba(245, 166, 35, .28);
+  background: linear-gradient(180deg, rgba(245, 166, 35, .08), transparent), #0a0f1e;
+}
+.hi__cabTit { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.hi__cabTit .hi__led { width: 8px; height: 8px; box-shadow: 0 0 0 3px rgba(52, 224, 161, .16); animation: none; }
+.hi__cabTit b { font-family: var(--serif); font-weight: 600; font-size: 1.02rem; letter-spacing: -.01em; white-space: nowrap; }
+.hi__cabTit small { font-family: var(--mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--txt-3); white-space: nowrap; }
+
+.hi__nav { display: flex; gap: 6px; margin-left: auto; }
+.hi__nav button {
+  font: inherit; font-family: var(--mono); font-size: .62rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--txt-3);
+  background: var(--fondo-2); border: 1px solid var(--raya); border-radius: 999px;
+  padding: 6px 12px; cursor: pointer; transition: color .18s, border-color .18s, background .18s;
+}
+.hi__nav button:hover { color: var(--txt); border-color: var(--raya-2); }
+.hi__nav button.is-activa { color: #1a1206; background: var(--amb); border-color: var(--amb); }
+
+.hi__soltar {
+  font: inherit; font-family: var(--mono); font-size: .62rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--txt-2); background: transparent;
+  border: 1px solid var(--raya); border-radius: 999px; padding: 6px 11px; cursor: pointer;
+}
+.hi__soltar:hover { color: var(--txt); border-color: var(--raya-2); }
+
+.hi__pantalla { position: relative; flex: 1 1 auto; min-height: 0; }
+.hi__scroll { padding: 0 16px 18px; }
+
+/* ── secciones ─────────────────────────────────────────────────────────── */
+.hi__sec { padding-top: 18px; scroll-margin-top: 10px; }
+.hi__sec + .hi__sec { border-top: 1px solid var(--raya); margin-top: 20px; }
+.hi__secCab { margin-bottom: 12px; }
+.hi__secCab h3 {
+  display: flex; align-items: baseline; gap: 10px;
+  font-family: var(--serif); font-weight: 600; font-size: 1.28rem; letter-spacing: -.01em;
+}
+.hi__secCab h3 i {
+  font-family: var(--mono); font-style: normal; font-size: .7rem; font-weight: 800;
+  letter-spacing: .12em; color: #1a1206; background: var(--amb);
+  padding: 3px 7px; border-radius: 5px;
+}
+.hi__secCab p { margin-top: 5px; font-size: .78rem; line-height: 1.45; color: var(--txt-2); max-width: 86ch; }
+.hi__secCab p b { color: var(--ver); }
+
+.hi__vacio {
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .06em;
+  color: var(--txt-3); padding: 14px 10px; text-align: center;
+  border: 1px dashed var(--raya); border-radius: 10px;
+}
+
+/* ── 1 · qué se movió ──────────────────────────────────────────────────── */
+.hi__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.hi__col h4 {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
+  font-family: var(--mono); font-size: .64rem; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--txt-3);
+}
+.hi__col h4 b { font-size: .62rem; padding: 2px 7px; border-radius: 999px; background: var(--fondo-3); color: var(--txt-2); }
+.hi__col--baja h4 { color: var(--ver); } .hi__col--baja h4 b { background: rgba(52, 224, 161, .14); color: var(--ver); }
+.hi__col--suba h4 { color: var(--roj); } .hi__col--suba h4 b { background: rgba(255, 90, 110, .14); color: var(--roj); }
+
+.hi__mov {
+  display: grid; grid-template-columns: 70px minmax(0, 1fr) auto 58px;
+  align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 8px 10px; margin-bottom: 5px;
+  font: inherit; color: inherit; cursor: pointer;
+  background: var(--fondo-2); border: 1px solid var(--raya); border-left-width: 3px; border-radius: 8px;
+  transition: background .16s, border-color .16s, transform .16s;
+}
+.hi__mov:hover { background: var(--fondo-3); border-color: var(--raya-2); transform: translateX(2px); }
+.hi__mov[disabled] { cursor: default; opacity: .72; }
+.hi__mov--baja { border-left-color: var(--ver); }
+.hi__mov--suba { border-left-color: var(--roj); }
+.hi__mov.is-viejo { opacity: .55; }
+
+.hi__movDelta { font-family: var(--mono); font-size: .92rem; font-weight: 800; letter-spacing: -.02em; }
+.hi__mov--baja .hi__movDelta { color: var(--ver); }
+.hi__mov--suba .hi__movDelta { color: var(--roj); }
+.hi__movQuien { display: flex; flex-direction: column; min-width: 0; }
+.hi__movQuien b { font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hi__movQuien small { font-family: var(--mono); font-size: .58rem; letter-spacing: .06em; text-transform: uppercase; color: var(--txt-3); }
+.hi__movNums { display: flex; flex-direction: column; align-items: flex-end; font-family: var(--mono); }
+.hi__movNums s { font-size: .6rem; color: var(--txt-3); }
+.hi__movNums em { font-size: .82rem; font-weight: 700; font-style: normal; color: var(--txt); }
+.hi__movCuando { font-family: var(--mono); font-size: .58rem; letter-spacing: .04em; color: var(--txt-3); text-align: right; }
+
+.hi__extra { margin-top: 12px; }
+.hi__extra summary {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--txt-3); cursor: pointer; padding: 7px 0;
+}
+.hi__extra summary:hover { color: var(--txt-2); }
+.hi__extra .hi__cols { grid-template-columns: 1fr 1fr; }
+.hi__extra .hi__col { display: contents; }
+
+/* ── 2 · cómo viene cada ruta ──────────────────────────────────────────── */
+.hi__leyenda { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.hi__lg {
+  font-family: var(--mono); font-size: .58rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; padding: 4px 9px; border-radius: 999px;
+  background: var(--fondo-2); border: 1px solid var(--raya); color: var(--txt-3);
+}
+.hi__lg--min { color: var(--ver); border-color: rgba(52, 224, 161, .4); }
+.hi__lg--cerca { color: #8ee9c4; border-color: rgba(142, 233, 196, .3); }
+.hi__lg--medio { color: var(--amb); border-color: rgba(245, 166, 35, .36); }
+.hi__lg--caro { color: var(--roj); border-color: rgba(255, 90, 110, .34); }
+
+.hi__grupo { margin-bottom: 16px; }
+.hi__grupoCab {
+  display: flex; align-items: center; gap: 10px; padding: 7px 4px 7px 0; margin-bottom: 6px;
+  border-bottom: 1px solid var(--raya);
+}
+.hi__grupoCab[data-dest] { cursor: pointer; }
+.hi__grupoCab[data-dest]:hover .hi__grupoNom b { color: var(--amb-lt); }
+.hi__grupoEmoji { font-size: 1.15rem; line-height: 1; }
+.hi__grupoNom { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.hi__grupoNom b { font-family: var(--serif); font-weight: 600; font-size: 1.02rem; transition: color .16s; }
+.hi__grupoNom small { font-family: var(--mono); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: var(--txt-3); }
+.hi__grupoTag {
+  margin-left: auto; font-family: var(--mono); font-size: .58rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--txt-3);
+}
+.hi__grupoRutas { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+.hi__ruta {
+  display: grid; grid-template-columns: 84px minmax(0, 1fr) 84px 100px;
+  align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 7px 10px; font: inherit; color: inherit; cursor: pointer;
+  background: var(--fondo-2); border: 1px solid var(--raya); border-radius: 8px;
+  transition: background .16s, border-color .16s;
+}
+.hi__ruta:hover { background: var(--fondo-3); border-color: var(--raya-2); }
+.hi__ruta[disabled] { cursor: default; }
+.hi__ruta.is-archivo { opacity: .5; }
+.hi__ruta--min { border-color: rgba(52, 224, 161, .38); background: rgba(52, 224, 161, .05); }
+
+.hi__rutaMes {
+  display: flex; flex-direction: column; font-family: var(--mono);
+  font-size: .74rem; font-weight: 700; color: var(--txt); white-space: nowrap;
+}
+.hi__rutaMes small { font-size: .5rem; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--txt-3); line-height: 1.45; }
+.hi__rutaMes small:last-child { opacity: .72; }
+.hi__rutaGraf { min-width: 0; }
+.hi__rutaGraf .hi__spark { width: 100%; height: 40px; }
+.hi__rutaNums { display: flex; flex-direction: column; align-items: flex-end; font-family: var(--mono); }
+.hi__rutaNums b { font-size: .82rem; font-weight: 800; letter-spacing: -.02em; }
+.hi__rutaNums small { font-size: .55rem; letter-spacing: .04em; color: var(--txt-3); }
+.hi__rutaSobre {
+  display: flex; flex-direction: column; align-items: flex-end; text-align: right;
+  font-family: var(--mono); font-size: .74rem; font-weight: 800; letter-spacing: -.01em;
+}
+.hi__rutaSobre small { font-size: .5rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--txt-3); line-height: 1.2; }
+.hi__rutaSobre--min { color: var(--ver); font-size: .56rem; letter-spacing: .08em; }
+.hi__rutaSobre--cerca { color: #8ee9c4; }
+.hi__rutaSobre--medio { color: var(--amb); }
+.hi__rutaSobre--caro { color: var(--roj); }
+.hi__rutaSobre--nd { color: var(--txt-3); }
+
+/* ── 3 · las mejores ventanas ──────────────────────────────────────────── */
+.hi__minTabla { border: 1px solid var(--raya); border-radius: 10px; overflow: hidden; }
+.hi__minCab, .hi__min {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) 104px 118px 106px 96px;
+  align-items: center; gap: 12px; padding: 7px 12px; width: 100%; text-align: left;
+}
+.hi__minCab {
+  font-family: var(--mono); font-size: .55rem; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--txt-3);
+  background: var(--fondo-3); border-bottom: 1px solid var(--raya);
+}
+.hi__minCab span:nth-child(n+2) { text-align: right; }
+.hi__min {
+  font: inherit; color: inherit; cursor: pointer; background: transparent;
+  border: 0; border-top: 1px solid rgba(120, 140, 190, .08);
+  transition: background .14s;
+}
+.hi__min:first-of-type { border-top: 0; }
+.hi__min:hover { background: var(--fondo-2); }
+.hi__min[disabled] { cursor: default; }
+.hi__min.is-archivo { opacity: .48; }
+.hi__minQuien { display: flex; flex-direction: column; min-width: 0; }
+.hi__minQuien b { font-size: .78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hi__minQuien small { font-family: var(--mono); font-size: .55rem; letter-spacing: .08em; text-transform: uppercase; color: var(--txt-3); }
+.hi__minPrecio, .hi__minVuelo, .hi__minVisto, .hi__minHoy {
+  display: flex; flex-direction: column; align-items: flex-end; text-align: right;
+  font-family: var(--mono); font-size: .78rem; font-weight: 700;
+}
+.hi__minPrecio { color: var(--amb-lt); font-weight: 800; }
+.hi__minVuelo, .hi__minVisto { color: var(--txt-2); font-size: .68rem; font-weight: 500; }
+.hi__minPrecio small, .hi__minVuelo small, .hi__minVisto small, .hi__minHoy small {
+  font-size: .5rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--txt-3);
+}
+.hi__minHoy--min { color: var(--ver); }
+.hi__minHoy--cerca { color: #8ee9c4; }
+.hi__minHoy--medio { color: var(--amb); }
+.hi__minHoy--caro { color: var(--roj); }
+.hi__minHoy--nd { color: var(--txt-3); }
+
+.hi__firma {
+  margin: 18px 0 4px; padding-top: 12px; border-top: 1px solid var(--raya);
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--txt-3); text-align: center;
+}
+
+/* ── pantallas chicas: una columna ─────────────────────────────────────── */
+@container (max-width: 860px) {
+  .hi__cols, .hi__grupoRutas, .hi__extra .hi__cols { grid-template-columns: 1fr; }
+  .hi__minCab, .hi__min { grid-template-columns: minmax(0, 1.4fr) 92px 86px; }
+  .hi__minCab span:nth-child(n+4), .hi__minVisto { display: none; }
+  .hi__nav button { padding: 6px 8px; font-size: .56rem; }
+  .hi__cabTit small { display: none; }
+}
+
+/* ── celular: la cabecera pasa a dos filas ─────────────────────────────────
+   En un panel de ~365 px el título, las tres píldoras de la nav y el botón de
+   soltar no entran en una sola fila de 54 px: la nav se montaba ENCIMA del
+   título (medido en 390x844: 118 px de solape) y sus botones partían el texto
+   en cuatro líneas, quedando de 62 px de alto dentro de una barra de 54.
+   Acá se reparte en dos filas — título + soltar arriba, la nav abajo — y la
+   nav scrollea de costado si aun así no entrara. .hi__cab es flex:none dentro
+   de .hi__cerca, así que crecer solo le come alto a .hi__pantalla.          */
+@container (max-width: 560px) {
+  .hi__cab { flex-wrap: wrap; height: auto; padding: 9px 12px 10px; gap: 9px 10px; }
+  .hi__cabTit { flex: 1 1 auto; overflow: hidden; }
+  .hi__cabTit b { overflow: hidden; text-overflow: ellipsis; }
+  .hi__soltar { flex: none; margin-left: auto; }
+  .hi__nav { order: 1; flex: 1 1 100%; margin-left: 0; overflow-x: auto; scrollbar-width: none; }
+  .hi__nav::-webkit-scrollbar { display: none; }
+  .hi__nav button { flex: 1 1 auto; white-space: nowrap; padding: 6px 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hi__led { animation: none; }
+  .hi__mov, .hi__ruta, .hi__min { transition: none; }
+}
+
+/* ── La brújula ahora tiene un chip más ────────────────────────────────────
+   mundo/mundo.css deja que los chips se apilen recién a los 760px; con seis
+   botones la fila se apretaba entre 760 y 1000. Se adelanta el wrap desde acá
+   (aditivo y acotado a esa franja: arriba de 1000px no aplica y la maqueta
+   original queda igual). */
+@media (min-width: 761px) and (max-width: 1000px) {
+  .brujula { flex-wrap: wrap; justify-content: center; max-width: 94vw; }
+}

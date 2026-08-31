@@ -676,6 +676,29 @@ ancla('llegadas',  new THREE.Vector3( 3.6, 3.8, -6.4), 3.6, 1.7, -0.36);
   const l = new THREE.PointLight(0xffd479, 8, 7, 2); l.position.set(-4.4, 1.9, -3.2); scene.add(l);
 }
 ancla('mostrador', new THREE.Vector3(-4.6, 1.35, -3.4), 1.9, 1.25, 0.9);
+// Pizarra de cotizaciones (el histórico de precios): a la derecha y abajo del
+// ventanal, sobre un pedestal, mirando de frente a la butaca. Da yaw ≈ +62 y
+// pitch ≈ −9.5, lejos de llegadas (+29/+19) y de la Mac (0/−40).
+{
+  const HX = 3.18, HY = 0.62, HZ = -1.69, HR = -1.08;   // HR: gira para mirar a la butaca
+  const sn = Math.sin(HR), cs = Math.cos(HR);
+  const atras = d => [HX - sn * d, HZ - cs * d];         // d>0 = alejarse de la butaca
+  const piezas = [];
+  const [px, pz] = atras(0.02);
+  piezas.push({ geo: G(new THREE.BoxGeometry(2.5, 0.10, 0.9), px, 0.05, pz, 0, HR), color: 0x2b3242 });   // plinto
+  const [cx, cz] = atras(0.24);
+  piezas.push({ geo: G(new THREE.BoxGeometry(0.6, 0.85, 0.32), cx, 0.42, cz, 0, HR), color: 0x1c2436 });  // columna
+  const [vx, vz] = atras(-0.13);
+  piezas.push({ geo: G(new THREE.BoxGeometry(2.34, 0.11, 0.44), vx, 1.44, vz, 0, HR), color: 0x141a2a }); // visera
+  scene.add(new THREE.Mesh(fusionar(piezas), new THREE.MeshLambertMaterial({ vertexColors: true })));
+  const tiras = [];
+  const [tx, tz] = atras(-0.15);
+  tiras.push({ geo: G(new THREE.BoxGeometry(2.06, 0.025, 0.05), tx, 1.375, tz, 0, HR) });                 // luz bajo la visera
+  const [fx, fz] = atras(-0.30);
+  tiras.push({ geo: G(new THREE.BoxGeometry(1.5, 0.02, 0.05), fx, 0.115, fz, 0, HR) });                   // luz de piso
+  scene.add(new THREE.Mesh(fusionar(tiras), M.ambar));   // emisivo barato: no suma PointLights
+  ancla('historico', new THREE.Vector3(HX, HY, HZ), 1.9, 1.15, HR);
+}
 // La Mac en el regazo: apenas delante y abajo de la cabeza (el modelo real está más arriba)
 ancla('mac', new THREE.Vector3(0, 0.62, -0.72), 0.75, 0.5, 0);
 anclas.mac.marco.visible = false;                       // la tapa de la Mac hace de marco

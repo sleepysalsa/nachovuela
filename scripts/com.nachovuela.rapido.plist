@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Barridos RÁPIDOS de NachoVuela (solo el radar, ~20 min).
+  Van entre los completos porque las ventanas de mejor precio duran
+  ~9 h de mediana: con dos chequeos por día se escapaban.
+  Instalación: ver scripts/agendar.md
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.nachovuela.rapido</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__RUTA__/scripts/run.sh</string>
+    <string>--rapido</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>23</integer><key>Minute</key><integer>30</integer></dict>
+  </array>
+  <key>StandardOutPath</key>
+  <string>__RUTA__/data/rastrillaje.log</string>
+  <key>StandardErrorPath</key>
+  <string>__RUTA__/data/rastrillaje.log</string>
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

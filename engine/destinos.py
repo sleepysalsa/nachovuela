@@ -22,6 +22,10 @@ ORIGENES = {
 }
 
 # Destinos con sus aeropuertos alternativos agrupados.
+# "origenes" (opcional): desde qué aeropuertos de salida tiene sentido buscar
+# este destino. Sin el campo, se usan los del viaje. Verificado 19-ago-2026:
+# Aeroparque tiene premios a Mendoza (13.000!), San Pablo (70.700, casi la
+# mitad que desde Ezeiza) e Iguazú; a Miami/Madrid no opera.
 # clave = grupo, contiene la lista de aeropuertos y datos de la ciudad "cabecera".
 DESTINOS = {
     # ---- Estados Unidos ----
@@ -84,6 +88,7 @@ DESTINOS = {
     },
     # ---- Sudamérica / cabotaje e internacionales cercanos ----
     "rio": {
+        "origenes": ["EZE", "AEP"],
         "nombre": "Río de Janeiro", "pais": "Brasil", "region": "sudamerica",
         "emoji": "🏝️", "lat": -22.81, "lon": -43.25, "moneda": "USD",
         "aeropuertos": [
@@ -92,6 +97,7 @@ DESTINOS = {
         ],
     },
     "sao_paulo": {
+        "origenes": ["EZE", "AEP"],
         "nombre": "San Pablo", "pais": "Brasil", "region": "sudamerica",
         "emoji": "🇧🇷", "lat": -23.43, "lon": -46.47, "moneda": "USD",
         "aeropuertos": [
@@ -99,6 +105,7 @@ DESTINOS = {
         ],
     },
     "florianopolis": {
+        "origenes": ["EZE", "AEP"],
         "nombre": "Florianópolis", "pais": "Brasil", "region": "sudamerica",
         "emoji": "🏄", "lat": -27.67, "lon": -48.55, "moneda": "USD",
         "aeropuertos": [
@@ -106,21 +113,25 @@ DESTINOS = {
         ],
     },
     "bariloche": {
+        "origenes": ["EZE", "AEP"],
         "nombre": "Bariloche", "pais": "Argentina", "region": "cabotaje",
         "emoji": "🏔️", "lat": -41.15, "lon": -71.16, "moneda": "ARS",
         "aeropuertos": [{"code": "BRC", "ciudad": "Bariloche"}],
     },
     "mendoza": {
+        "origenes": ["EZE", "AEP"],
         "nombre": "Mendoza", "pais": "Argentina", "region": "cabotaje",
         "emoji": "🍷", "lat": -32.89, "lon": -68.85, "moneda": "ARS",
         "aeropuertos": [{"code": "MDZ", "ciudad": "Mendoza"}],
     },
     "iguazu": {
+        "origenes": ["EZE", "AEP"],
         "nombre": "Puerto Iguazú", "pais": "Argentina", "region": "cabotaje",
         "emoji": "💦", "lat": -25.74, "lon": -54.47, "moneda": "ARS",
         "aeropuertos": [{"code": "IGR", "ciudad": "Iguazú"}],
     },
     "ushuaia": {
+        "origenes": ["EZE", "AEP"],
         "nombre": "Ushuaia", "pais": "Argentina", "region": "cabotaje",
         "emoji": "🐧", "lat": -54.84, "lon": -68.30, "moneda": "ARS",
         "aeropuertos": [{"code": "USH", "ciudad": "Ushuaia"}],

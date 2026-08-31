@@ -9,9 +9,19 @@ set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$DIR"
 
+MODO="completo"
+if [ "$1" = "--rapido" ]; then MODO="rapido"; fi
+
 echo "=================================================="
-echo " NachoVuela · rastrillaje $(date '+%Y-%m-%d %H:%M')"
+echo " NachoVuela · rastrillaje $MODO $(date '+%Y-%m-%d %H:%M')"
 echo "=================================================="
+
+# Un barrido rápido nunca interrumpe a uno completo en curso: se saltea y
+# espera al siguiente turno (los completos tardan bastante más).
+if [ "$MODO" = "rapido" ] && pgrep -f "engine/rastrillar.py" >/dev/null 2>&1; then
+  echo "Ya hay un rastrillaje en curso, este rápido se saltea."
+  exit 0
+fi
 
 # -1) Vigilante anti-Mac-dormida: si quedó una corrida anterior colgada
 #     (la Mac se durmió en el medio y recién despertó), la matamos si tiene
@@ -38,7 +48,9 @@ fi
 #    duerma por inactividad mientras corre (no evita dormirse si cerrás
 #    la tapa — eso lo decide macOS sin excepciones).
 #    Los domingos (día 7) además refresca el clima.
-if [ "$(date +%u)" = "7" ]; then
+if [ "$MODO" = "rapido" ]; then
+  caffeinate -s python3 engine/rastrillar.py --rapido
+elif [ "$(date +%u)" = "7" ]; then
   caffeinate -s python3 engine/rastrillar.py --clima
 else
   caffeinate -s python3 engine/rastrillar.py
@@ -50,7 +62,7 @@ if [ -d .git ] && git remote get-url origin >/dev/null 2>&1; then
   echo "Publicando datos en GitHub..."
   git add data/*.json
   if ! git diff --cached --quiet; then
-    git commit -m "datos: rastrillaje $(date '+%Y-%m-%d %H:%M')" >/dev/null
+    git commit -m "datos: rastrillaje $MODO $(date '+%Y-%m-%d %H:%M')" >/dev/null
     if git push origin HEAD >/dev/null 2>&1; then
       echo "✓ Datos publicados. La app ya muestra lo último."
     else

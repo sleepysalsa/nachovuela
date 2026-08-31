@@ -151,11 +151,14 @@ def rutas_desde_config(config):
     vistos = set()
 
     def agregar(origenes, destinos_claves, meses):
-        for og in origenes:
-            for dk in destinos_claves:
-                d = cat.DESTINOS.get(dk)
-                if not d:
-                    continue
+        for dk in destinos_claves:
+            d = cat.DESTINOS.get(dk)
+            if not d:
+                continue
+            # Si el destino declara desde dónde tiene sentido salir, mandan
+            # esos (ej. Mendoza y Brasil también desde Aeroparque; Miami no).
+            ogs = d.get("origenes") or origenes
+            for og in ogs:
                 for aero in d["aeropuertos"]:
                     for ym in meses:
                         anio, mes = int(ym[:4]), int(ym[5:7])
@@ -184,7 +187,7 @@ def rutas_desde_config(config):
     return tareas
 
 
-def correr(demo=False, refrescar_clima=False):
+def correr(demo=False, refrescar_clima=False, rapido=False):
     config = cargar_json(CONFIG_PATH, {})
     historial = cargar_json(HIST_PATH, {"rutas": {}})
     rutas_hist = historial.setdefault("rutas", {})
@@ -330,20 +333,44 @@ def correr(demo=False, refrescar_clima=False):
     escribir_destinos()
     clima_actual = cargar_json(CLIMA_PATH, {}).get("destinos", {})
     faltan_clima = [k for k in cat.DESTINOS if k not in clima_actual]
-    if refrescar_clima or faltan_clima:
+    if not rapido and (refrescar_clima or faltan_clima):
         if faltan_clima:
             print(f"Clima: destinos nuevos sin datos {faltan_clima}, refrescando...")
         escribir_clima()
 
-    # Datos del BUSCADOR ida+vuelta (piernas de ida y de regreso por día)
-    escribir_busqueda(config, demo=demo)
-    escribir_meta(config)
-    escribir_ofertas()
+    if rapido:
+        # Barrido rápido: solo el radar, que es lo que caza oportunidades.
+        # El buscador ida+vuelta, el clima y las noticias son lentos y casi
+        # no cambian entre corridas: los deja para el barrido completo.
+        escribir_meta(config)
+        print("  (modo rápido: sin buscador ida+vuelta, clima ni noticias)")
+    else:
+        # Datos del BUSCADOR ida+vuelta (piernas de ida y de regreso por día)
+        escribir_busqueda(config, demo=demo)
+        escribir_meta(config)
+        escribir_ofertas()
+        escribir_apertura(config)
 
     n_op = sum(1 for r in resultados if r["nivel"] == "oportunidad")
     print(f"[{ahora_iso()}] Listo. {len(resultados)} rutas, {n_op} oportunidades 🔥, "
           f"{len(errores)} errores.")
     return latest
+
+
+def escribir_apertura(config):
+    """
+    Detector de apertura de venta (data/apertura.json).
+
+    Mira los próximos ~14 meses y marca, ruta por ruta, si Smiles ya tiene
+    premios o todavía no salió a la venta. Reusa lo que este mismo barrido
+    acaba de escribir en latest.json, así que casi no consulta de más.
+    Ver engine/apertura.py. Si falla, la corrida sigue igual.
+    """
+    try:
+        import apertura
+        apertura.correr(config=config, log=print, verificar_base=False)
+    except Exception as e:
+        print(f"  Apertura no actualizada en esta corrida: {e}")
 
 
 def agregar_detalles(resultados, config, demo=False):
@@ -466,5 +493,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--demo", action="store_true", help="una sola ruta, prueba rápida")
     ap.add_argument("--clima", action="store_true", help="refresca también el clima")
+    ap.add_argument("--rapido", action="store_true",
+                    help="solo el radar (para las corridas frecuentes del día)")
     args = ap.parse_args()
-    correr(demo=args.demo, refrescar_clima=args.clima)
+    correr(demo=args.demo, refrescar_clima=args.clima, rapido=args.rapido)

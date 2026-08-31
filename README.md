@@ -161,6 +161,47 @@ Al guardar, la app copia la configuración nueva y te abre GitHub para pegarla y
 confirmar (botón *Commit changes*). El motor la toma solo en el próximo
 rastrillaje, porque antes de buscar hace `git pull`.
 
+## Detector de apertura de venta
+
+Las aerolíneas no venden con anticipación infinita: abren la venta de cada mes
+unos **11-12 meses antes**. Ese día es el mejor momento del ciclo para cazar,
+porque está el inventario premio entero sin tocar; de ahí en adelante solo se
+achica.
+
+`engine/apertura.py` vigila ese borde. Mira los próximos 14 meses de cada ruta de
+los viajes activos y anota, mes por mes, si Smiles ya tiene premios (`abierto`) o
+todavía no salió a la venta (`cerrado`). Cuando una ruta-mes pasa de cerrada a
+abierta lo guarda como **novedad** con fecha y hora, para que la app pueda cantar
+*"se abrió la venta de septiembre 2027"*.
+
+Es barato a propósito: los meses que el radar ya consultó se leen de
+`data/latest.json` sin gastar nada, un mes que ya vimos abierto no se vuelve a
+consultar (la venta no se cierra) y a Smiles solo se le pregunta por los meses de
+la **frontera** para adelante, con un tope de consultas por corrida.
+
+Todo eso queda en `data/apertura.json`:
+
+| campo | qué es |
+| --- | --- |
+| `frontera` | el último mes con premios confirmados y cuántos meses de anticipación está dando Smiles hoy |
+| `novedades` | las aperturas detectadas, de la más reciente a la más vieja |
+| `proximos_a_abrir` | los meses todavía cerrados, del más cercano al más lejano, con la fecha estimada de apertura |
+| `meses` | resumen por mes: cuántas rutas abiertas y cuántas cerradas |
+| `rutas` | el detalle de cada ruta+mes: estado, días con premio, mínimo de millas y desde cuándo está abierta |
+
+Corre solo al final de cada barrido **completo**; el `--rapido` no lo toca. A mano:
+
+```bash
+python3 engine/apertura.py --limite 8     # tope de consultas nuevas a Smiles
+python3 engine/apertura.py --sin-smiles   # solo reusa lo que ya está guardado
+```
+
+Se ajusta desde `engine/config.json` con un bloque opcional:
+
+```json
+"apertura": { "meses_horizonte": 14, "max_consultas": 30 }
+```
+
 ## Preguntas frecuentes
 
 **¿Por qué algunos meses dicen "sin disponibilidad"?**

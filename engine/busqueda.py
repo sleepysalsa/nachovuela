@@ -43,6 +43,29 @@ def _cash_ref_compacto(ref):
             "e": ref.get("escalas"), "f": ref.get("fecha")}
 
 
+
+def _mejor_origen(posibles, destino_key, latest=None):
+    """De los orígenes posibles, el que el último rastrillaje vio más barato."""
+    if len(posibles) == 1:
+        return posibles[0]
+    if latest is None:
+        import json as _j, os as _o
+        p = _o.path.join(_o.path.dirname(_o.path.dirname(_o.path.abspath(__file__))),
+                         "data", "latest.json")
+        try:
+            with open(p, encoding="utf-8") as f:
+                latest = _j.load(f)
+        except (OSError, ValueError):
+            return posibles[0]
+    mejor, precio = None, float("inf")
+    for r in latest.get("resultados", []):
+        if r.get("destino_key") != destino_key or r.get("origen") not in posibles:
+            continue
+        if r.get("mejor_precio_millas", float("inf")) < precio:
+            precio, mejor = r["mejor_precio_millas"], r["origen"]
+    return mejor or posibles[0]
+
+
 def construir(config, log=print, demo=False):
     """
     Devuelve el dict de búsqueda listo para guardar como data/busqueda.json.
@@ -58,7 +81,12 @@ def construir(config, log=print, demo=False):
         ogs = viaje.get("origenes") or [origen_default]
         for dk in viaje.get("destinos", []):
             destinos_meses.setdefault(dk, set()).update(viaje.get("meses", []))
-            origen_por_destino.setdefault(dk, ogs[0])
+            # Si el destino puede salir de varios aeropuertos (ej. Mendoza y
+            # Brasil también desde Aeroparque), armamos el viaje desde el que
+            # el radar viene mostrando más barato. Verificado 19-ago-2026:
+            # AEP->MDZ 13.000 vs nada desde EZE; AEP->GRU 70.700 vs 125.100.
+            posibles = cat.DESTINOS.get(dk, {}).get("origenes") or ogs
+            origen_por_destino.setdefault(dk, _mejor_origen(posibles, dk))
 
     cash_tok = cc.token(config)
 
