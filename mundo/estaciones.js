@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    NachoVuela · mundo/estaciones.js — paneles DOM pegados al mundo 3D.
 
-   Cada estación (mac, partidas, llegadas, mostrador) es un <section> HTML
-   normal — con su buscador, su cartel, su índice — que se PROYECTA encima del
-   3D en la posición de su ancla. Cuando la mirada se acerca (zoom→1) el panel
-   crece hasta ocupar la pantalla y recibe clics/scroll; lejos, es un cartel
-   dentro de la escena que se ve chiquito y no se toca.
+   Cada estación (mac, partidas, mostrador) es un <section> HTML normal — con
+   su buscador, su tablero, su índice — que se PROYECTA encima del 3D en la
+   posición de su ancla. Cuando la mirada se acerca (zoom→1) el panel crece
+   hasta ocupar la pantalla y recibe clics/scroll; lejos, es un cartel dentro
+   de la escena que se ve chiquito y no se toca.
 
    Contrato de una estación:
      NV.estacion('partidas', {
@@ -14,7 +14,17 @@
        enfocar(el, ctx)       cuando la cámara la enfoca (zoom>0.85)
        desenfocar(el, ctx)
        tick(el, ctx, cam)     opcional, por frame (barato)
+       refrescar(el, ctx)     opcional: entraron datos nuevos (o pasó un minuto
+                              y hay que repintar los "hace X"). Lo dispara el
+                              evento nv:datos del cerebro; si el cerebro todavía
+                              no lo emite, acá hay un respaldo cada 60 s.
      })
+
+   Además vive acá NV.ui: los helpers de PRESENTACIÓN que comparten las
+   estaciones (sello de hora, días al mínimo, links a Smiles). Son envoltorios
+   finos sobre la API del cerebro (NV.sello, NV.diasMin, NV.pasajeros…): si el
+   cerebro todavía no la expone, calculan lo mismo con lo que hay en
+   NV.state para que ninguna pantalla se rompa mientras tanto.
    ═══════════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -22,6 +32,124 @@
   const defs = {}, vivas = {};
 
   NV.estacion = (nombre, def) => { defs[nombre] = def; };
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     NV.ui — presentación compartida
+     ═══════════════════════════════════════════════════════════════════════ */
+  const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ESC[c]);
+  const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+  /* "2027-05-12" → "12 May". El formato lo define el cerebro (NV.fechaCorta):
+     acá solo está el respaldo por si todavía no lo expone. */
+  function fechaCorta(iso) {
+    if (typeof NV.fechaCorta === 'function') { try { return NV.fechaCorta(iso); } catch (e) { /* respaldo */ } }
+    if (!iso || typeof iso !== 'string') return '';
+    const p = iso.split('-'); if (p.length < 3) return iso;
+    const y = +p[0], m = +p[1], d = +p[2];
+    if (!(m >= 1 && m <= 12)) return iso;
+    const mismoAnio = y === new Date().getFullYear();
+    return d + ' ' + MESES[m - 1] + (mismoAnio ? '' : ' ' + String(y).slice(2));
+  }
+  const hhmm = iso => { try { const d = new Date(iso); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); } catch (e) { return ''; } };
+  const haceTxt = iso => { try { return NV.haceCuanto ? NV.haceCuanto(iso) : ''; } catch (e) { return ''; } };
+
+  /* Sello de hora de una fuente. Preferimos el del cerebro (NV.sello, que sabe
+     de g_ida/g_vta por destino-mes); si no está todavía, lo armamos con el
+     "generado" del archivo. Forma: {iso, horas, hace, nivel, txt}. */
+  function sello(fuente) {
+    if (typeof NV.sello === 'function') {
+      try { const s = NV.sello(fuente); if (s && s.iso) return s; } catch (e) { /* seguimos con el respaldo */ }
+    }
+    const iso = fuente === 'buscador'
+      ? (NV.state && NV.state.busqueda && NV.state.busqueda.generado)
+      : (NV.state && NV.state.latest && NV.state.latest.generado);
+    return selloDe(iso);
+  }
+  function selloDe(iso) {
+    if (!iso) return { iso: null, horas: null, hace: '', nivel: 'muy_viejo', txt: 'sin datos todavía' };
+    const horas = (Date.now() - new Date(iso).getTime()) / 36e5;
+    const nivel = horas < 3 ? 'fresco' : horas < 8 ? 'viejo' : 'muy_viejo';
+    return { iso, horas, hace: haceTxt(iso), nivel, txt: 'datos de las ' + hhmm(iso) };
+  }
+  /* Sello de UNA ruta: cuándo se consultó ESA ruta (campo nuevo `consultado`). */
+  function selloRuta(r) {
+    if (typeof NV.selloRuta === 'function') {
+      try { const s = NV.selloRuta(r); if (s && s.iso) return s; } catch (e) { /* respaldo */ }
+    }
+    return selloDe((r && r.consultado) || (NV.state && NV.state.latest && NV.state.latest.generado));
+  }
+  /* El chip visual: una píldora con la ETIQUETA de la fuente ("radar" /
+     "buscador") y adentro el sello del cerebro. Usamos el markup de NV.selloHTML
+     porque trae data-sello: así el latido de app.js (NV.refrescarSellos, una vez
+     por minuto) reescribe el "hace X" también acá adentro, sin que la estación
+     tenga que rearmarse. `fuente` es "radar" | "buscador" | un ISO suelto.    */
+  function selloHTML(fuente, etiqueta) {
+    const cabeza = '<span class="nv-sello">' + (etiqueta ? '<i>' + esc(etiqueta) + '</i>' : '');
+    if (typeof NV.selloHTML === 'function') {
+      try { return cabeza + NV.selloHTML(fuente) + '</span>'; } catch (e) { /* respaldo */ }
+    }
+    const s = (fuente === 'radar' || fuente === 'buscador') ? sello(fuente) : selloDe(fuente);
+    const nivel = s.nivel || 'fresco';
+    const cola = s.hace ? ' · ' + s.hace : '';
+    return cabeza + '<span class="sello sello--' + esc(nivel) + '">🕒 ' + esc(s.txt || '') + esc(cola) + '</span></span>';
+  }
+
+  /* TODAS las fechas al precio mínimo de un resultado del radar. Es la causa #1
+     del diagnóstico: el motor publicaba un solo mejor_fecha y Smiles rota cuál
+     de los días empatados está al mínimo (21 de 33 rutas tienen más de uno). */
+  function diasMin(r) {
+    if (!r) return [];
+    if (typeof NV.diasMin === 'function') {
+      try { const a = NV.diasMin(r); if (Array.isArray(a) && a.length) return a; } catch (e) { /* respaldo */ }
+    }
+    if (Array.isArray(r.dias_min) && r.dias_min.length) return r.dias_min.slice().sort();
+    const dias = Array.isArray(r.dias) ? r.dias : [];
+    let min = null;
+    for (const d of dias) if (d && d.miles != null && (min == null || d.miles < min)) min = d.miles;
+    if (min == null) return r.mejor_fecha ? [r.mejor_fecha] : [];
+    return dias.filter(d => d && d.miles === min).map(d => d.date).filter(Boolean).sort();
+  }
+
+  /* Nacho viaja con la familia: los deep links salen con los pasajeros reales. */
+  function pasajeros() {
+    if (typeof NV.pasajeros === 'function') {
+      try { const p = NV.pasajeros(); if (p) return p; } catch (e) { /* respaldo */ }
+    }
+    const c = (NV.state && NV.state.config && NV.state.config.pasajeros) || null;
+    return { adultos: (c && c.adultos) || 1, ninos: (c && c.ninos) || 0, bebes: (c && c.bebes) || 0 };
+  }
+
+  /* Link de una sola pierna para UN día puntual. smilesOneWayURL ya sale con
+     los pasajeros de config (Nacho viaja con las dos nenas). */
+  function unaVia(orig, code, iso, moneda) {
+    try { if (NV.smilesOneWayURL) return NV.smilesOneWayURL(orig, code, iso, moneda) || ''; } catch (e) { /* nada */ }
+    return '';
+  }
+
+  /* Los chips de días con link. Para un resultado del radar usamos los del
+     cerebro tal cual (NV.diasMinChips): mismo formato, misma clase .diamin y
+     los mismos links en toda la app. Para las vueltas —que salen de
+     busqueda.json y van del destino al origen— armamos los mismos chips a mano. */
+  function diasChips(r, dias) {
+    const d = dias || diasMin(r);
+    if (typeof NV.diasMinChips === 'function' && r && r.origen && r.aeropuerto) {
+      try { return NV.diasMinChips(r, d); } catch (e) { /* respaldo */ }
+    }
+    return chipsSueltos(d, (r && r.origen) || '', (r && r.aeropuerto) || '', r && r.moneda);
+  }
+  function chipsSueltos(dias, orig, code, moneda) {
+    return (dias || []).map(f => {
+      // smilesOneWayURL devuelve '' si falta la fecha o el aeropuerto. Un
+      // href="" recarga la app entera de un toque: mejor un chip sin link.
+      const url = unaVia(orig, code, f, moneda);
+      if (!url || url === '#') return '<span class="diamin diamin--muerto">' + esc(fechaCorta(f)) + '</span>';
+      return '<a class="diamin" href="' + esc(url) + '" target="_blank" rel="noopener"'
+        + ' title="Verificar ' + esc(fechaCorta(f)) + ' en Smiles">' + esc(fechaCorta(f)) + '<span>↗</span></a>';
+    }).join('');
+  }
+
+  NV.ui = { esc, fechaCorta, sello, selloDe, selloRuta, selloHTML, diasMin, diasChips, chipsSueltos, pasajeros, unaVia };
 
   function ctx() {
     return {
@@ -74,7 +202,9 @@
         fw = base.W * 0.94; fh = base.H * 0.80;
       } else {
         fw = Math.min(base.W * 0.94, 1240); fh = fw / rel;
-        const maxAlto = base.H * 0.88;
+        // Celular acostado (alto < 520): con el 88% del alto el panel llegaba
+        // hasta y=23 y la brújula, que ahí no puede irse abajo, le caía encima.
+        const maxAlto = base.H * (base.H < 520 ? 0.74 : 0.88);
         if (fh > maxAlto) { fh = maxAlto; fw = fh * rel; }
       }
       v.fw = fw; v.fh = fh;
@@ -120,5 +250,27 @@
     }
   }
 
-  NV.montarEstaciones = montar;
+  /* ── "Entraron datos nuevos" ────────────────────────────────────────────
+     El cerebro dispara nv:datos cuando repesca meta.json y también una vez por
+     minuto para que los "hace X" no queden congelados (antes se calculaban una
+     sola vez al cargar y ahí quedaban toda la sesión). Cada estación decide en
+     su refrescar() si le alcanza con repintar el sello o si tiene que rearmar
+     las filas. El setInterval es el respaldo por si el cerebro todavía no
+     emite el evento: sin él las horas volverían a congelarse.               */
+  let ultimoAviso = 0;
+  function avisar(porEvento) {
+    if (!porEvento && Date.now() - ultimoAviso < 45000) return;   // el respaldo no pisa al evento
+    ultimoAviso = Date.now();
+    const c = ctx();
+    for (const v of Object.values(vivas)) {
+      try { v.def.refrescar?.(v.el, c); } catch (e) { /* una estación rota no apaga a las otras */ }
+    }
+  }
+  NV.avisarEstaciones = () => avisar(true);
+
+  NV.montarEstaciones = () => {
+    montar();
+    window.addEventListener('nv:datos', () => avisar(true));
+    setInterval(() => avisar(false), 60000);
+  };
 })();

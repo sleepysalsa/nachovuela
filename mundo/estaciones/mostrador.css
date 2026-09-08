@@ -156,7 +156,7 @@ body[data-enfocada="mostrador"] .est--mostrador .mo__lejos { opacity: calc(1.45 
 body[data-enfocada="mostrador"] .est--mostrador .mo__cerca { opacity: calc((var(--zoom, 0) - .5) * 2.8); }
 .est--foco .mo__cerca { opacity: 1; pointer-events: auto; }
 
-/* ── cabecera: kicker · pestañas · volver ─────────────────────────────── */
+/* ── cabecera: kicker · pestañas · sello de hora ───────────────────────── */
 .mo__cab {
   flex: 0 0 auto; display: flex; align-items: flex-end; gap: 14px;
   padding: 14px 18px 0 20px; min-height: 58px;
@@ -184,13 +184,10 @@ body[data-enfocada="mostrador"] .est--mostrador .mo__cerca { opacity: calc((var(
   box-shadow: 0 -6px 18px -8px rgba(245, 166, 35, .7);
 }
 .mo__tab:focus-visible { outline: 2px solid var(--amber-lt); outline-offset: 2px; }
-.mo__soltar {
-  margin-left: auto; align-self: center; margin-bottom: 8px;
-  font: inherit; font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--ink-dim); background: rgba(10, 14, 26, .6); border: 1px solid var(--line); border-radius: 999px;
-  padding: 6px 12px; cursor: pointer; white-space: nowrap; transition: .15s;
-}
-.mo__soltar:hover { color: var(--ink); border-color: var(--line-strong); }
+/* Donde estaba el botón de volver (la salida es una sola: el chip de la
+   brújula o Esc) va ahora el sello: de qué hora son estos precios. */
+.mo__sello { margin-left: auto; align-self: center; margin-bottom: 8px; display: flex; min-width: 0; }
+.mo__sello .nv-sello { font-size: .6rem; }
 
 /* ── la página de papel ────────────────────────────────────────────────── */
 .mo__pagina {
@@ -352,7 +349,12 @@ body[data-enfocada="mostrador"] .est--mostrador .mo__cerca { opacity: calc((var(
   .mo__ext { display: none; }
 }
 @container (max-width: 480px) {
-  .mo__soltar { display: none; }
+  /* El sello NO se esconde en el celular: es justo donde Nacho mira los
+     precios sin tener la Mac al lado. Baja a su propio renglón, que es lo
+     que antes hacía el botón de volver (ese sí se fue). */
+  .mo__cab { flex-wrap: wrap; gap: 5px 10px; padding-bottom: 6px; }
+  .mo__sello { flex: 1 0 100%; margin-left: 0; margin-bottom: 0; align-self: flex-start; }
+  .mo__sello .nv-sello { font-size: .56rem; padding: 3px 8px; }
   .mo__grid { grid-template-columns: minmax(0, 1fr); }   /* una columna: dos no entran (la ficha mide ~250px de mínimo) */
   .mo__card { min-width: 0; }
   .mo__hace { display: none; }

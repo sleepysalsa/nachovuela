@@ -32,19 +32,70 @@ body.cam-enfocada #visera { opacity: .35; }
 .hud--marca img { filter: drop-shadow(0 2px 6px rgba(0,0,0,.7)); }
 .hud--estado { right: 18px; top: 16px; padding: 7px 12px; border: 1px solid var(--line-strong); border-radius: 999px; background: rgba(10,14,26,.7); }
 .hud--estado i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 8px; box-shadow: 0 0 10px var(--green); }
+/* El HUD dice si el último barrido salió bien: si falló o el dato quedó viejo
+   se ve, en vez de mostrar un "hace X min" congelado como hasta ahora. */
+.hud--estado.es-viejo { border-color: rgba(245,166,35,.5); color: var(--amber-lt); }
+.hud--estado.es-viejo i { background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+.hud--estado.es-mal { border-color: rgba(255,90,110,.55); color: #ffb3bc; }
+.hud--estado.es-mal i { background: var(--red); box-shadow: 0 0 10px var(--red); }
 .hud--pista { left: 50%; bottom: 18px; transform: translateX(-50%); padding: 8px 14px; border-radius: 999px; background: rgba(10,14,26,.72); border: 1px solid var(--line); white-space: nowrap; }
 body.cam-enfocada .hud--pista { opacity: 0; }
 
-/* Brújula de estaciones (chips) */
-.brujula { position: fixed; z-index: 4; left: 50%; top: 14px; transform: translateX(-50%); display: flex; gap: 6px; pointer-events: auto; }
+/* ── Brújula de estaciones (3 chips + una sola salida) ─────────────────────
+   Ancho: width:max-content es el arreglo del celular (medido el 8-sep-2026).
+   Con position:fixed + left:50% + width:auto el navegador calcula el ancho
+   "shrink-to-fit" contra lo que queda a la derecha del 50% → en una pantalla
+   de 375px el contenedor medía 188px de ancho y 169 de alto: los chips se
+   apilaban en columna y tapaban el panel de la Mac justo sobre el precio.
+   max-content pide el ancho de UNA fila y el translateX(-50%) la centra.   */
+.brujula { position: fixed; z-index: 4; left: 50%; top: 14px; transform: translateX(-50%);
+  width: max-content; display: flex; flex-wrap: nowrap; gap: 6px; pointer-events: auto; }
 .brujula button { font: inherit; font-family: var(--mono); font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-dim);
-  background: rgba(10,14,26,.7); border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px; cursor: pointer; transition: .18s; }
+  background: rgba(10,14,26,.7); border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px; cursor: pointer; transition: .18s; white-space: nowrap; }
 .brujula button:hover, .brujula button.is-mirando { color: var(--ink); border-color: var(--line-strong); }
 .brujula button.is-foco { color: #1a1206; background: var(--amber); border-color: var(--amber); }
-.brujula .volver { display: none; } body.cam-enfocada .brujula .volver { display: inline-block; }
+/* LA salida: una sola en toda la app (antes había tres botones distintos).
+   Aparece recién cuando estás dentro de una estación; Esc hace lo mismo. */
+.brujula .volver { display: none; color: var(--amber-lt); border-color: rgba(245,166,35,.5); background: rgba(44,29,7,.85); }
+.brujula .volver:hover { color: #1a1206; background: var(--amber-lt); border-color: var(--amber-lt); }
+body.cam-enfocada .brujula .volver { display: inline-block; }
 
-@media (max-width: 760px) { .hud--pista { font-size: .6rem; } .brujula { top: auto; bottom: 14px; flex-wrap: wrap; justify-content: center; max-width: 96vw; } .hud--pista { display: none; } }
-@media (max-width: 560px) { .hud--marca b { display: none; } .hud--estado { font-size: .6rem; padding: 6px 10px; } }
+/* ── Sello de hora (lo usan todas las estaciones vía NV.ui.selloHTML) ──────
+   Cada panel dice de QUÉ HORA es su dato: el Tablero y las Revistas leen el
+   radar (latest.json) y la Mac lee el buscador (busqueda.json), que solo se
+   regenera en los barridos completos. Cuando la fuente pasa las ~8 h se
+   pinta ámbar y avisa, para que Nacho no confíe en un número viejo.        */
+.nv-sello { display: inline-flex; align-items: baseline; gap: 6px; font-family: var(--mono); font-size: .62rem;
+  letter-spacing: .05em; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: rgba(8,12,22,.62); color: var(--ink-dim); white-space: nowrap; }
+.nv-sello i { font-style: normal; opacity: .6; text-transform: uppercase; letter-spacing: .12em; }
+/* adentro va el .sello del cerebro (trae data-sello y su propio color) */
+.nv-sello .sello { font-size: 1em; color: var(--ink); }
+.nv-sello .sello--viejo, .nv-sello .sello--muy_viejo { color: var(--amber-lt); }
+.nv-sello:has(.sello--viejo) { border-color: rgba(245,166,35,.35); background: rgba(48,32,6,.5); }
+.nv-sello:has(.sello--muy_viejo) { border-color: rgba(245,166,35,.6); background: rgba(58,38,6,.72); }
+.nv-sello:has(.sello--viejo) i, .nv-sello:has(.sello--muy_viejo) i { color: var(--amber-lt); }
+
+@media (max-width: 760px) {
+  .hud--pista { display: none; }
+  /* Abajo del todo y en UNA fila: el panel enfocado llega hasta el 90% del
+     alto, así que la brújula tiene que ser una tira finita, no un bloque. */
+  .brujula { top: auto; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); gap: 5px; }
+  .brujula button { font-size: .58rem; padding: 6px 9px; letter-spacing: .03em; }
+  .nv-sello { font-size: .56rem; padding: 3px 8px; gap: 4px; }
+}
+@media (max-width: 560px) { .hud--marca b { display: none; } .hud--estado { font-size: .56rem; padding: 5px 9px; max-width: calc(100vw - 84px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+/* Celular acostado: no sobra lugar ni arriba ni abajo (el panel ocupa casi todo
+   el alto), así que la brújula se corre a la izquierda —al lado del logo— y le
+   deja la derecha al estado del motor. Sin esto se pisaban entre ellos. */
+@media (max-height: 520px) and (min-width: 761px) {
+  .hud--marca b { display: none; }
+  .brujula { left: 58px; transform: none; gap: 5px; }
+  .brujula button { font-size: .58rem; padding: 5px 9px; letter-spacing: .03em; }
+  .hud--estado { font-size: .58rem; padding: 5px 9px; max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hud--pista { display: none; }
+}
+@media (max-width: 380px) { .brujula button { font-size: .55rem; padding: 6px 7px; } }
 @media (prefers-reduced-motion: reduce) { .est { transition: none; } }
 
 

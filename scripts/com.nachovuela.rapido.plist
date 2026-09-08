@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Barridos RÁPIDOS de NachoVuela (solo el radar, ~20 min).
-  Van entre los completos porque las ventanas de mejor precio duran
-  ~9 h de mediana: con dos chequeos por día se escapaban.
+  Barridos RÁPIDOS de NachoVuela (solo el radar, ~7 min).
+
+  Un turno POR HORA, de 9 a 23, en el minuto 20.
+  Parece mucho, pero casi ninguno hace trabajo: run.sh tiene una compuerta
+  que sale de una si data/latest.json tiene menos de 90 min. La idea es que
+  cuando la Mac está abierta el dato nunca pase de ~2 h, y cuando está
+  cerrada (tapa + batería) no se largue ni una corrida.
+  Antes eran 4 horarios fijos y, si la Mac estaba dormida a esa hora, el
+  turno se perdía entero.
+
+  ¿Por qué el minuto 20 y no en punto? Para no chocar con los completos, que
+  van a las 11:00 y a las 17:00.
+
+  OJO: esto es una PLANTILLA. __RUTA__ se reemplaza al instalar.
   Instalación: ver scripts/agendar.md
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -10,23 +21,38 @@
 <dict>
   <key>Label</key>
   <string>com.nachovuela.rapido</string>
+
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
     <string>__RUTA__/scripts/run.sh</string>
     <string>--rapido</string>
   </array>
+
   <key>StartCalendarInterval</key>
   <array>
-    <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>23</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>10</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>11</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>13</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>16</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>17</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>19</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>20</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>21</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>22</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Hour</key><integer>23</integer><key>Minute</key><integer>20</integer></dict>
   </array>
+
   <key>StandardOutPath</key>
   <string>__RUTA__/data/rastrillaje.log</string>
   <key>StandardErrorPath</key>
   <string>__RUTA__/data/rastrillaje.log</string>
+
   <key>RunAtLoad</key>
   <false/>
 </dict>

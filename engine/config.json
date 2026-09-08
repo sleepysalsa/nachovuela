@@ -80,5 +80,11 @@
   },
   "valor_milla_usd": 0.012,
   "precio_milla_ars": 2.9,
-  "_precio_milla_nota": "Lo que te cuesta comprar 1 milla en pesos (Galicia 2,90 / Smiles directo 3,62). El motor lo convierte a USD con el dólar MEP del día."
+  "_precio_milla_nota": "Lo que te cuesta comprar 1 milla en pesos (Galicia 2,90 / Smiles directo 3,62). El motor lo convierte a USD con el dólar MEP del día.",
+  "pasajeros": {
+    "adultos": 2,
+    "ninos": 2,
+    "bebes": 0
+  },
+  "_pasajeros_nota": "Con cuántos pasajeros la app abre los links a Smiles (vos, ella y las dos nenas). SOLO afecta los links: el calendario de precios que rastrilla el motor no cambia por cantidad de pasajeros (verificado: adults=1 y adults=3 devuelven exactamente lo mismo). Si algún día viajan solos, cambiá los números acá y los botones 'Abrir en Smiles' salen con la búsqueda ya armada."
 }

@@ -92,7 +92,10 @@
 }
 .mac__resumen .kicker b { color: var(--ink); font-family: var(--serif); font-size: 1.9cqw; letter-spacing: 0; text-transform: none; font-weight: 600; }
 .mac__resumen .kicker b em { color: var(--amber-lt); font-style: italic; font-weight: 400; }
-.mac__resumen .kicker i { display: inline-block; width: .9cqw; height: .9cqw; border-radius: 50%; background: var(--green); box-shadow: 0 0 1.4cqw var(--green); margin-right: .8cqw; vertical-align: middle; }
+/* El sello del RADAR (de qué hora es el número que muestra esta pantalla).
+   .nv-sello viene de mundo.css en rem: acá lo pasamos a cqw para que escale
+   con la tapa de la Mac igual que el resto del resumen. */
+.mac__resumen .kicker .nv-sello { font-size: 1.3cqw; gap: .5cqw; padding: .35cqw 1cqw; border-radius: 999px; }
 .mac__resumen .nivel {
   font-family: var(--mono); font-size: 1.45cqw; letter-spacing: .22em; text-transform: uppercase; color: var(--green);
   border: 1px solid rgba(52, 224, 161, .45); border-radius: 999px; padding: .55cqw 1.6cqw; margin-bottom: 2.2cqw;
@@ -109,6 +112,10 @@
 }
 .mac__resumen .millas small { font-size: 2cqw; font-weight: 500; letter-spacing: 0; color: var(--ink-dim); margin-left: .6cqw; }
 .mac__resumen .cuando { margin-top: 1.4cqw; font-family: var(--sans); font-size: 2.3cqw; color: var(--ink-dim); }
+/* Los días al mínimo, no una fecha sola: Smiles rota cuál está más barato.
+   La frase la arma el cerebro (NV.diasMinTxt) para que toda la app diga lo
+   mismo de la misma manera. */
+.mac__dias { color: var(--amber-lt); font-weight: 600; }
 .mac__resumen .cta {
   position: absolute; left: 0; right: 0; bottom: 3cqw;
   font-family: var(--mono); font-size: 1.7cqw; letter-spacing: .18em; text-transform: uppercase; color: var(--amber);
@@ -138,9 +145,11 @@
 .mac__barra .titulo b { font-family: var(--serif); font-weight: 600; font-size: 1.15rem; letter-spacing: -.01em; }
 .mac__barra .titulo b em { color: var(--amber-lt); font-style: italic; font-weight: 400; }
 .mac__barra .titulo span { font-family: var(--mono); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-dim); }
-.mac__barra .radar { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); white-space: nowrap; }
-.mac__barra .radar i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
-.mac__barra .radar.frio i { background: var(--ink-faint); box-shadow: none; }
+/* El sello del BUSCADOR: los combos salen de busqueda.json, que solo se rehace
+   en los barridos completos. Antes esta barra mostraba la hora de latest.json
+   (el radar) — dos relojes distintos con un solo rótulo. */
+.mac__sello { display: flex; align-items: center; min-width: 0; }
+.mac__sello .nv-sello { font-size: .64rem; }
 
 /* Formulario */
 .mac__form {
@@ -184,7 +193,7 @@
 .mac__res { padding: 16px 22px 26px; }
 .mac-rhead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .mac-rhead h2 { font-family: var(--serif); font-weight: 600; font-size: 1.45rem; letter-spacing: -.02em; }
-.mac-rhead h2 small { font-family: var(--mono); font-weight: 500; font-size: .85rem; color: var(--amber-lt); margin-left: 8px; letter-spacing: 0; }
+.mac-rhead h2 small { font-family: var(--mono); font-weight: 500; font-size: .85rem; color: var(--amber-lt); margin-left: 8px; letter-spacing: 0; white-space: nowrap; }
 .mac-rhead p { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); }
 
 .mac-combos { list-style: none; display: flex; flex-direction: column; gap: 8px; }
@@ -202,6 +211,19 @@
 .mac-leg { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
 .mac-leg i { font: 700 .58rem var(--mono); letter-spacing: .18em; color: var(--ink-faint); font-style: normal; }
 .mac-leg b { font-family: var(--serif); font-weight: 600; font-size: 1.22rem; letter-spacing: -.01em; }
+/* La fecha de cada pierna es un link directo a Smiles para ESE día */
+.mac-leg__d {
+  font-family: var(--serif); font-weight: 600; font-size: 1.22rem; letter-spacing: -.01em;
+  color: var(--ink); text-decoration: none; border-bottom: 1px dashed rgba(245, 166, 35, .45); padding-bottom: 1px;
+}
+.mac-leg__d:hover, .mac-leg__d:focus-visible { outline: none; color: var(--amber-lt); border-bottom-color: var(--amber-lt); }
+.mac-leg__d::after { content: ' ↗'; font-family: var(--mono); font-size: .62rem; color: var(--amber); opacity: .7; }
+/* Otros días del mes al mismo precio (el detalle, en el title) */
+.mac-leg__mas {
+  font: 700 .6rem var(--mono); font-style: normal; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--amber); background: rgba(245, 166, 35, .12); border: 1px solid rgba(245, 166, 35, .28);
+  border-radius: 5px; padding: 2px 6px; cursor: help; white-space: nowrap;
+}
 .mac-leg span { font: 500 .8rem var(--mono); color: var(--ink-dim); }
 .mac-combo__flecha { color: var(--amber); font-size: 1.05rem; }
 .mac-combo__meta { grid-column: 2; grid-row: 2; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .82rem; color: var(--ink-dim); }
@@ -266,6 +288,10 @@
 }
 /* Teléfono: todo apilado (el total ya no cabe al lado de las fechas) */
 @media (max-width: 600px) {
+  /* el sello se pasaba de largo por la derecha del panel: baja a su renglón */
+  .mac__barra { flex-wrap: wrap; gap: 4px 10px; padding: 10px 14px; }
+  .mac__sello { width: 100%; }
+  .mac__sello .nv-sello { font-size: .58rem; white-space: normal; }
   .mac__form { grid-template-columns: 1fr; }
   .mac-combo { grid-template-columns: 26px minmax(0, 1fr); column-gap: 10px; }
   .mac-combo__rank { grid-row: 1 / 4; }
@@ -273,6 +299,16 @@
   .mac-combo__total b { font-size: 1.3rem; }
   .mac-combo__acciones { grid-column: 1 / 3; grid-row: 4; min-width: 0; }
   .mac-leg b { font-size: 1.05rem; }
+  /* La fila de cada pierna venía con white-space:nowrap y se iba hasta 40 px
+     afuera del panel: la fecha en serif + las millas + el "+19 días" no entran
+     en 351 px. Medido 8-sep-2026 en 390x844: .mac-leg llegaba a x=411 con el
+     panel terminando en 371, así que el badge quedaba cortado por la mitad.
+     Que envuelva, y que el "+N días" arranque su propio renglón. */
+  .mac-leg { flex-wrap: wrap; white-space: normal; row-gap: 2px; }
+  .mac-leg__mas { flex-basis: 100%; }
+  /* Mismo motivo que .mac-leg: "conviene ida en millas + vuelta en plata ·
+     ≈ US$ 409" no entra en un renglón de 351 px. */
+  .mac-combo__meta .veredicto { white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) {
   .mac__resumen .cta::before { animation: none; } .mac-combo { animation: none; }

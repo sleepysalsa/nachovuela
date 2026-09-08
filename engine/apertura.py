@@ -222,6 +222,14 @@ def leer_radar(latest, cubiertos, pares, meses):
     Una ruta-mes que el radar consultó y NO aparece en resultados es un
     'cerrado' legítimo (rastrillar lo imprime como "sin disponibilidad"),
     salvo que esa consulta haya quedado registrada como error.
+
+    Excepción (8-sep-2026): las lecturas PARCIALES no dicen nada. Cuando
+    Smiles recorta el calendario y muestra 1 día de 31, tomar eso como estado
+    hacía que el mes pasara a "cerrado" a la madrugada y a "abierto" a la
+    mañana, y este módulo cantaba "volvieron a haber premios" todos los días:
+    las 30 novedades guardadas al 8-sep eran reapariciones, ninguna una
+    apertura de verdad, y casi todas con 1 o 3 días con premio. Una lectura
+    parcial ahora no genera estado: queda lo cacheado de la corrida anterior.
     """
     ts = latest.get("generado") or ahora_iso()
     errores = latest.get("errores") or []
@@ -236,13 +244,15 @@ def leer_radar(latest, cubiertos, pares, meses):
             if k3 not in cubiertos:
                 continue
             r = con_datos.get(k3)
+            if r and r.get("parcial"):
+                continue          # calendario recortado: no sabemos nada
             if r:
                 out[k3] = {
                     "estado": "abierto",
                     "dias_con_premio": r.get("total_dias_disponibles") or len(r.get("dias") or []),
                     "min_millas": r.get("mejor_precio_millas"),
                     "min_fecha": r.get("mejor_fecha"),
-                    "visto": ts,
+                    "visto": r.get("consultado") or ts,
                     "fuente": "radar",
                     "fresco": True,
                 }
@@ -261,25 +271,31 @@ def leer_radar(latest, cubiertos, pares, meses):
 
 def consultar_smiles(info, ym):
     """
-    Una consulta de calendario a Smiles. Devuelve (dias, error).
+    Una consulta de calendario a Smiles. Devuelve (dias, error, parcial).
 
     Mismo trato que el radar: pausas de 2.5-5 s, y para EEUU/Europa una sola
     llamada (solo_socias) porque GOL no vuela esas rutas.
+
+    parcial=True significa que Smiles recortó el calendario: no alcanza ni
+    para decir "abierto" ni para decir "cerrado".
     """
     anio, mes = int(ym[:4]), int(ym[5:7])
     try:
-        dias, _bandas = smiles_client.calendario_mes(
+        dias, _bandas, declarado = smiles_client.calendario_mes(
             info["origen"], info["aeropuerto"], anio, mes,
             currency=info.get("moneda", "USD"),
             pausa=(2.5, 5.0),
             preferir_socias=info.get("destino_pais") != "Brasil",
             solo_socias=info.get("region") in ("eeuu", "europa"),
         )
-        return dias, None
+        # Sin días pero con días declarados = calendario recortado, no cerrado.
+        parcial = bool(declarado.get("parcial")
+                       or (not dias and declarado.get("dias_esperados")))
+        return dias, None, parcial
     except smiles_client.SmilesError as e:
-        return None, str(e)
+        return None, str(e), False
     except Exception as e:  # red rara, JSON roto: no rompemos la corrida
-        return None, f"{type(e).__name__}: {e}"
+        return None, f"{type(e).__name__}: {e}", False
 
 
 # ---------------------------------------------------------------------------
@@ -395,18 +411,28 @@ def correr(config=None, limite=None, meses=None, log=print,
             vuelta += 1
 
     consultas, errores = 0, []
-    if consultar and cola and limite > 0:
-        if verificar_base:
-            smiles_client.base_activa(log=log)
+    hay_base = True
+    if consultar and cola and limite > 0 and verificar_base:
+        hay_base = smiles_client.base_activa(log=log) is not None
+        if not hay_base:
+            log("  Apertura: ningún servidor de Smiles sirve precios; me quedo "
+                "con el radar y lo cacheado.")
+    if consultar and cola and limite > 0 and hay_base:
         log(f"  Apertura: {len(cola)} ruta-mes por confirmar desde {desde}; "
             f"consulto hasta {min(limite, len(cola))}.")
         for reg in cola[:limite]:
-            dias, err = consultar_smiles(reg, reg["ym"])
+            dias, err, parcial = consultar_smiles(reg, reg["ym"])
             consultas += 1
             reg["chequeos"] += 1
             if err:
                 errores.append(err)
                 log(f"    {reg['ruta']}: error ({err[:70]})")
+                continue
+            if parcial:
+                # Calendario recortado: ni abierto ni cerrado. Lo dejamos como
+                # estaba para no inventar una transición que después se
+                # convierte en una novedad falsa.
+                log(f"    {reg['ruta']}: calendario recortado, no concluyo nada")
                 continue
             reg["visto"] = ahora_iso()
             reg["fuente"] = "smiles"

@@ -495,3 +495,80 @@ select.fld__in{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
 @media (max-width:520px){ .vueltas__form{ grid-template-columns:1fr; } }
 
 .stalewarn.sequia{ background:rgba(126,90,175,.12); border-color:rgba(150,110,200,.4); }
+
+/* ================= Días al mínimo, sellos de hora y dato parcial =================
+   Agregado el 8-sep-2026. Antes la app mostraba UN día por ruta (el mejor_fecha
+   que publica el motor) y Smiles rota cuál de los días empatados está al mínimo:
+   Nacho abría el link y veía otro precio. Ahora se muestran todos los días al
+   mismo precio, cada uno con su link, y cada superficie dice de qué hora es su
+   dato. */
+
+/* chips de los días al mínimo — pensados para el pulgar en el celular */
+.diasmin{ display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 10px; }
+.diamin{
+  display:inline-flex; align-items:center; gap:4px;
+  font-family:var(--mono); font-size:.72rem; font-weight:700; letter-spacing:.01em;
+  color:#daffee; background:rgba(52,224,161,.14); border:1px solid rgba(52,224,161,.38);
+  border-radius:999px; padding:5px 10px; text-decoration:none; line-height:1;
+  min-height:30px; transition:background .15s, border-color .15s;
+}
+.diamin:hover{ background:rgba(52,224,161,.24); border-color:rgba(52,224,161,.65); }
+.diamin span{ font-size:.6rem; opacity:.65; }
+.diasmin--mas{ display:block; margin:2px 0 10px; }
+.diasmin--mas > summary{
+  cursor:pointer; font-size:.78rem; color:var(--green); list-style:none;
+  padding:6px 0; user-select:none;
+}
+.diasmin--mas > summary::-webkit-details-marker{ display:none; }
+.diasmin--mas > summary::before{ content:'▸ '; }
+.diasmin--mas[open] > summary::before{ content:'▾ '; }
+.diasmin__grid{ display:flex; flex-wrap:wrap; gap:6px; padding-bottom:6px; }
+.dcell.has{ text-decoration:none; }
+.dcell.esmin{ outline:1px solid rgba(52,224,161,.55); outline-offset:-1px; }
+
+/* sello: de qué hora es ESTE dato (se refresca solo cada minuto) */
+.sello{
+  font-family:var(--mono); font-size:.64rem; letter-spacing:.02em;
+  color:var(--ink-faint); white-space:nowrap;
+}
+.sello--viejo{ color:var(--amber-lt); }
+.sello--muy_viejo{ color:var(--red); }
+.card__sello, .hero__sello{ margin-top:8px; }
+.hero__dias{ font-size:.86rem; color:var(--ink-dim); margin:4px 0 8px; }
+.hero__dias b{ color:var(--ink); }
+.topbar__status.is-frio .pulse{ background:var(--red); animation:none; }
+
+.vigencia{
+  font-size:.76rem; color:var(--amber-lt); background:rgba(245,166,35,.08);
+  border:1px solid rgba(245,166,35,.28); border-radius:9px;
+  padding:7px 10px; margin:8px 0; line-height:1.45;
+}
+
+/* calendario incompleto: ni "caro" ni oportunidad, media foto */
+.parcial{
+  font-size:.78rem; color:var(--ink); background:rgba(110,168,255,.1);
+  border:1px solid rgba(110,168,255,.3); border-radius:10px;
+  padding:8px 11px; margin:6px 0 10px; line-height:1.5;
+}
+.parcial b{ color:var(--blue); }
+.card.lvl-parcial{ opacity:.92; border-color:rgba(110,168,255,.35); }
+.semaforo.parcial{ color:var(--blue); background:rgba(110,168,255,.12); border:1px solid rgba(110,168,255,.35); }
+
+.hint.pax{
+  background:rgba(120,140,190,.07); border:1px solid var(--line);
+  border-radius:10px; padding:9px 12px; margin-top:10px;
+}
+
+/* histórico disuelto en la ficha: el mínimo que vimos + sparkline */
+.histmini{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+.histmini__k b{ display:block; font-family:var(--mono); font-size:1rem; color:var(--green); }
+.histmini__k span{ display:block; font-size:.72rem; color:var(--ink-dim); margin-top:3px; }
+.nvspark{ flex:0 0 auto; max-width:100%; height:auto; }
+
+/* La píldora de estado ahora dice el barrido y las rutas (más largo que el
+   "rastrillado hace 3 h" de antes): que se encoja en el celular en vez de
+   desbordar la barra. El texto completo queda en el title. */
+.topbar__status{ min-width:0; flex:0 1 auto; overflow:hidden; }
+#scanStatusText{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.topbar__status .pulse{ flex:0 0 auto; }
+@media(max-width:560px){ .brand__tag{ display:none; } .topbar__status{ max-width:48vw; } }

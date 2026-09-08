@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Agenda de NachoVuela para macOS (launchd).
-  Corre el rastrillaje dos veces por día: 9:00 y 20:00.
+  Corridas COMPLETAS de NachoVuela (radar + buscador ida+vuelta + apertura +
+  clima + ofertas). Dos por día: 11:00 y 17:00.
+
+  Antes eran 9:00 y 20:00, dos horarios en los que la Mac suele estar cerrada:
+  el completo de las 20:00 terminaba a las 11 de la mañana siguiente y de paso
+  bloqueaba al de las 9:00 (launchd no larga otra instancia del mismo label
+  mientras la vieja sigue viva). En data/rastrillaje.log, sobre los 7 días
+  completos que hay registrados (1 al 7-sep-2026), el turno de las 9:00 arrancó
+  4 veces y el de las 12:00 los 7: los completos se mudan a esa franja.
+
+  OJO: esto es una PLANTILLA. __RUTA__ se reemplaza al instalar.
   Instalación: ver scripts/agendar.md
-  Acordate de reemplazar __RUTA__ por la ruta real del proyecto.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -19,8 +27,8 @@
 
   <key>StartCalendarInterval</key>
   <array>
-    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>20</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>11</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>17</integer><key>Minute</key><integer>0</integer></dict>
   </array>
 
   <key>StandardOutPath</key>

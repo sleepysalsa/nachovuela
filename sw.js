@@ -1,7 +1,10 @@
 /* NachoVuela service worker — red primero con respaldo offline.
    Estrategia: TODO va a la red primero (así cada deploy se ve al instante)
    y se guarda copia en cache; si no hay conexión, se sirve la copia. */
-const CACHE = 'nachovuela-v20';
+/* OJO: si SHELL lista un archivo que ya no existe, addAll rechaza, el service
+   worker no instala y la PWA se queda con la versión vieja para siempre.
+   v21 (8-sep-2026): se fue la estación Histórico (historico.js/.css). */
+const CACHE = 'nachovuela-v21';
 const SHELL = [
   './', './index.html', './styles.css', './app.js',
   './mundo/mundo.css', './mundo/camara.js', './mundo/estaciones.js', './mundo/arranque.js',
@@ -9,7 +12,6 @@ const SHELL = [
   './mundo/estaciones/mac.js', './mundo/estaciones/mac.css',
   './mundo/estaciones/carteles.js', './mundo/estaciones/carteles.css',
   './mundo/estaciones/mostrador.js', './mundo/estaciones/mostrador.css',
-  './mundo/estaciones/historico.js', './mundo/estaciones/historico.css',
   './manifest.webmanifest', './assets/logo-mark.svg'
 ];
 

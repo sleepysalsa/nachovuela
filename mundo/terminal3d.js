@@ -6,13 +6,18 @@
    afuera, reflejos en el vidrio, un avión estacionado en la puerta, gente que
    camina, aviones que ruedan/despegan/cruzan el cielo.
 
-   Estaciones (posiciones en el mundo → la cámara las mira con yaw/pitch):
+   Estaciones NAVEGABLES (posiciones en el mundo → la cámara las mira con yaw/pitch):
      mac        abajo, en el regazo            yaw 0    pitch -40
-     partidas   arriba a la izquierda          yaw -27  pitch  20
-     llegadas   arriba a la derecha            yaw  29  pitch  19
+     partidas   arriba a la izquierda          yaw -27  pitch  20   ← el Tablero
      mostrador  a la izquierda, kiosco/revista yaw -54  pitch   1
    Los paneles DOM de cada estación se proyectan encima del 3D con
    NV.mundo.proyectar(nombre) → {x,y,escala,visible}.
+
+   Muebles que quedaron de DECORADO (8-sep-2026): el cartel de llegadas (a la
+   derecha) y la pizarra de cotizaciones (abajo a la derecha). Sus vuelos son
+   ahora la pestaña "Vueltas" del Tablero y el histórico se mudó a la ficha de
+   cada destino, así que sus anclas ya NO se registran en la cámara: siguen en
+   la escena, pintados con su cartel, pero no son estaciones a las que viajar.
 
    PERFORMANCE (objetivo ≥45fps incluso en swiftshader 1440x900):
      · 3 PointLights en total (2 techo + mostrador) + Hemisphere + Directional
@@ -703,9 +708,77 @@ ancla('mostrador', new THREE.Vector3(-4.6, 1.35, -3.4), 1.9, 1.25, 0.9);
 ancla('mac', new THREE.Vector3(0, 0.62, -0.72), 0.75, 0.5, 0);
 anclas.mac.marco.visible = false;                       // la tapa de la Mac hace de marco
 
-/* Registrar las estaciones en la cámara con sus yaw/pitch reales */
+/* ── Carteles PINTADOS (decorado, sin panel DOM) ──────────────────────────
+   Llegadas y la pizarra dejaron de ser estaciones, pero un marco negro vacío
+   colgado del techo queda feo y desorienta. Les pegamos adelante un plano con
+   textura de canvas que dice lo suyo — y, de paso, hacia dónde se mudó lo que
+   antes mostraban. Es un solo Mesh Basic por cartel: no suma luces ni pasadas. */
+function cartelPintado(nombre, w, h, dibujo) {
+  const a = anclas[nombre]; if (!a) return null;
+  const tex = texturaCanvas(w, h, dibujo);
+  const g = a.marco.geometry.parameters;
+  const plano = new THREE.Mesh(new THREE.PlaneGeometry(g.width - 0.3, g.height - 0.3),
+                               new THREE.MeshBasicMaterial({ map: tex }));
+  const ry = a.marco.rotation.y;
+  plano.position.copy(a.obj.position).add(new THREE.Vector3(Math.sin(ry), 0, Math.cos(ry)).multiplyScalar(0.10));
+  plano.rotation.y = ry;
+  scene.add(plano);
+  return tex;
+}
+/* Fondo + marco interior comunes a los dos carteles pintados. */
+function fondoCartel(ctx, w, h) {
+  ctx.fillStyle = '#080b14'; ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(120,140,190,.22)'; ctx.lineWidth = 2;
+  ctx.strokeRect(6, 6, w - 12, h - 12);
+}
+cartelPintado('llegadas', 512, 242, (ctx, w, h) => {
+  fondoCartel(ctx, w, h);
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#f3efe4'; ctx.font = '800 34px "JetBrains Mono", monospace';
+  ctx.fillText('LLEGADAS', 26, 42);
+  ctx.fillStyle = '#98a1ba'; ctx.font = '500 17px "JetBrains Mono", monospace';
+  ctx.fillText('arrivals', 232, 46);
+  ctx.strokeStyle = 'rgba(120,140,190,.25)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(26, 70); ctx.lineTo(w - 26, 70); ctx.stroke();
+  // tres renglones apagados: el mueble sigue siendo un cartel de aeropuerto
+  ctx.fillStyle = 'rgba(152,161,186,.30)'; ctx.font = '700 20px "JetBrains Mono", monospace';
+  for (let i = 0; i < 3; i++) ctx.fillText('· · · · · · · ·      · · · · ·      · · · ·', 26, 100 + i * 30);
+  // La flecha apunta a la IZQUIERDA a propósito: este cartel está a la derecha
+  // (x +3,6) y el Tablero cuelga del otro lado de la sala (x −3,4).
+  ctx.fillStyle = '#ffd479'; ctx.font = '700 19px "JetBrains Mono", monospace';
+  ctx.fillText('← LAS VUELTAS ESTAN EN EL TABLERO', 26, h - 32);
+});
+/* La pizarra: un titular de una línea. arranque.js lo completa con el dato
+   real en cuanto carga (NV.mundo.pizarra), y lo refresca con nv:datos. */
+let texPizarra = null, titularPizarra = 'el detalle vive en la ficha de cada destino';
+function dibujarPizarra(ctx, w, h) {
+  fondoCartel(ctx, w, h);
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffd479'; ctx.font = '800 26px "JetBrains Mono", monospace';
+  ctx.fillText('COTIZACIONES', 22, 38);
+  ctx.strokeStyle = 'rgba(245,166,35,.35)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(22, 62); ctx.lineTo(w - 22, 62); ctx.stroke();
+  ctx.fillStyle = '#f3efe4'; ctx.font = '700 22px "JetBrains Mono", monospace';
+  // el titular entra en dos renglones como mucho
+  const palabras = String(titularPizarra).split(' ');
+  let linea = '', y = 110;
+  for (const p of palabras) {
+    const prueba = linea ? linea + ' ' + p : p;
+    if (ctx.measureText(prueba).width > w - 44 && linea) { ctx.fillText(linea, 22, y); y += 34; linea = p; if (y > h - 40) break; }
+    else linea = prueba;
+  }
+  if (linea && y <= h - 30) ctx.fillText(linea, 22, y);
+}
+texPizarra = cartelPintado('historico', 420, 254, dibujarPizarra);
+
+/* ── Estaciones navegables ────────────────────────────────────────────────
+   Solo estas tres se registran en la cámara: son las que tienen panel DOM y
+   chip en la brújula. Si registráramos también llegadas/historico, la mirada
+   se engancharía en ellas y el zoom aterrizaría en un cartel sin contenido. */
+const NAVEGABLES = ['mac', 'partidas', 'mostrador'];
 function registrarEstaciones() {
-  for (const [n, a] of Object.entries(anclas)) {
+  for (const n of NAVEGABLES) {
+    const a = anclas[n]; if (!a) continue;
     const v = a.obj.position.clone().sub(CABEZA);
     const yaw = Math.atan2(v.x, -v.z) / D2R;
     const pitch = Math.atan2(v.y, Math.hypot(v.x, v.z)) / D2R;
@@ -801,5 +874,13 @@ window.addEventListener('resize', redimensionar);
 redimensionar();
 requestAnimationFrame(frame);
 
-NV.mundo = { THREE, scene, camera, renderer, anclas, proyectar, onFrame: h => hooks.push(h), CABEZA };
+/* Titular de la pizarra (una línea). Lo escribe arranque.js con lo que sepa el
+   cerebro; si nadie lo llama, queda el texto por defecto. */
+function pizarra(txt) {
+  if (!txt || txt === titularPizarra) return;
+  titularPizarra = String(txt);
+  texPizarra?.__redibujar?.();
+}
+
+NV.mundo = { THREE, scene, camera, renderer, anclas, proyectar, pizarra, onFrame: h => hooks.push(h), CABEZA };
 document.dispatchEvent(new CustomEvent('nv:mundo-listo'));

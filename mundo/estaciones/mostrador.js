@@ -42,6 +42,13 @@
   const hace = iso => { try { return NV.haceCuanto ? NV.haceCuanto(iso) : ''; } catch (e) { return ''; } };
   const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
 
+  /* Los precios de las tarjetas salen del RADAR (latest.json): que se vea de
+     qué hora son, igual que en el Tablero y en la Mac. */
+  function selloHTML() {
+    const U = NV.ui || {};
+    return U.selloHTML ? U.selloHTML('radar', 'radar') : '';
+  }
+
   const REGION = { eeuu: 'Estados Unidos', europa: 'Europa', sudamerica: 'Sudamérica', cabotaje: 'Argentina',
                    caribe: 'Caribe', asia: 'Asia', oceania: 'Oceanía' };
   const ORDEN_REGION = ['cabotaje', 'sudamerica', 'eeuu', 'europa', 'caribe', 'asia', 'oceania'];
@@ -189,7 +196,7 @@
             <button type="button" role="tab" class="mo__tab is-activa" data-tab="dest" aria-selected="true">📍 Destinos</button>
             <button type="button" role="tab" class="mo__tab" data-tab="novs" aria-selected="false">📰 Novedades</button>
           </nav>
-          <button type="button" class="mo__soltar" data-soltar title="Volver a mirar alrededor (Esc)">↩ mirar alrededor</button>
+          <span class="mo__sello">${selloHTML()}</span>
         </header>
         <div class="mo__pagina">
           <div class="est__scroll mo__scroll" data-scroll-interno>
@@ -222,8 +229,10 @@
     if (n) n.innerHTML = paginaNovedades(ctx);
     const lejos = el.querySelector('.mo__lejos');
     if (lejos) lejos.outerHTML = tapas(ctx);
+    repintarSello(el);
     stamp = sello();
   }
+  function repintarSello(el) { const s = el.querySelector('.mo__sello'); if (s) s.innerHTML = selloHTML(); }
 
   function mount(el, ctx) {
     stamp = sello();
@@ -231,7 +240,6 @@
       const t = e.target;
       const tab = t.closest && t.closest('.mo__tab');
       if (tab) { e.preventDefault(); mostrarTab(el, tab.dataset.tab); return; }
-      if (t.closest && t.closest('[data-soltar]')) { e.preventDefault(); ctx.soltar(); return; }
       const card = t.closest && t.closest('[data-dest]');
       if (card) { e.preventDefault(); ctx.abrirDestino(card.dataset.dest); return; }
       // los links de novedades siguen su curso (target=_blank)
@@ -255,5 +263,10 @@
   }
   function desenfocar(el) { el.classList.remove('mo--foco'); }
 
-  NV.estacion('mostrador', { html, mount, enfocar, desenfocar });
+  /* Datos nuevos (o el minuto que pasa): rearmar solo si cambió el archivo. */
+  function refrescar(el, ctx) {
+    if (sello() !== stamp) rerender(el, ctx); else repintarSello(el);
+  }
+
+  NV.estacion('mostrador', { html, mount, enfocar, desenfocar, refrescar });
 })();

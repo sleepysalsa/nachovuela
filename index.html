@@ -52,13 +52,13 @@
 <!-- HUD -->
 <a class="hud hud--marca" href="#" id="hudTop"><img src="assets/logo-mark.svg" alt=""><b>Nacho<em>Vuela</em></b></a>
 <div class="hud hud--estado" id="hudEstado"><i></i><span>cargando…</span></div>
+<!-- Tres paradas y una sola salida. Llegadas pasó a ser la pestaña "Vueltas"
+     del Tablero y el Histórico vive ahora en la ficha de cada destino. -->
 <nav class="brujula" id="brujula" aria-label="Estaciones">
   <button data-est="mac">💻 Buscar</button>
-  <button data-est="partidas">🛫 Partidas</button>
-  <button data-est="llegadas">🛬 Llegadas</button>
+  <button data-est="partidas">🛫 Tablero</button>
   <button data-est="mostrador">📰 Revistas</button>
-  <button data-est="historico">📈 Histórico</button>
-  <button class="volver" data-est="">↩ Mirar alrededor</button>
+  <button class="volver" data-est="" title="Volver a mirar alrededor (Esc)">↩ Salir</button>
 </nav>
 <div class="hud hud--pista" id="hudPista">movete con el mouse para mirar · scrolleá o hacé clic para acercarte</div>
 
@@ -78,7 +78,6 @@
 <script src="mundo/estaciones/mac.js"></script>
 <script src="mundo/estaciones/carteles.js"></script>
 <script src="mundo/estaciones/mostrador.js"></script>
-<script src="mundo/estaciones/historico.js"></script>
 <script type="module" src="mundo/terminal3d.js"></script>
 <script src="mundo/arranque.js"></script>
 </body>

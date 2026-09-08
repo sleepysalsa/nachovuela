@@ -15,9 +15,41 @@ Qué hace, en una corrida:
      data/clima.json.
 
 Uso:
-    python3 engine/rastrillar.py            # rastrilla según config
-    python3 engine/rastrillar.py --clima    # además refresca el clima
-    python3 engine/rastrillar.py --demo     # una sola ruta, para probar rápido
+    python3 engine/rastrillar.py               # corrida completa (radar + extras)
+    python3 engine/rastrillar.py --clima       # además refresca el clima
+    python3 engine/rastrillar.py --demo        # una sola ruta, para probar rápido
+    python3 engine/rastrillar.py --rapido      # solo el radar + una tanda de vueltas
+
+EN DOS ETAPAS (lo que usa scripts/run.sh para publicar antes)
+-------------------------------------------------------------
+En un completo el radar queda listo a los ~8 minutos pero antes había que
+esperar los ~25 de la corrida entera para publicar (y hasta 11 h si la Mac se
+durmió en el medio). Ahora el completo se puede partir:
+
+    python3 engine/rastrillar.py --solo-radar    # etapa 1: el radar
+    → run.sh publica acá, con el dato fresco
+    python3 engine/rastrillar.py --solo-extras   # etapa 2: buscador, apertura…
+    → run.sh vuelve a publicar
+
+  --solo-radar   consulta Smiles ruta por ruta y escribe latest.json,
+                 historial.json, destinos.json, las IDAS de busqueda.json y
+                 meta.json. NO toca vueltas, ofertas, apertura ni clima.
+  --solo-extras  no consulta el radar: lee el latest.json de la etapa 1 y
+                 hace las VUELTAS del buscador, las ofertas, la apertura y
+                 (si corresponde) el clima. Vuelve a escribir meta.json.
+
+Sin ninguna de las dos flags hace todo junto, como siempre.
+
+CÓDIGO DE SALIDA
+----------------
+Sale con != 0 cuando la corrida NO tiene nada bueno para publicar: no hay
+servidor de Smiles sirviendo precios, o ninguna ruta trajo resultado, o
+trajeron muchas menos de lo normal y encima hubo errores. En esos casos NO
+pisa latest.json ni historial.json (el dato viejo es mejor que uno vacío: el
+5-sep-2026 un rápido sin red publicó 0 rutas y la app quedó 3 h 21 min en
+blanco). Lo único que igual escribe es meta.json, con estado "vacio" o
+"sin_servidor", para que la app pueda avisar "el barrido de las 12:14 falló,
+mostrando datos de las 09:12".
 
 Es respetuoso con Smiles: pausas aleatorias entre llamadas.
 """
@@ -77,7 +109,7 @@ def guardar_json(path, obj):
 # Semáforo de oportunidades
 # ---------------------------------------------------------------------------
 
-def clasificar(miles, price_range, historico_ruta_mes):
+def clasificar(miles, price_range, historico_ruta_mes, declarado=None):
     """
     Devuelve ("oportunidad" | "bueno" | "normal" | "caro", motivo_texto).
 
@@ -85,7 +117,24 @@ def clasificar(miles, price_range, historico_ruta_mes):
       - price_range: cuartil de Smiles (1 = más barato de la ruta, 4 = más caro).
       - historico_ruta_mes: lista de precios mínimos que ya vimos para esa
         ruta+mes en corridas anteriores (nuestro baseline propio).
+
+    declarado: lo que smiles_client detectó sobre la respuesta. Si el
+    calendario vino PARCIAL no clasificamos nada: un mes del que Smiles nos
+    mostró 1 día de 31 no es ni una oportunidad ni un mes caro, es una
+    respuesta incompleta. Así dejamos de cantar "🔴 caro 115.500" con un solo
+    día (AEP-GIG, 6-sep-2026) y "🟢🔥 oportunidad" con otro.
     """
+    if declarado and declarado.get("parcial"):
+        n = declarado.get("dias_obtenidos") or 0
+        esp = declarado.get("dias_esperados")
+        # Ojo con cómo lo decimos: `esp` sale del histograma de precios que
+        # manda Smiles, que cuenta OPCIONES, no días (ver _declaracion en
+        # smiles_client). Es un techo confiable de "hay mucho más que esto",
+        # no un "Smiles dice que hay N días": no se lo atribuimos como cita.
+        return "normal", [f"Smiles está mostrando solo {n} día"
+                          f"{'s' if n != 1 else ''} de este mes"
+                          + (f"; su resumen de precios da para {esp}" if esp else "")]
+
     motivos = []
     score = 0  # negativo = oportunidad, positivo = caro
 
@@ -187,10 +236,77 @@ def rutas_desde_config(config):
     return tareas
 
 
-def correr(demo=False, refrescar_clima=False, rapido=False):
+def _ficha(t, og, code, moneda, k, consultado, dias, bandas, declarado,
+           nivel, motivos, promedio_hist, cash):
+    """Una entrada de latest.json["resultados"].
+
+    Campos nuevos del 8-sep-2026 (los usa la app):
+      consultado     cuándo se consultó ESTA ruta (no la corrida entera)
+      dias_min       TODAS las fechas que están al precio mínimo, ordenadas.
+                     Smiles rota cuál de los días empatados deja al mínimo, y
+                     publicar uno solo hacía que la app marcara "Madrid 12-may
+                     166.500" cuando ese día ya valía 435.700 y otros 7 días de
+                     mayo seguían a 166.500 (medido el 7-sep-2026: 21 de 33
+                     ruta-mes tenían más de un día empatado en el mínimo).
+      parcial        el calendario vino recortado (ver smiles_client)
+      dias_esperados días con precio que declara Smiles, o None
+      min_declarado  piso de precio que declara Smiles, o None
+
+    Si dias viene vacío (recortado), mejor_precio_millas y mejor_fecha van en
+    null: no hay ningún día del que sacarlos y no vamos a inventar uno.
+    """
+    mejor = min(dias, key=lambda d: d["miles"]) if dias else None
+    dias_min = sorted(d["date"] for d in dias
+                      if mejor and d["miles"] == mejor["miles"])
+    return {
+        "ruta": k,
+        "origen": og,
+        "origen_ciudad": cat.ORIGENES.get(og, {}).get("ciudad", og),
+        "destino_key": t["destino_key"],
+        "destino_nombre": t["destino"]["nombre"],
+        "destino_pais": t["destino"]["pais"],
+        "destino_emoji": t["destino"].get("emoji", "✈️"),
+        "region": t["destino"].get("region"),
+        "aeropuerto": code,
+        "aeropuerto_ciudad": t["aeropuerto"]["ciudad"],
+        "moneda": moneda,
+        "ym": t["ym"],
+        "consultado": consultado,
+        "mejor_precio_millas": mejor["miles"] if mejor else None,
+        "mejor_fecha": mejor["date"] if mejor else None,
+        "dias_min": dias_min,
+        "price_range": mejor["price_range"] if mejor else None,
+        "quartil_bandas": bandas,
+        "parcial": bool(declarado.get("parcial")),
+        "dias_esperados": declarado.get("dias_esperados"),
+        "min_declarado": declarado.get("min_declarado"),
+        "nivel": nivel,
+        "motivos": motivos,
+        "promedio_historico": promedio_hist,
+        "dias": dias,
+        "total_dias_disponibles": len(dias),
+        "cash": cash,
+    }
+
+
+def correr(demo=False, refrescar_clima=False, rapido=False, etapa="todo"):
+    """
+    Una corrida del motor. Devuelve el latest.json resultante, o None si no
+    hubo nada bueno para publicar (ahí el que llama tiene que salir con != 0).
+
+    etapa: "todo" (radar + extras, lo de siempre), "radar" (--solo-radar) o
+    "extras" (--solo-extras). Ver el docstring del módulo.
+    """
     config = cargar_json(CONFIG_PATH, {})
+    modo = "rapido" if rapido else "completo"
+    iniciado = ahora_iso()
+
+    if etapa == "extras":
+        return correr_extras(config, iniciado, modo, refrescar_clima, demo)
+
     historial = cargar_json(HIST_PATH, {"rutas": {}})
     rutas_hist = historial.setdefault("rutas", {})
+    previo = cargar_json(LATEST_PATH, {})
 
     tareas = rutas_desde_config(config)
     if demo:
@@ -199,7 +315,14 @@ def correr(demo=False, refrescar_clima=False, rapido=False):
     # Smiles cambia de servidor cada tanto y el viejo queda devolviendo
     # calendarios vacíos (sin error). Elegimos el que esté sirviendo datos.
     print(f"[{ahora_iso()}] Verificando el servidor de Smiles...")
-    smiles_client.base_activa(log=print)
+    if smiles_client.base_activa(log=print) is None:
+        # Sin servidor no tiene sentido gastar 80 llamadas para nada: cualquier
+        # cosa que "consiguiéramos" sería un calendario vacío disfrazado.
+        print("⚠ Ningún servidor de Smiles sirve precios: no rastrillo y no "
+              "piso los datos buenos.")
+        escribir_meta(config, iniciado=iniciado, modo=modo, estado="sin_servidor",
+                      rutas=0, consultadas=0, n_errores=0)
+        return None
 
     cash_tok = cash_client.token(config)
     print(f"[{ahora_iso()}] Rastrillando {len(tareas)} ruta-mes...")
@@ -210,7 +333,17 @@ def correr(demo=False, refrescar_clima=False, rapido=False):
               "ver README para activarlo)")
 
     resultados = []
+    # `errores` es la lista que se publica en latest.json y arrastra de todo:
+    # rutas que no contestaron Y el precio cash de Travelpayouts, que es otra
+    # API y no tiene nada que ver con el radar. `errores_rutas` cuenta SOLO las
+    # rutas: es el número honesto para el estado de la corrida y para la
+    # compuerta. Sin esta separación, un hipo de Travelpayouts (una entrada en
+    # la lista) marcaba la corrida como "parcial" —la app le decía a Nacho
+    # "corrida incompleta · 1 con error" con el radar impecable— y, peor,
+    # activaba la regla del 40% de _hay_que_abortar: si encima Smiles estaba en
+    # sequía de verdad, nos guardábamos una caída real por un error ajeno.
     errores = []
+    errores_rutas = 0
     fallidas = []
     # Dos vueltas: la principal y una repesca de lo que falló (las fallas de
     # red suelen ser transitorias — visto 17-jul-2026 con DNS flameante).
@@ -229,7 +362,7 @@ def correr(demo=False, refrescar_clima=False, rapido=False):
         es_brasil = t["destino"]["pais"] == "Brasil"
         region = t["destino"].get("region")
         try:
-            dias, bandas = smiles_client.calendario_mes(
+            dias, bandas, declarado = smiles_client.calendario_mes(
                 og, code, t["anio"], t["mes"], currency=moneda,
                 pausa=(0.4, 0.9) if demo else (2.5, 5.0),
                 preferir_socias=not es_brasil,
@@ -242,30 +375,60 @@ def correr(demo=False, refrescar_clima=False, rapido=False):
             else:
                 print(f"  [{i}/{len(tareas)}] {etiqueta}: ERROR {e}")
                 errores.append(str(e))
+                errores_rutas += 1
             continue
 
+        consultado = ahora_iso()
+        k = clave_ruta(og, code, t["ym"])
+
         if not dias:
-            print(f"  [{i}/{len(tareas)}] {etiqueta}: sin disponibilidad")
+            if not declarado.get("dias_esperados"):
+                print(f"  [{i}/{len(tareas)}] {etiqueta}: sin disponibilidad")
+                continue
+            # Smiles DICE tener días con precio y no nos dio ninguno: eso no es
+            # "sin disponibilidad", es un calendario recortado. La dejamos en
+            # latest.json (con dias vacío) para que la app pueda decir "Smiles
+            # no muestra días ahora; a la mañana mostró 31 desde 39.600" en vez
+            # de hacer desaparecer la ruta del tablero.
+            resultados.append(_ficha(t, og, code, moneda, k, consultado,
+                                     dias=[], bandas=bandas, declarado=declarado,
+                                     nivel="normal",
+                                     motivos=["Smiles no está mostrando ningún día "
+                                              "de este mes; su resumen de precios "
+                                              f"da para {declarado['dias_esperados']}"],
+                                     promedio_hist=None, cash=None))
+            print(f"  [{i}/{len(tareas)}] {etiqueta}: ⚠ calendario recortado — "
+                  f"0 días, con resumen de precios para "
+                  f"{declarado['dias_esperados']}")
             continue
 
         # Mínimo del mes para esta ruta
         mejor = min(dias, key=lambda d: d["miles"])
-        k = clave_ruta(og, code, t["ym"])
 
         # Histórico propio de esta ruta+mes (mínimos de corridas previas)
-        hist = rutas_hist.setdefault(k, {"snapshots": []})
-        previos = [s["min_miles"] for s in hist["snapshots"]]
+        previos = [s["min_miles"]
+                   for s in (rutas_hist.get(k) or {}).get("snapshots", [])]
 
-        nivel, motivos = clasificar(mejor["miles"], mejor["price_range"], previos)
+        nivel, motivos = clasificar(mejor["miles"], mejor["price_range"],
+                                    previos, declarado)
 
-        # Guardar snapshot en el histórico
-        hist["snapshots"].append({
-            "ts": ahora_iso(),
-            "min_miles": mejor["miles"],
-            "min_date": mejor["date"],
-        })
-        # Mantener el histórico acotado (últimos 400 snapshots por ruta)
-        hist["snapshots"] = hist["snapshots"][-400:]
+        # Guardar snapshot en el histórico — pero NO los calendarios parciales.
+        # Un mínimo sacado de 1 día suelto no es el mínimo del mes: metido en
+        # el histórico ensucia el promedio y el "mínimo visto" para siempre (de
+        # ahí salía el falso "Florianópolis subió 242%"). Preferimos un hueco
+        # en la serie antes que un punto mentiroso.
+        if declarado.get("parcial"):
+            print(f"      ({len(dias)} de {declarado['dias_esperados']} días: "
+                  f"calendario parcial, no va al histórico)")
+        else:
+            hist = rutas_hist.setdefault(k, {"snapshots": []})
+            hist["snapshots"].append({
+                "ts": consultado,
+                "min_miles": mejor["miles"],
+                "min_date": mejor["date"],
+            })
+            # Mantener el histórico acotado (últimos 400 snapshots por ruta)
+            hist["snapshots"] = hist["snapshots"][-400:]
 
         promedio_hist = round(sum(previos) / len(previos)) if previos else None
 
@@ -282,44 +445,43 @@ def correr(demo=False, refrescar_clima=False, rapido=False):
                 if str(e) not in errores:
                     errores.append(str(e))
 
-        resultados.append({
-            "ruta": k,
-            "origen": og,
-            "origen_ciudad": cat.ORIGENES.get(og, {}).get("ciudad", og),
-            "destino_key": t["destino_key"],
-            "destino_nombre": t["destino"]["nombre"],
-            "destino_pais": t["destino"]["pais"],
-            "destino_emoji": t["destino"].get("emoji", "✈️"),
-            "region": t["destino"].get("region"),
-            "aeropuerto": code,
-            "aeropuerto_ciudad": t["aeropuerto"]["ciudad"],
-            "moneda": moneda,
-            "ym": t["ym"],
-            "mejor_precio_millas": mejor["miles"],
-            "mejor_fecha": mejor["date"],
-            "price_range": mejor["price_range"],
-            "quartil_bandas": bandas,
-            "nivel": nivel,
-            "motivos": motivos,
-            "promedio_historico": promedio_hist,
-            "dias": dias,
-            "total_dias_disponibles": len(dias),
-            "cash": cash,
-        })
+        resultados.append(_ficha(t, og, code, moneda, k, consultado, dias, bandas,
+                                 declarado, nivel, motivos, promedio_hist, cash))
         flag = {"oportunidad": "🟢🔥", "bueno": "🟢", "normal": "⚪", "caro": "🔴"}[nivel]
+        aviso = " ⚠ parcial" if declarado.get("parcial") else ""
         print(f"  [{i}/{len(tareas)}] {etiqueta}: {flag} {mejor['miles']:,} millas "
-              f"({mejor['date']}) — {len(dias)} días disp.")
+              f"({mejor['date']}) — {len(dias)} días disp.{aviso}")
 
-    # Ordenar: oportunidades primero, luego por precio
+    # Ordenar: oportunidades primero, luego por precio. Las ruta-mes recortadas
+    # (sin precio) van al final: no compiten con las que sí tienen un número.
     orden_nivel = {"oportunidad": 0, "bueno": 1, "normal": 2, "caro": 3}
-    resultados.sort(key=lambda r: (orden_nivel[r["nivel"]], r["mejor_precio_millas"]))
+    resultados.sort(key=lambda r: (orden_nivel[r["nivel"]],
+                                   r["mejor_precio_millas"] or 10 ** 9))
 
     # Detalle de vuelos (aerolínea / duración / escalas) para los mejores días.
     # Requiere sesión de Smiles iniciada (python3 engine/login_smiles.py).
     agregar_detalles(resultados, config, demo=demo)
 
+    # --- Compuerta: ¿tenemos algo que valga la pena publicar? ---------------
+    con_datos = [r for r in resultados if r["dias"]]
+    motivo_corte = _hay_que_abortar(con_datos, tareas, errores_rutas, previo, demo)
+    if motivo_corte:
+        print(f"⚠ {motivo_corte}")
+        print("  No piso latest.json ni historial.json: el dato viejo es "
+              "mejor que uno vacío. Solo dejo el aviso en meta.json.")
+        escribir_meta(config, iniciado=iniciado, modo=modo, estado="vacio",
+                      rutas=len(con_datos), consultadas=len(tareas),
+                      n_errores=errores_rutas)
+        return None
+
     latest = {
         "generado": ahora_iso(),
+        "iniciado": iniciado,
+        "modo": modo,
+        # "parcial" = la corrida terminó pero con RUTAS que fallaron; la app
+        # puede avisar que lo que muestra está incompleto. Ojo: solo rutas —
+        # que se caiga el precio cash no deja incompleto al radar.
+        "estado": "parcial" if errores_rutas else "ok",
         "total_rutas": len(resultados),
         # Cuántas ruta-mes se consultaron en total. Sirve para que la app
         # distinga "el motor falló" de "Smiles no tiene premios cargados":
@@ -331,29 +493,108 @@ def correr(demo=False, refrescar_clima=False, rapido=False):
     guardar_json(LATEST_PATH, latest)
     guardar_json(HIST_PATH, historial)
     escribir_destinos()
-    clima_actual = cargar_json(CLIMA_PATH, {}).get("destinos", {})
-    faltan_clima = [k for k in cat.DESTINOS if k not in clima_actual]
-    if not rapido and (refrescar_clima or faltan_clima):
-        if faltan_clima:
-            print(f"Clima: destinos nuevos sin datos {faltan_clima}, refrescando...")
-        escribir_clima()
 
-    if rapido:
-        # Barrido rápido: solo el radar, que es lo que caza oportunidades.
-        # El buscador ida+vuelta, el clima y las noticias son lentos y casi
-        # no cambian entre corridas: los deja para el barrido completo.
-        escribir_meta(config)
-        print("  (modo rápido: sin buscador ida+vuelta, clima ni noticias)")
+    # El BUSCADOR ida+vuelta: las idas salen gratis de lo que acabamos de
+    # consultar, así que se actualizan SIEMPRE (antes solo en los completos, y
+    # por eso la estación Buscar mostraba datos de hasta 24 h mientras el HUD
+    # mostraba los del último rápido). Las vueltas sí cuestan llamadas:
+    #   --solo-radar → ninguna (las hace la etapa 2)
+    #   --rapido     → una tanda rotativa
+    #   completo     → todas
+    if etapa == "radar":
+        escribir_busqueda(config, latest, demo=demo, max_llamadas=0)
+    elif rapido:
+        escribir_busqueda(config, latest, demo=demo,
+                          max_llamadas=busq.LLAMADAS_VUELTA_RAPIDO,
+                          max_segundos=busq.SEGUNDOS_VUELTA_RAPIDO)
     else:
-        # Datos del BUSCADOR ida+vuelta (piernas de ida y de regreso por día)
-        escribir_busqueda(config, demo=demo)
-        escribir_meta(config)
+        escribir_busqueda(config, latest, demo=demo)
+
+    escribir_meta(config, iniciado=iniciado, modo=modo, estado="ok",
+                  rutas=len(con_datos), consultadas=len(tareas),
+                  n_errores=errores_rutas)
+
+    if etapa == "todo" and not rapido:
         escribir_ofertas()
         escribir_apertura(config)
+        _clima_si_hace_falta(refrescar_clima)
+    elif rapido:
+        print("  (modo rápido: sin clima, apertura ni noticias)")
 
     n_op = sum(1 for r in resultados if r["nivel"] == "oportunidad")
+    n_parc = sum(1 for r in resultados if r["parcial"])
     print(f"[{ahora_iso()}] Listo. {len(resultados)} rutas, {n_op} oportunidades 🔥, "
-          f"{len(errores)} errores.")
+          f"{n_parc} calendarios recortados, {errores_rutas} rutas con error.")
+    return latest
+
+
+def _hay_que_abortar(con_datos, tareas, errores_rutas, previo, demo):
+    """Motivo por el que esta corrida NO debería publicarse, o None.
+
+    El 5-sep-2026 un rápido sin red publicó un latest.json con 0 rutas y la app
+    quedó 3 h 21 min en blanco. Desde entonces preferimos el dato viejo.
+
+    errores_rutas cuenta SOLO rutas que no contestaron. Los errores del precio
+    cash (otra API) no cuentan: si contaran, un hipo de Travelpayouts armaría
+    la regla del 40% y nos taparía una sequía real de Smiles, que es
+    información que Nacho quiere ver.
+    """
+    if tareas and not con_datos:
+        return (f"Se consultaron {len(tareas)} ruta-mes y NINGUNA trajo "
+                f"resultado ({errores_rutas} con error).")
+    # Una caída fuerte contra la corrida anterior solo es sospechosa si además
+    # hubo errores. Sin errores puede ser sequía real de Smiles, y eso es
+    # información válida que Nacho quiere ver.
+    previas = len([r for r in (previo or {}).get("resultados", []) if r.get("dias")])
+    if not demo and previas and errores_rutas and len(con_datos) < previas * 0.4:
+        return (f"Solo {len(con_datos)} rutas con datos contra {previas} de la "
+                f"corrida anterior, y encima {errores_rutas} con error.")
+    return None
+
+
+def _clima_si_hace_falta(refrescar_clima):
+    clima_actual = cargar_json(CLIMA_PATH, {}).get("destinos", {})
+    faltan = [k for k in cat.DESTINOS if k not in clima_actual]
+    if refrescar_clima or faltan:
+        if faltan:
+            print(f"Clima: destinos nuevos sin datos {faltan}, refrescando...")
+        escribir_clima()
+
+
+def correr_extras(config, iniciado, modo, refrescar_clima, demo):
+    """
+    Etapa 2 de un completo (--solo-extras): todo lo que no es el radar.
+
+    No consulta el calendario de ida de ninguna ruta: reusa el latest.json que
+    dejó la etapa 1. Sí consulta las VUELTAS del buscador, que el radar no mira.
+    """
+    latest = cargar_json(LATEST_PATH, {})
+    if not latest.get("resultados"):
+        print("⚠ No hay un latest.json con datos: corré primero la etapa "
+              "--solo-radar.")
+        return None
+
+    print(f"[{ahora_iso()}] Extras sobre el radar de {latest.get('generado')}.")
+    if smiles_client.base_activa(log=print) is None:
+        print("⚠ Ningún servidor de Smiles sirve precios: no hago las vueltas.")
+        return None
+
+    escribir_busqueda(config, latest, demo=demo)
+    # La etapa 2 no vuelve a consultar el radar, así que el parte del barrido
+    # (rutas / consultadas / errores) es el que dejó la etapa 1 en meta.json.
+    # Recontar los errores desde latest["errores"] daría de más: esa lista
+    # arrastra también los del precio cash, que no son rutas caídas.
+    meta_1 = cargar_json(os.path.join(DATA, "meta.json"), {})
+    escribir_meta(config, iniciado=iniciado, modo=modo, estado="ok",
+                  rutas=meta_1.get("rutas")
+                  or len([r for r in latest["resultados"] if r.get("dias")]),
+                  consultadas=meta_1.get("consultadas")
+                  or latest.get("total_consultadas") or 0,
+                  n_errores=meta_1.get("errores") or 0)
+    escribir_ofertas()
+    escribir_apertura(config)
+    _clima_si_hace_falta(refrescar_clima)
+    print(f"[{ahora_iso()}] Extras listos.")
     return latest
 
 
@@ -415,13 +656,22 @@ def agregar_detalles(resultados, config, demo=False):
         print(f"  Detalle no disponible en esta corrida: {e}")
 
 
-def escribir_busqueda(config, demo=False):
-    """Construye y guarda data/busqueda.json (piernas ida+vuelta por día)."""
-    print("Armando datos del buscador ida+vuelta...")
+def escribir_busqueda(config, radar, demo=False, max_llamadas=None,
+                      max_segundos=None):
+    """Actualiza y guarda data/busqueda.json (piernas ida+vuelta por día).
+
+    Las idas salen de `radar` (el latest.json de esta corrida) sin gastar una
+    llamada; las vueltas se consultan hasta agotar el presupuesto. Lo que no
+    se refresca se conserva del archivo anterior, con su sello viejo.
+    """
+    print("Actualizando el buscador ida+vuelta...")
+    previo = cargar_json(BUSQUEDA_PATH, {})
     try:
-        data = busq.construir(config, log=print, demo=demo)
+        data = busq.actualizar(config, previo, radar, log=print, demo=demo,
+                               max_llamadas=max_llamadas,
+                               max_segundos=max_segundos)
     except Exception as e:
-        print(f"  Buscador no generado en esta corrida: {e}")
+        print(f"  Buscador no actualizado en esta corrida: {e}")
         return
     data["generado"] = ahora_iso()
     guardar_json(BUSQUEDA_PATH, data)
@@ -443,15 +693,38 @@ def escribir_destinos():
     guardar_json(DESTINOS_PATH, {"origenes": cat.ORIGENES, "destinos": out})
 
 
-def escribir_meta(config):
-    """Dólar MEP + costo real de la milla en USD (para el armador)."""
+def escribir_meta(config, iniciado=None, modo=None, estado="ok",
+                  rutas=0, consultadas=0, n_errores=0):
+    """Dólar MEP + costo de la milla + cómo le fue a ESTA corrida.
+
+    meta.json pesa 200 bytes y la app lo repesca cada pocos minutos para saber
+    si hay dato nuevo, así que acá va el parte del barrido:
+      estado "ok"           terminó y publicó
+             "vacio"        corrió pero no trajo nada; latest.json quedó viejo
+             "sin_servidor" ningún servidor de Smiles sirve precios
+    Es el ÚNICO archivo que se pisa cuando la corrida aborta: así la app puede
+    decir "el barrido de las 12:14 falló, mostrando datos de las 09:12".
+    """
     import dolar_client
+    meta_previa = cargar_json(os.path.join(DATA, "meta.json"), {})
     precio_ars = float(config.get("precio_milla_ars", 2.90))
     dolar, dolar_fecha = dolar_client.dolar_mep()
+    if not dolar:
+        # Si dolarapi no contesta, el MEP de la corrida anterior es muchísimo
+        # mejor que el valor_milla_usd de config (0,012 contra 0,0019 real:
+        # multiplicaría por 6 todo lo que la app muestra en dólares).
+        dolar = meta_previa.get("dolar_mep")
+        dolar_fecha = meta_previa.get("dolar_fecha")
     valor_usd = round(precio_ars / dolar, 6) if dolar else \
         float(config.get("valor_milla_usd", 0.012))
     meta = {
         "generado": ahora_iso(),
+        "iniciado": iniciado or ahora_iso(),
+        "modo": modo or "completo",
+        "estado": estado,
+        "rutas": rutas,
+        "consultadas": consultadas,
+        "errores": n_errores,
         "dolar_mep": dolar,
         "dolar_fecha": dolar_fecha,
         "precio_milla_ars": precio_ars,
@@ -494,6 +767,17 @@ if __name__ == "__main__":
     ap.add_argument("--demo", action="store_true", help="una sola ruta, prueba rápida")
     ap.add_argument("--clima", action="store_true", help="refresca también el clima")
     ap.add_argument("--rapido", action="store_true",
-                    help="solo el radar (para las corridas frecuentes del día)")
+                    help="radar + una tanda de vueltas (las corridas del día)")
+    ap.add_argument("--solo-radar", action="store_true",
+                    help="etapa 1 de un completo: solo el radar, para publicar antes")
+    ap.add_argument("--solo-extras", action="store_true",
+                    help="etapa 2 de un completo: buscador, apertura, clima y ofertas")
     args = ap.parse_args()
-    correr(demo=args.demo, refrescar_clima=args.clima, rapido=args.rapido)
+    if args.solo_radar and args.solo_extras:
+        ap.error("--solo-radar y --solo-extras son las dos mitades de un "
+                 "completo: pasá una o ninguna, no las dos.")
+    etapa = "radar" if args.solo_radar else "extras" if args.solo_extras else "todo"
+    resultado = correr(demo=args.demo, refrescar_clima=args.clima,
+                       rapido=args.rapido, etapa=etapa)
+    # != 0 avisa a scripts/run.sh que NO publique los datos (ver el docstring).
+    sys.exit(0 if resultado else 1)

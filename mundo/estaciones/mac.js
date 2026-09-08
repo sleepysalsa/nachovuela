@@ -35,32 +35,62 @@
   const usd = v => { try { return NV.fmtUSD ? NV.fmtUSD(v) : 'US$ ' + Math.round(v); } catch (e) { return ''; } };
   const ymL = ym => { try { return ym ? (NV.ymLabel ? NV.ymLabel(ym) : ym) : ''; } catch (e) { return ym || ''; } };
   const fecha = iso => { try { return iso ? (NV.dateLabel ? NV.dateLabel(iso) : iso) : ''; } catch (e) { return iso || ''; } };
-  const hace = iso => { try { return NV.haceCuanto ? NV.haceCuanto(iso) : ''; } catch (e) { return ''; } };
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
   const NIVEL = { oportunidad: 'oportunidad', bueno: 'buen precio', normal: 'normal', caro: 'caro' };
-  const N_MIN = 1, N_MAX = 60, TOP = 8;
+  const N_MIN = 1, N_MAX = 60, TOP = 8, MAX_DIAS = 5;
+  const ui = () => NV.ui || {};
 
   const finder = () => (NV.state && NV.state.finder) || (NV.state.finder = { dest: null, orig: 'EZE', mes: null, nMin: 10, nMax: 20, esc: 'todos', diaIda: null });
   const bDest = () => { try { return NV.bDestinos ? (NV.bDestinos() || {}) : {}; } catch (e) { return {}; } };
   const mesesDe = k => { const d = bDest()[k]; return Object.keys((d && d.meses) || {}).sort(); };
 
-  /* Estado del radar (para la cabecera): fresco si tiene menos de un día. */
-  function radar() {
-    const gen = NV.state && NV.state.latest && NV.state.latest.generado;
-    if (!gen) return { txt: 'radar sin datos', frio: true };
-    const h = (Date.now() - new Date(gen).getTime()) / 36e5;
-    return { txt: 'radar · ' + hace(gen), frio: !(h < 30) };
+  /* ── Sellos de hora: LOS DOS RELOJES, cada uno con su nombre ──────────────
+     Esta pantalla mezcla dos archivos y hasta hoy los rotulaba a los dos con
+     la hora de latest.json:
+       · el resumen de LEJOS muestra lo mejor del RADAR (latest.json, que se
+         refresca en cada barrido rápido)
+       · el buscador de CERCA arma los combos con el BUSCADOR (busqueda.json,
+         que solo se rehace en los barridos completos — puede tener medio día)
+     Por eso a veces el número de la Mac no era el de la etiqueta. Ahora cada
+     bloque dice de qué hora es SU dato. */
+  function selloHTML(fuente, etiqueta) {
+    const U = ui();
+    return U.selloHTML ? U.selloHTML(fuente, etiqueta) : '';
   }
 
-  /* La mejor oportunidad del radar (para el resumen de LEJOS). */
+  /* Los días al mínimo, en la frase que arma el cerebro ("3 días (18, 22 y 29
+     Abr)"): en el resumen de LEJOS una línea se lee mejor que un montón de
+     chips, y así toda la app dice lo mismo de la misma manera. */
+  function diasMinTxt(r) {
+    if (typeof NV.diasMinTxt === 'function') { try { return NV.diasMinTxt(r); } catch (e) { /* respaldo */ } }
+    const U = ui();
+    const dias = U.diasMin ? U.diasMin(r) : (r.mejor_fecha ? [r.mejor_fecha] : []);
+    if (!dias.length) return '';
+    return dias.length === 1 ? fecha(dias[0])
+      : dias.length + ' días (' + dias.slice(0, MAX_DIAS).map(d => (U.fechaCorta ? U.fechaCorta(d) : d)).join(', ') + ')';
+  }
+
+  /* Los otros días del mes que están al MISMO precio que esta pierna. Es dato
+     del buscador (busqueda.json), no del radar. */
+  function mismosDias(code, tipo, mi) {
+    const F = finder(), d = bDest()[F.dest] || {};
+    const bloque = (d.meses || {})[F.mes] || {};
+    return ((bloque[tipo] || {})[code] || []).filter(x => x && x.mi === mi).map(x => x.d).sort();
+  }
+
+  /* La mejor oportunidad del radar (para el resumen de LEJOS). Las rutas con
+     calendario PARCIAL pesan lo mismo que las peores: Smiles les está listando
+     3 de 30 días, así que su "oportunidad" no significa nada y no puede ser el
+     titular de la pantalla. Solo ganan si no hay ninguna ruta completa. */
   function mejorDelRadar(ctx) {
     const R = (ctx && ctx.resultados) || [];
     const peso = { oportunidad: 0, bueno: 1, normal: 2, caro: 3 };
+    const pesoDe = r => (r.parcial ? 8 : (peso[r.nivel] == null ? 4 : peso[r.nivel]));
     let best = null;
     for (const r of R) {
       if (!r || r.mejor_precio_millas == null) continue;
       if (!best) { best = r; continue; }
-      const pa = peso[r.nivel] == null ? 9 : peso[r.nivel], pb = peso[best.nivel] == null ? 9 : peso[best.nivel];
+      const pa = pesoDe(r), pb = pesoDe(best);
       if (pa < pb || (pa === pb && r.mejor_precio_millas < best.mejor_precio_millas)) best = r;
     }
     return best;
@@ -68,8 +98,8 @@
 
   /* ── HTML: LEJOS (resumen grande dentro de la pantalla) ─────────────────── */
   function resumen(ctx) {
-    const r = mejorDelRadar(ctx), rd = radar();
-    const kicker = `<div class="kicker"><b>Nacho<em>Vuela</em></b><span><i></i>${esc(rd.txt)}</span></div>`;
+    const r = mejorDelRadar(ctx);
+    const kicker = `<div class="kicker"><b>Nacho<em>Vuela</em></b>${selloHTML('radar', 'radar')}</div>`;
     if (!r) {
       return `<div class="mac__resumen" aria-hidden="true">${kicker}
         <div class="nivel es-normal">buscador</div>
@@ -77,12 +107,13 @@
         <div class="cuando">todavía no hay resultados del radar</div>
         <div class="cta">tocá para buscar</div></div>`;
     }
-    const nivel = r.nivel || 'normal';
+    const nivel = r.parcial ? 'normal' : (r.nivel || 'normal');
+    const etiqueta = r.parcial ? 'Smiles lista pocos días' : (NIVEL[nivel] || nivel);
     return `<div class="mac__resumen" aria-hidden="true">${kicker}
-      <div class="nivel es-${esc(nivel)}">${esc(NIVEL[nivel] || nivel)}</div>
+      <div class="nivel es-${esc(nivel)}">${esc(etiqueta)}</div>
       <div class="dest">${esc(r.destino_emoji || '')} ${esc(r.destino_nombre || r.destino_key || '')}</div>
       <div class="millas">${miles(r.mejor_precio_millas)}<small>millas</small></div>
-      <div class="cuando">${esc(r.origen || '')} → ${esc(r.aeropuerto || '')} · ${esc(fecha(r.mejor_fecha))}</div>
+      <div class="cuando">${esc(r.origen || '')} → ${esc(r.aeropuerto || '')} · <span class="mac__dias">${esc(diasMinTxt(r))}</span></div>
       <div class="cta">tocá para buscar</div></div>`;
   }
 
@@ -129,6 +160,30 @@
     return `<span class="veredicto">${todoMillas ? 'conviene ' : '💡 conviene '}<b>${esc(txt)}</b>${a.totalEq != null ? ` · ≈ <strong>${esc(usd(a.totalEq))}</strong>` : ''}</span>`;
   }
 
+  /* Una pierna del combo. La fecha es un LINK a Smiles para ESE día y ESA
+     pierna, y si hay otros días del mes al mismo precio lo dice: Smiles rota
+     cuál está al mínimo, así que atarse a una sola fecha es lo que hacía que
+     Nacho abriera la app y el precio "ya no fuera ese". */
+  function legHTML(rotulo, leg, tipo, orig, code, moneda) {
+    const U = ui();
+    const de = tipo === 'ida' ? orig : code, a = tipo === 'ida' ? code : orig;
+    let url = '';
+    try { url = (U.unaVia ? U.unaVia(de, a, leg.d, moneda) : '') || ''; } catch (e) { url = ''; }
+    const otros = mismosDias(code, tipo, leg.mi).filter(x => x !== leg.d);
+    const tip = otros.length ? 'Al mismo precio también: ' + otros.map(x => fecha(x)).join(' · ') : '';
+    // Sin URL (falta fecha o aeropuerto) va texto pelado: un href="" recarga la
+    // app entera de un toque, que es peor que no tener link.
+    const fechaHTML = url
+      ? `<a class="mac-leg__d" href="${esc(url)}" target="_blank" rel="noopener noreferrer"`
+        + ` title="Verificar el ${esc(fecha(leg.d))} en Smiles (solo ${esc(tipo)})">${esc(fecha(leg.d))}</a>`
+      : `<b>${esc(fecha(leg.d))}</b>`;
+    return `<span class="mac-leg"><i>${esc(rotulo)}</i>`
+      + fechaHTML
+      + `<span>${miles(leg.mi)} mi</span>`
+      + (otros.length ? `<em class="mac-leg__mas" title="${esc(tip)}">+${otros.length} día${otros.length === 1 ? '' : 's'}</em>` : '')
+      + `</span>`;
+  }
+
   function filaCombo(c, i, ctx) {
     const F = finder(), d = bDest()[F.dest] || {};
     const orig = F.orig || d.origen || 'EZE';
@@ -137,9 +192,9 @@
     return `<li class="mac-combo${i === 0 ? ' mac-combo--best' : ''}" style="animation-delay:${i * 40}ms">
       <div class="mac-combo__rank">${i + 1}</div>
       <div class="mac-combo__fechas">
-        <span class="mac-leg"><i>IDA</i><b>${esc(fecha(c.ida.d))}</b><span>${miles(c.ida.mi)} mi</span></span>
+        ${legHTML('IDA', c.ida, 'ida', orig, c.code, d.moneda)}
         <span class="mac-combo__flecha" aria-hidden="true">→</span>
-        <span class="mac-leg"><i>VUELTA</i><b>${esc(fecha(c.vuelta.d))}</b><span>${miles(c.vuelta.mi)} mi</span></span>
+        ${legHTML('VUELTA', c.vuelta, 'vuelta', orig, c.code, d.moneda)}
       </div>
       <div class="mac-combo__meta">
         <span class="ruta">${esc(orig)} ⇄ <b>${esc(c.code)}</b> · ${esc(c.ciudad || c.code)}</span>
@@ -150,7 +205,7 @@
       <div class="mac-combo__total"><b>${miles(c.total)}</b><small>millas ida+vuelta</small></div>
       <div class="mac-combo__acciones">
         <button type="button" class="mac-btn mac-btn--armar" data-armar="${i}">Armar 🔀</button>
-        <a class="mac-btn" href="${esc(smiles)}" target="_blank" rel="noopener noreferrer">Abrir en Smiles ↗</a>
+        <a class="mac-btn" href="${esc(smiles)}" target="_blank" rel="noopener noreferrer">Verificar en Smiles ↗</a>
       </div>
     </li>`;
   }
@@ -179,11 +234,10 @@
     }
     const filas = combos.slice(0, TOP).map((c, i) => filaCombo(c, i, ctx)).join('');
     return head + `<ul class="mac-combos">${filas}</ul>
-      <p class="mac-nota">El total suma millas de ida + la mejor vuelta dentro de tu rango de noches. <b>Armar</b> abre los calendarios para elegir otros días; <b>Smiles</b> abre la búsqueda ida y vuelta con esas fechas.</p>`;
+      <p class="mac-nota">El total suma millas de ida + la mejor vuelta dentro de tu rango de noches. Tocá una <b>fecha</b> para verificar esa pierna sola en Smiles; <b>Verificar en Smiles</b> abre la ida y vuelta completa; <b>Armar</b> abre los calendarios para elegir otros días. Smiles mueve los precios varias veces por día: lo que ves acá es la última foto del buscador.</p>`;
   }
 
   function html(ctx) {
-    const rd = radar();
     return `<div class="mac">
       <div class="mac__tapa">
         <span class="mac__cam" aria-hidden="true"></span>
@@ -192,7 +246,7 @@
           <div class="mac__ui est__scroll" data-scroll-interno>
             <header class="mac__barra">
               <div class="titulo"><b>Nacho<em>Vuela</em></b><span>buscador</span></div>
-              <div class="radar${rd.frio ? ' frio' : ''}"><i></i><span>${esc(rd.txt)}</span></div>
+              <div class="mac__sello">${selloHTML('buscador', 'buscador')}</div>
             </header>
             ${formulario()}
             <div class="mac__res"><div class="mac-vacio mac-vacio--inicio"><b>Elegí destino, mes y noches</b><p>y tocá “Buscar combinaciones ✈”. Te muestro las ${TOP} mejores idas y vueltas con millas.</p></div></div>
@@ -256,11 +310,16 @@
   function rerender(el, ctx) {
     asegurarFinder();
     const lejos = el.querySelector('.mac__resumen'); if (lejos) lejos.outerHTML = resumen(ctx);
-    const rd = radar(), rEl = el.querySelector('.mac__barra .radar');
-    if (rEl) { rEl.classList.toggle('frio', rd.frio); const s = rEl.querySelector('span'); if (s) s.textContent = rd.txt; }
+    repintarSellos(el);
     const form = el.querySelector('.mac__form'); if (form) form.outerHTML = formulario();
     combosVivos = [];
     stamp = sello();
+  }
+  /* Solo las horas: barato, para que el "hace X" no quede congelado. */
+  function repintarSellos(el) {
+    const b = el.querySelector('.mac__sello'); if (b) b.innerHTML = selloHTML('buscador', 'buscador');
+    const k = el.querySelector('.mac__resumen .kicker .nv-sello');
+    if (k) k.outerHTML = selloHTML('radar', 'radar');
   }
 
   function mount(el, ctx) {
@@ -323,5 +382,12 @@
   }
   function desenfocar(el) { el.classList.remove('mac--foco'); }
 
-  NV.estacion('mac', { html, mount, enfocar, desenfocar });
+  /* Entraron datos nuevos (o pasó un minuto). Si cambió el archivo rearmamos
+     todo; si no, alcanza con repintar las horas. */
+  function refrescar(el, ctx) {
+    if (sello() !== stamp) { rerender(el, ctx); if (el.classList.contains('mac--foco')) buscar(el, ctx); }
+    else repintarSellos(el);
+  }
+
+  NV.estacion('mac', { html, mount, enfocar, desenfocar, refrescar });
 })();

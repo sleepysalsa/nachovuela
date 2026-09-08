@@ -94,13 +94,12 @@
           <div class="daypick" id="fDiasIda"></div>
         </div>
 
+        <!-- El selector "evitar conexión por Brasil" se fue el 8-sep-2026: filtraba
+             por fuente==='gol' fuera de Brasil y eso no pasa nunca (los 4 días con
+             fuente gol de busqueda.json son vuelos a Brasil, donde GOL opera el
+             vuelo). Prometía algo que no podía cumplir. -->
         <div class="fld fld--full">
-          <span class="fld__lbl">Preferencia de escalas</span>
-          <div class="segbtns" id="fEscalas">
-            <button type="button" class="segbtn is-active" data-esc="todos">Cualquiera</button>
-            <button type="button" class="segbtn" data-esc="directo">Evitar conexión por Brasil</button>
-          </div>
-          <p class="fld__hint">Las escalas exactas de cada vuelo las confirmás al abrir el día en Smiles. Acá puedo evitar los días que solo salen conectando por Brasil (GOL).</p>
+          <p class="fld__hint">Las escalas exactas de cada vuelo las confirmás al abrir el día en Smiles: el calendario que lee el radar trae el precio del día, no el itinerario.</p>
         </div>
 
         <button type="submit" class="finder__go" id="fGo">Buscar combinaciones ✈</button>

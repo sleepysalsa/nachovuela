@@ -66,11 +66,23 @@
     cam.enfocada = zoom > 0.5 ? nombre : cam.enfocada;
     marcar();
   }
-  function enfocar(nombre) { mirarA(nombre, 1); cam.enfocada = nombre; marcar(); }
+  /* Ojo con el nombre: desde que llegadas y la pizarra son decorado (8-sep-2026)
+     ya no están registradas acá. Sin este guardián, enfocar('llegadas') dejaba
+     cam.enfocada apuntando a una estación inexistente —la brújula y los paneles
+     quedaban en un limbo— y el siguiente acercar() reventaba con TypeError al
+     leer estaciones['llegadas'].yaw. */
+  function enfocar(nombre) {
+    if (!estaciones[nombre]) return;
+    mirarA(nombre, 1); cam.enfocada = nombre; marcar();
+  }
   function soltar() { cam.tZoom = 0; cam.enfocada = null; cam.libre = true; marcar(); }
   function acercar(delta) {
     // Al acercar, se engancha a la estación más cercana para que el zoom "aterrice".
     const n = cam.enfocada || masCercana();
+    // Si no hay ninguna estación cerca de la mirada no hay a qué acercarse:
+    // antes igual cerraba el FOV y quedaba un medio-zoom sobre nada (se nota
+    // desde que el cartel de llegadas y la pizarra son solo decorado).
+    if (delta > 0 && !n) return;
     if (delta > 0 && n) { cam.enfocada = n; cam.libre = false;
       const e = estaciones[n]; cam.tYaw = e.yaw; cam.tPitch = e.pitch; }
     cam.tZoom = clamp(cam.tZoom + delta, 0, 1);
@@ -80,6 +92,7 @@
 
   /* ── Entradas ────────────────────────────────────────────────────────── */
   let ancho = 1, alto = 1, arrastrando = false, ax = 0, ay = 0, ultimoToque = 0;
+  let hojaAbierta = false;      // ¿había una hoja (#sheet) abierta al apretar Esc?
   function medir() { ancho = window.innerWidth || 1; alto = window.innerHeight || 1; }
 
   function onMove(e) {
@@ -126,7 +139,15 @@
     else if (e.key === 'ArrowUp')    { cam.libre = false; cam.tPitch = clamp(cam.tPitch + p, ...cam.limites.pitch); }
     else if (e.key === 'ArrowDown')  { cam.libre = false; cam.tPitch = clamp(cam.tPitch - p, ...cam.limites.pitch); }
     else if (e.key === 'Enter') { const n = masCercana(); if (n) enfocar(n); }
-    else if (e.key === 'Escape') soltar();
+    else if (e.key === 'Escape') {
+      // Esc es LA salida (el mismo gesto que el chip "↩ Salir" de la brújula),
+      // pero si había una hoja abierta encima —ficha de destino, armador— esa
+      // Esc era de ella y nosotros no nos movemos. Hay que mirar el estado
+      // ANTES: app.js escucha en document, o sea que para cuando llega acá
+      // (window, burbuja) ya la cerró y parecería que no había ninguna.
+      if (hojaAbierta) return;
+      soltar();
+    }
     else return;
     e.preventDefault(); marcar();
   }
@@ -165,6 +186,13 @@
     window.addEventListener('touchmove', e => { const t = e.touches[0]; onDrag({ clientX: t.clientX, clientY: t.clientY }); }, { passive: true });
     window.addEventListener('touchend', onUp);
     window.addEventListener('wheel', onWheel, { passive: false });
+    // En captura: corre antes que el Escape de app.js (que cierra la hoja) y
+    // deja anotado si había una hoja abierta. Solo mira, no toca nada.
+    window.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      const h = document.getElementById('sheet');
+      hojaAbierta = !!(h && h.classList.contains('open'));
+    }, true);
     window.addEventListener('keydown', onKey);
     marcar();
   }

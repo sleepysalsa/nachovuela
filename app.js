@@ -18,8 +18,8 @@ const state = { latest:null, clima:null, destinos:null, config:null, busqueda:nu
 const $ = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
 
-async function loadJSON(path){
-  try{ const r = await fetch(path,{cache:'no-cache'}); if(!r.ok) throw 0; return await r.json(); }
+async function loadJSON(path, modo){
+  try{ const r = await fetch(path,{cache: modo || 'no-cache'}); if(!r.ok) throw 0; return await r.json(); }
   catch(e){ return null; }
 }
 
@@ -41,22 +41,510 @@ function haceCuanto(iso){
   return `hace ${Math.round(diff/86400)} días`;
 }
 
+/* ================= PASAJEROS =================
+   Nacho viaja con la familia: los deep links abrían Smiles con 1 adulto y
+   después había que rehacer la búsqueda a mano. El bloque "pasajeros" de
+   engine/config.json manda; si no está, asumimos la familia completa. */
+const PAX_DEFAULT = {adultos:2, ninos:2, bebes:0};
+
+function pasajeros(){
+  const p = state.config?.pasajeros;
+  if(!p) return {...PAX_DEFAULT};
+  const n = (v,d)=> Number.isFinite(+v) ? Math.max(0, Math.round(+v)) : d;
+  return {adultos: Math.max(1, n(p.adultos, PAX_DEFAULT.adultos)),
+          ninos:   n(p.ninos,  PAX_DEFAULT.ninos),
+          bebes:   n(p.bebes,  PAX_DEFAULT.bebes)};
+}
+function paxTxt(){
+  const p = pasajeros();
+  const bits = [`${p.adultos} ${p.adultos===1?'adulto':'adultos'}`];
+  if(p.ninos) bits.push(`${p.ninos} ${p.ninos===1?'chico':'chicos'}`);
+  if(p.bebes) bits.push(`${p.bebes} ${p.bebes===1?'bebé':'bebés'}`);
+  return bits.length>1 ? bits.slice(0,-1).join(', ')+' y '+bits[bits.length-1] : bits[0];
+}
+function paxTotal(){ const p = pasajeros(); return p.adultos + p.ninos + p.bebes; }
+
+// Nota honesta al lado de cada link: el calendario de Smiles devuelve el precio
+// del asiento más barato y NO cambia según cuántos viajen (verificado: adults=1
+// y adults=3 traen exactamente lo mismo). Lo que sí puede faltar es lugar.
+function paxHint(){
+  const t = paxTotal();
+  return `<p class="hint pax">👨‍👩‍👧‍👦 Los links abren Smiles para <b>${paxTxt()}</b>. Ojo: el calendario muestra el precio del asiento <b>más barato</b> y no cambia según cuántos viajen — en Smiles confirmá que haya lugar para ${t===1?'vos':'los '+t}.</p>`;
+}
+
+/* ================= SELLOS DE HORA =================
+   Cada pantalla tiene que decir de qué hora es SU dato. La Mac rastrilla con
+   la tapa cerrada y macOS la despierta 30 s cada ~15 min: un barrido que
+   debería durar 7 min tarda de 2 a 6 h, así que lo que ves puede ser de hace
+   media jornada. Antes los carteles mostraban la hora actual y el "hace X min"
+   se calculaba una sola vez al cargar y quedaba congelado toda la sesión. */
+const SELLO_FRESCO_H = 3;    // menos de 3 h: es de la corrida en curso
+const SELLO_VIEJO_H  = 8;    // más de 8 h: ya pasó medio día
+const SELLO_AVISO_H  = 6;    // desde acá avisamos "verificá antes de decidir"
+
+// El motor escribe hora local con offset (…-03:00), así que cortar el string
+// da la hora de Buenos Aires aunque el celular ande por otro huso. Si alguna
+// vez llegara en UTC (terminado en Z), hay que convertirla.
+function enUTC(iso){ return /[zZ]$/.test(String(iso)); }
+function dosD(n){ return String(n).padStart(2,'0'); }
+function horaCorta(iso){
+  if(!iso) return '';
+  if(enUTC(iso)){ const d = new Date(iso); return `${dosD(d.getHours())}:${dosD(d.getMinutes())}`; }
+  return String(iso).slice(11,16);
+}
+function fechaCorta(iso){
+  if(!iso) return '';
+  if(enUTC(iso)){ const d = new Date(iso); return `${d.getDate()} ${MONTHS[d.getMonth()]}`; }
+  const p = String(iso).slice(0,10).split('-');
+  return `${+p[2]} ${MONTHS[+p[1]-1]}`;
+}
+function esHoy(iso){
+  const d = new Date(iso), h = new Date();
+  return d.getFullYear()===h.getFullYear() && d.getMonth()===h.getMonth() && d.getDate()===h.getDate();
+}
+
+function selloDe(iso){
+  if(!iso) return {iso:null, horas:null, hace:'sin dato', nivel:'muy_viejo',
+                   txt:'todavía no hay datos', avisar:true};
+  const ms = new Date(iso).getTime();
+  const horas = (Date.now()-ms)/36e5;
+  const nivel = horas < SELLO_FRESCO_H ? 'fresco' : (horas < SELLO_VIEJO_H ? 'viejo' : 'muy_viejo');
+  const txt = esHoy(iso) ? `datos de las ${horaCorta(iso)}`
+                         : `datos del ${fechaCorta(iso)}, ${horaCorta(iso)}`;
+  return {iso, horas, hace:haceCuanto(iso), nivel, txt, avisar: horas >= SELLO_AVISO_H};
+}
+
+// El buscador (busqueda.json) tiene su propio reloj: las idas salen gratis del
+// radar y se refrescan en cada barrido, pero las vueltas cuestan llamadas y se
+// renuevan de a tandas (busqueda.py: cola ordenada por g_vta más viejo). Por eso
+// el sello global es el de la pierna MÁS VIEJA de todo el archivo — el contrato
+// lo pide así para los carteles generales. Para una pantalla de un solo
+// destino-mes está selloBloque(), que es el que Nacho realmente está mirando.
+let _selloBuscadorISO;
+function buscadorISO(){
+  if(_selloBuscadorISO !== undefined) return _selloBuscadorISO;
+  let peor = null;
+  const B = state.busqueda?.destinos || {};
+  for(const d of Object.values(B)){
+    for(const bloque of Object.values(d.meses || {})){
+      for(const k of ['g_ida','g_vta']){
+        const v = bloque[k];
+        if(!v) continue;
+        if(!peor || new Date(v).getTime() < new Date(peor).getTime()) peor = v;
+      }
+    }
+  }
+  _selloBuscadorISO = peor || state.busqueda?.generado || null;
+  return _selloBuscadorISO;
+}
+
+function sello(fuente){
+  return selloDe(fuente==='buscador' ? buscadorISO() : (state.latest?.generado || null));
+}
+/* Sello de UN destino-mes del buscador. sello('buscador') devuelve el peor de
+   todo el archivo (eso pide el contrato y sirve para un cartel general), pero
+   cuando la pantalla muestra UN destino y UN mes lo honesto es la hora de ESE
+   bloque: las idas se refrescan en cada barrido y las vueltas rotan de a tandas,
+   así que el peor global puede ser de ayer mientras lo que estás mirando es de
+   recién. Todos los sellos del motor llevan el mismo huso (-03:00), así que
+   ordenarlos como texto los ordena en el tiempo. */
+function isosBloque(destKey, ym){
+  const b = state.busqueda?.destinos?.[destKey]?.meses?.[ym];
+  return [b && b.g_ida, b && b.g_vta].filter(Boolean).sort();
+}
+function selloBloque(destKey, ym){
+  const isos = isosBloque(destKey, ym);
+  return isos.length ? selloDe(isos[0]) : sello('buscador');
+}
+function selloBloqueHTML(destKey, ym){
+  const isos = isosBloque(destKey, ym);
+  return isos.length ? selloHTML(isos[0]) : selloHTML('buscador');
+}
+// Sello de UNA ruta: el motor consulta las 33 rutas a lo largo de horas, así
+// que "cuándo se consultó esta ruta" no es lo mismo que "cuándo arrancó".
+function selloRuta(r){
+  return selloDe((r && r.consultado) || state.latest?.generado || null);
+}
+
+function selloTexto(s){ return `🕒 ${s.txt} · ${s.hace}`; }
+// fuente: "radar" | "buscador" | un ISO suelto (ej. r.consultado)
+function selloHTML(fuente, clase){
+  const esFuente = fuente==='radar' || fuente==='buscador';
+  const s = esFuente ? sello(fuente) : selloDe(fuente);
+  const attr = esFuente ? `data-sello="${fuente}"` : `data-sello="iso" data-sello-iso="${fuente||''}"`;
+  return `<span class="sello sello--${s.nivel}${clase?' '+clase:''}" ${attr}>${selloTexto(s)}</span>`;
+}
+// Reescribe los "hace X" ya pintados (los dispara el latido cada minuto)
+function refrescarSellos(root){
+  $$('[data-sello]', root || document).forEach(el=>{
+    const f = el.dataset.sello;
+    const s = f==='iso' ? selloDe(el.dataset.selloIso || null) : sello(f);
+    el.textContent = selloTexto(s);
+    el.className = el.className.replace(/sello--\w+/, 'sello--'+s.nivel);
+  });
+}
+
+// Aviso cuando el dato ya tiene unas horas. Smiles rota precios todo el día:
+// el 27% de los barridos consecutivos trae otro número.
+function avisoVigencia(s){
+  if(!s || s.horas == null || s.horas < SELLO_AVISO_H) return '';
+  return `<p class="vigencia">⏳ Precio de ${s.hace} — Smiles mueve la disponibilidad durante el día: verificá en Smiles antes de decidir.</p>`;
+}
+
+/* Estado real del motor, leído de meta.json (que se publica aunque el barrido
+   termine mal). Sin esto la app decía "rastrillado hace 2 h" cuando en realidad
+   ese barrido había fallado y estabas viendo el de la madrugada. */
+function estadoMotor(){
+  const m = state.meta || {}, L = state.latest || {};
+  const s = sello('radar');
+  const rutas = m.rutas ?? L.total_rutas ?? (L.resultados||[]).length;
+  const consultadas = m.consultadas ?? L.total_consultadas ?? null;
+  const errEnLatest = Array.isArray(L.errores) ? L.errores.length : (L.errores || 0);
+  const errores = Number.isFinite(+m.errores) ? +m.errores : errEnLatest;
+  // Único síntoma confiable de barrido fallido: el estado que escribe el motor.
+  // "vacio" = corrió y no trajo nada; "sin_servidor" = ningún server de Smiles
+  // sirve precios. En los dos casos el motor NO pisa latest.json a propósito.
+  // OJO: no sirve comparar meta.generado contra latest.generado. Un completo
+  // sano corre en dos etapas (run.sh: --solo-radar y después --solo-extras):
+  // el radar publica latest a los pocos minutos y meta recién se reescribe al
+  // final de la etapa 2, media hora o varias horas después. Con esa cuenta la
+  // app cantaba "el barrido de las 20:25 falló" en TODOS los completos buenos.
+  const ok = !(m.estado==='vacio' || m.estado==='sin_servidor');
+  const metaISO = m.generado || m.iniciado || null;
+  let txt;
+  if(!ok){
+    const cuando = metaISO ? `el barrido de las ${horaCorta(metaISO)}` : 'el último barrido';
+    txt = L.generado
+      ? `${cuando} falló: estás viendo datos de las ${horaCorta(L.generado)}`
+      : `${cuando} falló y todavía no hay precios publicados`;
+  } else if(!L.generado){
+    txt = 'todavía no hay ningún barrido publicado';
+  } else {
+    txt = `último barrido ${horaCorta(L.generado)} · ${rutas} ${rutas===1?'ruta':'rutas'}`;
+    if(L.estado==='parcial') txt += ' · corrida incompleta';
+    if(errores) txt += ` · ${errores} con error`;
+    if(s.horas != null && s.horas >= SELLO_VIEJO_H) txt += ` (${s.hace})`;
+  }
+  return {ok, txt, sello:s, rutas, consultadas, errores,
+          modo: m.modo || L.modo || null, estado: m.estado || L.estado || null};
+}
+
+/* ================= DÍAS AL MÍNIMO =================
+   La causa #1 de la queja. El motor publica un único mejor_fecha (el primero
+   empatado al mínimo) y Smiles rota cuál de los días empatados está barato:
+   el 7-sep Madrid figuraba 12-may a 166.500 y 48 min después ese día valía
+   435.700 mientras otros 7 días de mayo seguían a 166.500. Mostramos TODOS los
+   días al mínimo, cada uno con su link. 23 de las 33 rutas tienen más de uno. */
+const DIAS_A_LA_VISTA = 4;   // hasta 4 van sueltos; de ahí en más, desplegable
+
+function diasMin(r){
+  if(!r) return [];
+  if(Array.isArray(r.dias_min) && r.dias_min.length) return [...r.dias_min].sort();
+  const dias = (r.dias || []).filter(d => d && typeof d.miles === 'number' && d.miles > 0);
+  if(!dias.length) return r.mejor_fecha ? [r.mejor_fecha] : [];
+  let min = Infinity;
+  for(const d of dias) if(d.miles < min) min = d.miles;
+  const out = dias.filter(d => d.miles === min).map(d => d.date).sort();
+  return out.length ? out : (r.mejor_fecha ? [r.mejor_fecha] : []);
+}
+
+function unirTxt(a){
+  if(!a.length) return '';
+  return a.length===1 ? a[0] : a.slice(0,-1).join(', ') + ' y ' + a[a.length-1];
+}
+// "18, 22 y 29 Abr" si son del mismo mes; si no, "18 Abr, 3 May y 12 May"
+function listaDiasTxt(dias){
+  if(!dias.length) return '';
+  const meses = new Set(dias.map(d=>d.slice(0,7)));
+  if(meses.size === 1){
+    const m = +dias[0].slice(5,7);
+    return unirTxt(dias.map(d=>String(+d.slice(8,10)))) + ' ' + MONTHS[m-1];
+  }
+  return unirTxt(dias.map(fechaCorta));
+}
+function diasMinTxt(r){
+  const dias = diasMin(r), n = dias.length;
+  if(!n) return '';
+  if(n === 1) return dateLabel(dias[0]);
+  if(n <= DIAS_A_LA_VISTA) return `${n} días (${listaDiasTxt(dias)})`;
+  return `${n} días en ${ymLabel(r.ym)}`;
+}
+function diasMinChips(r, dias){
+  return dias.map(f=>`<a class="diamin" href="${smilesOneWayURL(r.origen, r.aeropuerto, f)}" target="_blank" rel="noopener" title="Verificar ${dateLabel(f)} en Smiles">${fechaCorta(f)}<span>↗</span></a>`).join('');
+}
+// Chips con link por día; si son muchos, desplegable para no tapar el celular.
+function diasMinHTML(r){
+  const dias = diasMin(r), n = dias.length;
+  if(!n) return '';
+  if(n <= DIAS_A_LA_VISTA) return `<div class="diasmin">${diasMinChips(r, dias)}</div>`;
+  return `<details class="diasmin diasmin--mas"><summary>ver los ${n} días al mismo precio</summary>
+    <div class="diasmin__grid">${diasMinChips(r, dias)}</div></details>`;
+}
+// La misma frase en el hero, en la tarjeta y en la ficha (incluido el caso en
+// que Smiles no mostró NINGÚN día, donde antes salía "0 días al mismo precio").
+function diasMinLinea(r, conMes){
+  const dias = diasMin(r);
+  if(!dias.length) return 'Smiles no nos mostró ningún día de este mes';
+  if(dias.length === 1) return `un solo día a ese precio: <b>${dateLabel(dias[0])}</b>`;
+  const cola = dias.length <= DIAS_A_LA_VISTA ? `: ${listaDiasTxt(dias)}`
+                                              : (conMes ? ` en ${ymLabel(r.ym)}` : '');
+  return `<b>${dias.length} días</b> al mismo precio${cola}`;
+}
+// Línea completa: "desde 107.500 · 3 días (18, 22 y 29 Abr)"
+function desdeTxt(r){
+  // Sin precio (calendario recortado a cero días) no hay "desde": decirlo así,
+  // en vez de escupir "desde — · " en el cartel que lo use.
+  if(!conPrecio(r)) return `sin días a la vista en ${ymLabel(r.ym)}`;
+  const n = diasMin(r).length;
+  return `desde ${fmtMiles(r.mejor_precio_millas)} · ${n===1 ? '1 día' : diasMinTxt(r)}`;
+}
+
+/* Calendario incompleto (campo "parcial" del motor). Para Brasil y cabotaje
+   Smiles solo devuelve el mes entero entre las 9 y las 11 de la mañana; el
+   resto del día manda 1 a 6 días sueltos. Eso no es "caro" ni "oportunidad":
+   es media foto, y así hay que mostrarlo. */
+function esParcial(r){ return !!(r && r.parcial); }
+
+/* Ruta sin NINGÚN día a la vista. El motor la publica igual (dias:[], con
+   mejor_precio_millas y mejor_fecha en null) cuando Smiles declara días con
+   precio pero no muestra ninguno: así la ruta no desaparece del tablero. La app
+   no le puede inventar una fecha, y sin fecha no hay link a un día. */
+function conPrecio(r){ return !!(r && r.mejor_precio_millas != null); }
+function fechaLink(r){ return diasMin(r)[0] || (r && r.mejor_fecha) || null; }
+// La ruta más barata de una lista, ignorando las que no trajeron ningún precio
+// (null <= cualquier cosa es true en JS: sin este filtro una ruta vacía ganaba
+// el desempate y la ficha del destino mostraba "— millas" como mejor precio).
+function masBarata(R){
+  const con = (R || []).filter(conPrecio);
+  if(!con.length) return (R && R[0]) || null;
+  return con.reduce((a,b)=> a.mejor_precio_millas <= b.mejor_precio_millas ? a : b);
+}
+// El mes entero en Smiles, para cuando no hay un día que abrir.
+function smilesMesURL(r){
+  const [y,m] = String((r && r.ym) || '').split('-').map(Number);
+  if(!y || !m) return '';
+  return smilesOneWayURL(r.origen, r.aeropuerto, `${y}-${dosD(m)}-15`);
+}
+// Botón "verificar": al día más barato si lo tenemos; si Smiles no mostró
+// ninguno, al mes y diciéndolo. Nunca abrimos un día cualquiera como si fuera
+// el barato.
+function ctaSmilesHTML(r, clase, estilo){
+  const st = estilo ? ` style="${estilo}"` : '';
+  const f = fechaLink(r);
+  if(f) return `<a class="${clase}"${st} href="${smilesURL(r, f)}" target="_blank" rel="noopener">Verificar en Smiles ↗</a>`;
+  const u = smilesMesURL(r);
+  if(!u) return '';
+  return `<a class="${clase}"${st} href="${u}" target="_blank" rel="noopener" title="Smiles no nos mostró ningún día de este mes: el link abre el mes para que lo veas vos">Ver el mes en Smiles ↗</a>`;
+}
+function parcialHTML(r){
+  if(!esParcial(r)) return '';
+  const n = (r.dias || []).length;
+  // n puede ser 0: Smiles declara días con precio y no nos muestra ninguno.
+  const cuantos = n === 0 ? 'no está mostrando ningún día'
+                          : (n === 1 ? 'está mostrando solo 1 día' : `está mostrando solo ${n} días`);
+  let t = `⏳ <b>Media foto</b>: Smiles ${cuantos} de ${ymLabel(r.ym)} en este momento`;
+  if(r.dias_esperados) t += ` (declara ${r.dias_esperados} días con precio)`;
+  t += `. A la mañana suele listar el mes completo — no tomes esto como el precio del mes.`;
+  // Con n === 0 no hay mejor_precio_millas contra qué comparar, pero el mínimo
+  // declarado es lo único concreto que tenemos: mostralo igual.
+  if(r.min_declarado && (r.mejor_precio_millas == null || r.min_declarado < r.mejor_precio_millas)){
+    t += ` Smiles declara un mínimo de ${fmtMiles(r.min_declarado)} millas para el mes, pero no nos mostró qué día es.`;
+  }
+  return `<p class="parcial">${t}</p>`;
+}
+
+/* ================= HISTÓRICO (disuelto en la ficha) =================
+   data/historial.json pesa 419 KB: se lee una vez, se indexa una vez y el JSON
+   crudo se descarta (nos quedamos solo con el índice). */
+let _histIdx = null;
+
+function indexarHistorial(crudo){
+  _histIdx = {};
+  const rutas = (crudo && crudo.rutas) || {};
+  for(const k of Object.keys(rutas)){
+    const s = ((rutas[k] || {}).snapshots || [])
+      .filter(x => x && typeof x.min_miles === 'number' && x.min_miles > 0 && x.ts)
+      .slice().sort((a,b)=> String(a.ts).localeCompare(String(b.ts)));
+    if(!s.length) continue;
+    let min = Infinity;
+    for(const x of s) if(x.min_miles < min) min = x.min_miles;
+    const enMin = s.filter(x => x.min_miles === min);
+    const ult = enMin[enMin.length-1];
+    _histIdx[k] = {snapshots:s, n:s.length, veces:enMin.length,
+                   minVisto:{miles:min, date:ult.min_date, ts:ult.ts}};
+  }
+}
+// rutaKey = "EZE-MIA-2027-03"
+function hist(rutaKey){ return (_histIdx && _histIdx[rutaKey]) || null; }
+
+/* Cuando el latido trae un latest nuevo NO volvemos a bajar historial.json (419
+   KB): metemos a mano la lectura que acaba de entrar, con la misma regla que usa
+   el motor (los calendarios recortados no se guardan, porque ensucian la serie).
+   Sin esto la ficha decía "bajó 5% desde la lectura anterior" comparando contra
+   la lectura vieja, con el precio nuevo pintado justo arriba. */
+function sumarLecturasDeLatest(latest){
+  if(!_histIdx || !latest) return;
+  for(const r of latest.resultados || []){
+    if(!r || !r.ruta || esParcial(r) || r.mejor_precio_millas == null) continue;
+    const h = _histIdx[r.ruta];
+    // Solo con r.consultado: el motor guarda el snapshot con ESE mismo sello, así
+    // que comparando ts sabemos si la lectura ya estaba. Sin el campo (datos
+    // viejos, previos al 8-sep-2026) no folqueamos nada: usar latest.generado
+    // como sello duplicaría la última lectura en cada repesca.
+    const ts = r.consultado;
+    if(!h || !ts) continue;
+    const ultimo = h.snapshots[h.n-1];
+    if(ultimo && String(ultimo.ts) >= String(ts)) continue;   // ya la teníamos
+    h.snapshots.push({ts, min_miles:r.mejor_precio_millas, min_date:r.mejor_fecha});
+    h.n = h.snapshots.length;
+    if(r.mejor_precio_millas < h.minVisto.miles){
+      h.minVisto = {miles:r.mejor_precio_millas, date:r.mejor_fecha, ts};
+      h.veces = 1;
+    } else if(r.mejor_precio_millas === h.minVisto.miles){
+      h.minVisto = {miles:r.mejor_precio_millas, date:r.mejor_fecha, ts};
+      h.veces += 1;
+    }
+  }
+}
+
+/* Variación honesta entre las dos últimas lecturas. El código viejo de la
+   estación Histórico comparaba los últimos dos snapshots sin mirar el día, y
+   por eso cantaba "Florianópolis subió 242%" cuando lo que había cambiado era
+   el día visible, no el precio. Si cambió el día, lo decimos y no damos %. */
+function histMovimiento(rutaKey){
+  const h = hist(rutaKey);
+  if(!h || h.n < 2) return null;
+  const ult = h.snapshots[h.n-1], prev = h.snapshots[h.n-2];
+  const delta = ult.min_miles - prev.min_miles;
+  const mismoDia = prev.min_date === ult.min_date;
+  const pct = prev.min_miles ? delta/prev.min_miles*100 : 0;
+  let txt;
+  if(delta === 0) txt = 'Sin cambios desde la lectura anterior.';
+  else if(mismoDia) txt = `${delta<0?'Bajó':'Subió'} ${Math.abs(Math.round(pct))}% desde la lectura anterior, con el mismo día más barato (${fechaCorta(ult.min_date)}).`;
+  else txt = `Cambió el día más barato: antes ${fechaCorta(prev.min_date)} a ${fmtMiles(prev.min_miles)}, ahora ${fechaCorta(ult.min_date)} a ${fmtMiles(ult.min_miles)} — no es que el precio se movió, es otro día.`;
+  return {delta, pct, mismoDia, txt, ult, prev};
+}
+
+/* Sparkline sin librerías. El piso punteado es el mínimo histórico de la ruta,
+   así de un vistazo se ve cuánto falta para tocarlo. Colores literales (no
+   variables CSS) para que sirva igual dentro de los paneles del mundo 3D. */
+function sparkline(snapshots, w, h){
+  const W = w || 140, H = h || 34, P = 3.5;
+  const vs = (snapshots || []).filter(x=>x && x.min_miles > 0).slice(-40).map(x=>x.min_miles);
+  const n = vs.length;
+  if(!n) return '';
+  let lo = vs[0], hi = vs[0];
+  for(const v of vs){ if(v<lo) lo=v; if(v>hi) hi=v; }
+  if(!(hi > lo)) hi = lo + Math.max(1, lo*0.02);
+  const x = i => P + (W-2*P)*(n===1 ? 0.5 : i/(n-1));
+  const y = v => P + (H-2*P)*(1-(v-lo)/(hi-lo));
+  let d = '';
+  for(let i=0;i<n;i++) d += (i?'L':'M') + x(i).toFixed(1) + ' ' + y(vs[i]).toFixed(1) + ' ';
+  const area = d + 'L' + x(n-1).toFixed(1) + ' ' + (H-P).toFixed(1) +
+               ' L' + x(0).toFixed(1) + ' ' + (H-P).toFixed(1) + ' Z';
+  const yPiso = y(lo).toFixed(1);
+  return `<svg class="nvspark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="none" aria-hidden="true">
+    <path d="${area}" fill="rgba(245,166,35,.13)"/>
+    <line x1="${P}" y1="${yPiso}" x2="${(W-P).toFixed(1)}" y2="${yPiso}" stroke="rgba(52,224,161,.5)" stroke-width="1" stroke-dasharray="3 3"/>
+    <path d="${d.trim()}" fill="none" stroke="#ffd479" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${x(n-1).toFixed(1)}" cy="${y(vs[n-1]).toFixed(1)}" r="2.4" fill="#ffd479"/>
+  </svg>`;
+}
+
+// Bloque para la ficha del destino: mínimo registrado + sparkline + movimiento.
+// Solo para rutas que siguen en latest (el código viejo daba por "viva"
+// cualquier ruta con snapshot de menos de 48 h aunque ya no se rastreara).
+function histBlock(r){
+  if(!r || !r.ruta) return '';
+  const h = hist(r.ruta);
+  if(!h || h.n < 2) return '';
+  const mv = h.minVisto;
+  const mov = histMovimiento(r.ruta);
+  // Sin precio de hoy (calendario recortado a cero días) no hay con qué comparar:
+  // sin este guard, null - 102.900 daba -100% y cantaba "Hoy está en ese mínimo".
+  const sobre = (mv.miles && r.mejor_precio_millas != null)
+    ? Math.round((r.mejor_precio_millas - mv.miles)/mv.miles*100) : null;
+  const dondeEsta = sobre == null ? ''
+    : (sobre <= 0 ? 'Hoy está en ese mínimo.'
+                  : (sobre <= 8 ? `Hoy está apenas ${sobre}% arriba.` : `Hoy está ${sobre}% arriba de ese mínimo.`));
+  return `<div class="block">
+    <h3>Lo que vimos en esta ruta</h3>
+    <div class="histmini">
+      <div class="histmini__k">
+        <b>mínimo que vimos: ${fmtMiles(mv.miles)}</b>
+        <span>lo registramos el ${fechaCorta(mv.ts)}${mv.date?` · para volar el ${fechaCorta(mv.date)}`:''}${h.veces>1?` · ${h.veces} veces`:''}</span>
+      </div>
+      ${sparkline(h.snapshots, 200, 40)}
+    </div>
+    <p class="hint">${h.n} lecturas guardadas de ${r.origen}→${r.aeropuerto} ${ymLabel(r.ym)}. ${dondeEsta} ${mov?mov.txt:''}</p>
+  </div>`;
+}
+
+/* ================= LATIDO =================
+   Nacho usa la PWA en el celular y vuelve horas después. Antes los "hace X min"
+   se calculaban una sola vez al cargar y quedaban clavados toda la sesión, y no
+   había forma de ver un barrido nuevo sin recargar a mano. */
+const LATIDO_MS  = 60000;      // refrescar los "hace X" cada minuto
+const REPESCA_MS = 5*60000;    // mirar meta.json (200 bytes) cada 5 minutos
+let _latido = null, _ultRepesca = 0, _refrescando = null;
+
+function emitirDatos(nuevo){
+  window.dispatchEvent(new CustomEvent('nv:datos', {detail:{nuevo:!!nuevo, sello:sello('radar')}}));
+}
+
+async function _repescar(forzar){
+  _ultRepesca = Date.now();
+  const meta = await loadJSON('data/meta.json','no-store');
+  if(!meta) return false;
+  const cambio = !state.meta || meta.generado !== state.meta.generado;
+  state.meta = meta;
+  if(!cambio && !forzar){ emitirDatos(false); return false; }
+  const [latest, busqueda] = await Promise.all([
+    loadJSON('data/latest.json','no-store'),
+    loadJSON('data/busqueda.json','no-store'),
+  ]);
+  let hubo = false;
+  if(latest && latest.generado !== state.latest?.generado){
+    state.latest = latest; sumarLecturasDeLatest(latest); hubo = true;
+  }
+  if(busqueda && busqueda.generado !== state.busqueda?.generado){
+    state.busqueda = busqueda; _selloBuscadorISO = undefined; hubo = true;
+  }
+  emitirDatos(hubo);
+  return hubo;
+}
+
+function refrescar(forzar){
+  if(_refrescando) return _refrescando;
+  _refrescando = _repescar(forzar).catch(()=>false).then(v=>{ _refrescando = null; return v; });
+  return _refrescando;
+}
+
+function arrancarLatido(){
+  if(_latido) return;
+  _ultRepesca = Date.now();
+  _latido = setInterval(()=>{
+    if(document.hidden) return;                              // en background no gastamos nada
+    emitirDatos(false);                                      // que se muevan los "hace X"
+    if(Date.now() - _ultRepesca > REPESCA_MS) refrescar();
+  }, LATIDO_MS);
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden) return;
+    emitirDatos(false);
+    refrescar();                                             // volvió a la app: ¿hay barrido nuevo?
+  });
+}
+
 /* Deep link a la búsqueda de Smiles para esa ruta/fecha */
 // Recordatorio de las dos formas de pago de Smiles. El link ya abre en pesos;
 // el desglose exacto de "millas + pesos" (Smiles&Money) solo lo muestra Smiles
 // al abrir (vive en la página de detalle que Smiles bloquea para robots).
 const smilesMoneyHint = `<p class="hint smoney">💡 En Smiles vas a ver <b>dos formas de pagar</b> (tarifa Club Smiles): <b>todo en millas</b>, o <b>menos millas + pesos</b> (Smiles&Money) — esta última suele convenir bastante. El link abre en pesos así ves las tasas reales; el desglose exacto lo muestra Smiles.</p>`;
 
-function smilesURL(r){
-  const [y,m,d] = r.mejor_fecha.split('-').map(Number);
-  const ms = new Date(y, m-1, d, 12, 0, 0).getTime();
-  const p = new URLSearchParams({
-    originAirportCode:r.origen, destinationAirportCode:r.aeropuerto,
-    departureDate:String(ms), adults:'1', children:'0', infants:'0',
-    tripType:'2', cabinType:'all', currencyCode:'ARS',
-    isFlexibleDateChecked:'false'
-  });
-  return `https://www.smiles.com.ar/emission?${p.toString()}`;
+// Acepta una fecha que pisa a r.mejor_fecha: cada día al mínimo abre SU día,
+// no el único que publicó el motor (que Smiles rota durante el día).
+function smilesURL(r, fechaISO){
+  return smilesOneWayURL(r.origen, r.aeropuerto, fechaISO || r.mejor_fecha);
 }
 
 /* ---------- Candado ---------- */
@@ -87,8 +575,9 @@ function setupLock(){
 
 /* ---------- init ---------- */
 async function cargarDatos(){
+  let historial;
   [state.latest, state.clima, state.destinos, state.config, state.busqueda,
-   state.meta, state.ofertas] = await Promise.all([
+   state.meta, state.ofertas, historial] = await Promise.all([
     loadJSON('data/latest.json'),
     loadJSON('data/clima.json'),
     loadJSON('data/destinos.json'),
@@ -96,7 +585,14 @@ async function cargarDatos(){
     loadJSON('data/busqueda.json'),
     loadJSON('data/meta.json'),
     loadJSON('data/ofertas.json'),
+    loadJSON('data/historial.json'),
   ]);
+  // El histórico crudo pesa 419 KB: se indexa una sola vez y el JSON se suelta;
+  // en memoria queda el índice y nada más (NV.hist lo consulta desde ahí).
+  indexarHistorial(historial);
+  historial = null;
+  _selloBuscadorISO = undefined;
+  arrancarLatido();
 }
 
 async function init(){
@@ -116,6 +612,21 @@ async function init(){
   renderOfertas();
   renderIdeas();
   registerSW();
+  // El cerebro avisa cuando entran datos nuevos, y cada minuto para que los
+  // "hace X" se muevan solos (antes se calculaban al cargar y quedaban clavados).
+  window.addEventListener('nv:datos', e=>{
+    renderStatus();
+    if(e.detail && e.detail.nuevo) repintar();
+    // Siempre: repintar() solo rehace el radar y las tarjetas, y los sellos del
+    // buscador, de Vueltas, del Armador y de la hoja abierta quedarían clavados
+    // en la hora vieja mientras el resto de la app ya muestra la nueva.
+    refrescarSellos();
+  });
+}
+
+function repintar(){
+  renderHero(); renderStats(); renderRadar(); renderDestinos();
+  renderOfertas(); renderIdeas();
 }
 
 function setupTabs(){
@@ -172,10 +683,6 @@ function setupFinder(){
   oSel.addEventListener('change', ()=>{ state.finder.orig=oSel.value; });
   $('#fNochesMin').addEventListener('input', e=>state.finder.nMin=+e.target.value||1);
   $('#fNochesMax').addEventListener('input', e=>state.finder.nMax=+e.target.value||1);
-  $$('#fEscalas .segbtn').forEach(b=>b.addEventListener('click',()=>{
-    $$('#fEscalas .segbtn').forEach(x=>x.classList.remove('is-active'));
-    b.classList.add('is-active'); state.finder.esc=b.dataset.esc;
-  }));
   $('#finderForm').addEventListener('submit', e=>{ e.preventDefault(); runFinder(); });
 }
 
@@ -211,8 +718,7 @@ function renderDiasIda(){
     if(info){
       const km=Math.round(info.mi/1000);
       const best=info.mi===min?' best':'';
-      const gol=info.f==='gol'?' gol':'';
-      cells+=`<button type="button" class="daychip has${best}${gol}" data-d="${iso}" title="${dateLabel(iso)} · ${fmtMiles(info.mi)} millas"><span>${dd}</span><span class="dm">${km}k</span></button>`;
+      cells+=`<button type="button" class="daychip has${best}" data-d="${iso}" title="${dateLabel(iso)} · ${fmtMiles(info.mi)} millas"><span>${dd}</span><span class="dm">${km}k</span></button>`;
     } else {
       cells+=`<div class="daycell-empty">${dd}</div>`;
     }
@@ -282,45 +788,56 @@ function armadoTxt(a){
 }
 
 // Deep link a Smiles: viaje redondo (ida+vuelta) para un aeropuerto y fechas
+// Los tres constructores abren Smiles con la familia entera (NV.pasajeros()),
+// no con 1 adulto como antes.
+function paxParams(){
+  const p = pasajeros();
+  return {adults:String(p.adultos), children:String(p.ninos), infants:String(p.bebes)};
+}
 function smilesRoundURL(orig, code, idaISO, vueltaISO, moneda){
+  if(!orig || !code || !idaISO || !vueltaISO) return '';   // sin fecha no hay link (ver smilesOneWayURL)
   const ms = iso=>{ const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d,12,0,0).getTime(); };
   const p = new URLSearchParams({
     originAirportCode:orig, destinationAirportCode:code,
     departureDate:String(ms(idaISO)), returnDate:String(ms(vueltaISO)),
-    adults:'1', children:'0', infants:'0', tripType:'1', cabinType:'all',
+    ...paxParams(), tripType:'1', cabinType:'all',
     currencyCode:'ARS', isFlexibleDateChecked:'false'
   });
   return `https://www.smiles.com.ar/emission?${p.toString()}`;
 }
+// Devuelve '' si falta la fecha en vez de reventar: desde el 8-sep-2026 el motor
+// publica rutas con dias:[] y mejor_fecha:null (Smiles declara días con precio y
+// no muestra ninguno), y una sola de esas dejaba el radar entero en blanco.
 function smilesOneWayURL(orig, code, idaISO, moneda){
+  if(!orig || !code || !idaISO) return '';
   const [y,m,d]=idaISO.split('-').map(Number);
   const ms=new Date(y,m-1,d,12,0,0).getTime();
   const p=new URLSearchParams({originAirportCode:orig,destinationAirportCode:code,
-    departureDate:String(ms),adults:'1',children:'0',infants:'0',tripType:'2',
+    departureDate:String(ms), ...paxParams(), tripType:'2',
     cabinType:'all',currencyCode:'ARS',isFlexibleDateChecked:'false'});
   return `https://www.smiles.com.ar/emission?${p.toString()}`;
 }
 
 // Núcleo: mejores combinaciones ida+vuelta
+// Ojo: el filtro "evitar conexión por Brasil" y la etiqueta "vía Brasil" se
+// fueron (8-sep-2026). Dependían de fuente==='gol' fuera de Brasil, y eso no
+// pasa nunca: de los 1.838 días de busqueda.json, los 4 con fuente gol son
+// vuelos a Brasil, donde GOL es la aerolínea que opera, no una escala.
 function calcularCombos(){
-  const {dest, orig, mes, nMin, nMax, esc, diaIda} = state.finder;
+  const {dest, orig, mes, nMin, nMax, diaIda} = state.finder;
   const d = bDestinos()[dest]; if(!d) return [];
   const bloque = d.meses?.[mes]; if(!bloque) return [];
-  const soloDirecto = esc==='directo';
-  const esBrasil = d.pais==='Brasil';
   const combos = [];
   for(const code of Object.keys(bloque.ida||{})){
     let idas = bloque.ida[code]||[];
     const vueltas = bloque.vuelta?.[code]||[];
     if(!vueltas.length) continue;
     if(diaIda) idas = idas.filter(x=>x.d===diaIda);
-    if(soloDirecto && !esBrasil){ idas=idas.filter(x=>x.f!=='gol'); }
     for(const ida of idas){
       let mejor=null;
       for(const v of vueltas){
         const n = diasEntre(ida.d, v.d);
         if(n<nMin || n>nMax) continue;
-        if(soloDirecto && !esBrasil && v.f==='gol') continue;
         if(!mejor || (ida.mi+v.mi)<mejor.total){
           mejor={total:ida.mi+v.mi, vuelta:v, noches:n};
         }
@@ -329,7 +846,6 @@ function calcularCombos(){
         combos.push({
           code, ciudad:(d.aeropuertos.find(a=>a.code===code)||{}).ciudad||code,
           ida, vuelta:mejor.vuelta, noches:mejor.noches, total:mejor.total,
-          viaGol: (!esBrasil && (ida.f==='gol'||mejor.vuelta.f==='gol')),
           cashIda: cashLeg(bloque,'ida',code,ida.d),
           cashVuelta: cashLeg(bloque,'vuelta',code,mejor.vuelta.d),
         });
@@ -364,7 +880,7 @@ function runFinder(){
     const code0 = (d.aeropuertos[0]||{}).code;
     const dia15 = `${mes}-15`;
     const explic = sinAward
-      ? `<div class="res__cash">🎫 <b>Smiles todavía no cargó pasajes con millas para ${ymLabel(mes)}</b> — pasa seguido en temporada alta: los libera más cerca de la fecha (o los pocos que había ya volaron). El radar chequea 2 veces por día y los vas a ver acá apenas aparezcan. Mientras tanto, mirá los precios en plata:</div>
+      ? `<div class="res__cash">🎫 <b>Smiles todavía no cargó pasajes con millas para ${ymLabel(mes)}</b> — pasa seguido en temporada alta: los libera más cerca de la fecha (o los pocos que había ya volaron). El radar vuelve a mirar en cada barrido y los vas a ver acá apenas aparezcan. Mientras tanto, mirá los precios en plata:</div>
         <div class="diaslinks" style="margin-top:10px">
           <a class="btn" href="${googleFlightsURL(orig,code0,dia15)}" target="_blank" rel="noopener">Google Flights ↗</a>
           <a class="btn" href="${despegarDayURL(orig,code0,dia15)}" target="_blank" rel="noopener">Despegar ↗</a>
@@ -372,7 +888,8 @@ function runFinder(){
         </div>
         <p class="hint" style="margin-top:8px">Los links abren a mitad de mes — ajustá la fecha ahí. Cuando Smiles libere premios, acá vas a poder armar ida y vuelta día por día.</p>`
       : `<p class="empty">No encontré combinaciones ida+vuelta con ${nMin}–${nMax} noches para ese mes. Probá ampliar el rango de noches, cambiar el mes, o sacar “Cualquiera” en el día de salida.</p>`;
-    host.innerHTML = `<div class="res__head"><h2>${d.emoji} ${d.nombre} · ${ymLabel(mes)}</h2></div>
+    host.innerHTML = `<div class="res__head"><h2>${d.emoji} ${d.nombre} · ${ymLabel(mes)}</h2>
+      <p class="res__sub">${selloBloqueHTML(dest, mes)}</p></div>
       ${cashHTML}${explic}`;
     host.scrollIntoView({behavior:'smooth'});
     return;
@@ -398,14 +915,13 @@ function runFinder(){
         <div class="combo__meta">
           <span class="combo__air">${orig} <span class="arw">⇄</span> ${c.code} · ${c.ciudad}</span>
           <span class="combo__nights">${c.noches} noches</span>
-          ${c.viaGol?`<span class="combo__gol" title="Alguna pierna solo sale conectando por Brasil (GOL)">vía Brasil</span>`:''}
         </div>
         ${armadoLine(c)}
       </div>
       <div class="combo__side">
         <div class="combo__total">${fmtMiles(c.total)}</div>
         <div class="combo__totu">millas ida+vuelta</div>
-        <a class="btn btn--go combo__cta" href="${smilesRoundURL(orig,c.code,c.ida.d,c.vuelta.d,d.moneda)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>
+        <a class="btn btn--go combo__cta" href="${smilesRoundURL(orig,c.code,c.ida.d,c.vuelta.d,d.moneda)}" target="_blank" rel="noopener">Verificar en Smiles ↗</a>
         <button class="combo__detail" data-idx="${i}">armar este viaje →</button>
         <button class="combo__detail armlink" data-dest="${dest}" data-ym="${mes}" data-code="${c.code}" data-ida="${c.ida.d}" data-vta="${c.vuelta.d}">🔀 elegir otros días</button>
       </div>
@@ -417,7 +933,9 @@ function runFinder(){
     <div class="res__head">
       <h2>${d.emoji} ${d.nombre} · ${ymLabel(mes)}</h2>
       <p class="res__sub">${combos.length} mejores combinaciones · ${nMin}–${nMax} noches · saliendo desde ${orig}</p>
+      <p class="res__sub">${selloBloqueHTML(dest, mes)}</p>
     </div>
+    ${avisoVigencia(selloBloque(dest, mes))}
     ${cashHTML}
     <div class="combos">${rows}</div>
     <p class="hint" style="margin-top:12px">El total es la suma de millas de ida + vuelta (el mejor regreso dentro de tu rango de noches). Tocá <b>“armar este viaje”</b> para comparar pierna por pierna si conviene millas o plata, con los links a Smiles, Despegar y Aviasales de ese día exacto.</p>`;
@@ -496,8 +1014,7 @@ function vueltaCalHTML(orig, code, mapaDias, ym, moneda){
     const info=byDate[iso];
     if(info){
       const best = info.mi===min?' best':'';
-      const gol = info.f==='gol'?' gol':'';
-      cells+=`<a class="daychip has arm${best}${gol}" href="${smilesOneWayURL(code, orig, iso, moneda)}" target="_blank" rel="noopener" title="${dateLabel(iso)} · ${fmtMiles(info.mi)} millas (volver a ${orig})">
+      cells+=`<a class="daychip has arm${best}" href="${smilesOneWayURL(code, orig, iso, moneda)}" target="_blank" rel="noopener" title="${dateLabel(iso)} · ${fmtMiles(info.mi)} millas (volver a ${orig})">
         <span>${dd}</span><span class="dm">${Math.round(info.mi/1000)}k</span></a>`;
     } else cells+=`<div class="daycell-empty">${dd}</div>`;
   }
@@ -525,7 +1042,9 @@ function renderVueltas(){
     <div class="res__head">
       <h2>${v.emoji} Volver de ${v.nombre} · ${ymLabel(mes)}</h2>
       <p class="res__sub">Días más baratos volviendo a ${v.orig}. Tocá un día para abrirlo (solo vuelta) en Smiles, en pesos.</p>
+      <p class="res__sub">${selloBloqueHTML(dest, mes)}</p>
     </div>
+    ${avisoVigencia(selloBloque(dest, mes))}
     ${cals}
     <p class="hint">Verde = el día más barato del mes. Los números son miles de millas. Si enganchás una vuelta que te cierra, después buscás la ida para esas fechas en la solapa <b>Buscar</b> o en el <b>Armador</b>.</p>`;
 }
@@ -623,12 +1142,13 @@ function openArmadoSheet(idx){
     <div class="block">
       <h3>Viaje completo, de una</h3>
       <div class="diaslinks">
-        <a class="btn btn--go" href="${smilesRoundURL(orig,c.code,c.ida.d,c.vuelta.d,d.moneda)}" target="_blank" rel="noopener">✈ Ida y vuelta en Smiles ↗</a>
+        <a class="btn btn--go" href="${smilesRoundURL(orig,c.code,c.ida.d,c.vuelta.d,d.moneda)}" target="_blank" rel="noopener">✈ Verificar ida y vuelta en Smiles ↗</a>
         <a class="btn" href="${googleFlightsURL(orig,c.code,c.ida.d,c.vuelta.d)}" target="_blank" rel="noopener">Ida y vuelta en Google Flights (todas las aerolíneas) ↗</a>
         <a class="btn" href="${despegarDayURL(orig,c.code,c.ida.d).replace('/oneway/','/roundtrip/').replace(`/${c.ida.d}/`,`/${c.ida.d}/${c.vuelta.d}/`)}" target="_blank" rel="noopener">Ida y vuelta en Despegar ↗</a>
         <a class="btn" href="${kayakURL(orig,c.code,c.ida.d,c.vuelta.d)}" target="_blank" rel="noopener">Ida y vuelta en Kayak ↗</a>
       </div>
       ${aerolineasBlock(dest, false)}
+      ${paxHint()}
       <p class="hint" style="margin-top:10px">El “equivalente” usa tu costo real de reponer millas: ${valorMillaTxt()} — configurable en la config. Ojo: a las millas sumales las tasas de Smiles (confirmalas en el link). Google Flights y Kayak buscan en todas las aerolíneas a la vez, como hacías a mano.</p>
     </div>`;
   $('#sheet').classList.add('open');
@@ -637,21 +1157,29 @@ function openArmadoSheet(idx){
 
 function renderStatus(){
   const el = $('#scanStatusText'); const foot = $('#footScan');
-  if(!state.latest){ el.textContent='sin datos aún'; return; }
-  const t = haceCuanto(state.latest.generado);
-  el.textContent = `rastrillado ${t}`;
-  foot.textContent = `último rastrillaje · ${state.latest.generado?.slice(0,16).replace('T',' ')}`;
-  // Aviso si el radar no corre hace más de un día (Mac apagada, error, etc.)
-  const horas = (Date.now() - new Date(state.latest.generado)) / 36e5;
-  const warn = $('#staleWarn');
-  if(warn) warn.remove();
-  if(horas > 26){
-    const dias = Math.floor(horas/24);
+  if(!el) return;
+  const E = estadoMotor();
+  const s = E.sello;
+  el.textContent = state.latest ? E.txt : 'sin datos aún';
+  el.title = state.latest ? `${E.txt} — ${s.txt} (${s.hace})` : '';
+  $('#scanStatus')?.classList.toggle('is-frio', !E.ok || s.nivel==='muy_viejo');
+  if(foot) foot.textContent = state.latest?.generado ? `${s.txt} · ${s.hace}` : '';
+  // Antes este aviso recién aparecía a las 26 h y prometía un cronograma
+  // ("9:00 y 20:00") que la Mac no cumple: con la tapa cerrada macOS la despierta
+  // 30 s cada 15 min y un barrido de 7 min tarda de 2 a 6 h. Medido en 14 días de
+  // septiembre 2026: 12 corridas congeladas y atrasos típicos de 5 a 20 h. Ahora
+  // avisamos a las 8 h y decimos la hora real del dato, sin prometer horarios.
+  $('#staleWarn')?.remove();
+  const main = document.querySelector('main');
+  if(!main || !state.latest) return;
+  if(!E.ok || (s.horas != null && s.horas >= SELLO_VIEJO_H)){
     const div = document.createElement('div');
     div.id = 'staleWarn';
     div.className = 'stalewarn';
-    div.innerHTML = `⚠️ El radar no rastrilla hace ${dias>=1?dias+(dias===1?' día':' días'):Math.round(horas)+' h'}. Suele pasar si la Mac estuvo apagada a las 9:00 y 20:00. Los precios pueden estar desactualizados.`;
-    document.querySelector('main').prepend(div);
+    div.innerHTML = !E.ok
+      ? `⚠️ <b>El último barrido no llegó a publicar precios.</b> ${E.txt}. Verificá en Smiles antes de decidir.`
+      : `⚠️ <b>Los precios que ves son de las ${horaCorta(s.iso)} (${s.hace}).</b> La Mac rastrilla con la tapa cerrada y a veces tarda medio día en terminar. Smiles mueve la disponibilidad todo el tiempo: verificá antes de decidir.`;
+    main.prepend(div);
   }
 }
 
@@ -664,16 +1192,24 @@ function renderHero(){
       <p class="hero__sub">Corré el motor con <code>python3 engine/rastrillar.py</code> para empezar a cazar.</p>`;
     return;
   }
-  const r = state.latest.resultados[0];
-  const isOp = r.nivel==='oportunidad';
+  const R = state.latest.resultados;
+  // Ni una media foto ni una ruta sin precio pueden ser "la mejor oportunidad".
+  const r = R.find(x=>!esParcial(x) && conPrecio(x)) || R.find(conPrecio) || R[0];
+  const parcial = esParcial(r);
+  const isOp = r.nivel==='oportunidad' && !parcial;
   host.innerHTML = `
-    <p class="hero__kicker">${isOp?'🟢 oportunidad detectada':'mejor precio ahora'}</p>
+    <p class="hero__kicker">${parcial?'⏳ dato parcial':(isOp?'🟢 oportunidad detectada':'mejor precio ahora')}</p>
     <div class="hero__route"><span class="emoji">${r.destino_emoji}</span> ${r.destino_nombre}</div>
-    <p class="hero__sub">${r.origen_ciudad} → ${r.aeropuerto_ciudad} · ${dateLabel(r.mejor_fecha)}</p>
+    <p class="hero__sub">${r.origen_ciudad} → ${r.aeropuerto_ciudad} · ${ymLabel(r.ym)}</p>
     <div class="hero__price">
       <span class="hero__miles">${fmtMiles(r.mejor_precio_millas)} <small>millas</small></span>
     </div>
-    <a class="hero__cta" href="${smilesURL(r)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>`;
+    <p class="hero__dias">${diasMinLinea(r, true)}</p>
+    ${diasMinHTML(r)}
+    ${parcialHTML(r)}
+    ${ctaSmilesHTML(r, 'hero__cta')}
+    <p class="hero__sello">${selloHTML(r.consultado || 'radar')}</p>
+    ${avisoVigencia(selloRuta(r))}`;
 }
 
 /* ---------- STATS ---------- */
@@ -681,10 +1217,13 @@ function renderStats(){
   const host = $('#statStrip');
   if(!state.latest){ host.innerHTML=''; return; }
   const R = state.latest.resultados;
-  const ops = R.filter(r=>r.nivel==='oportunidad').length;
+  const ops = R.filter(r=>r.nivel==='oportunidad' && !esParcial(r)).length;   // una media foto no es oportunidad
   const rutas = R.length;
   const destinos = new Set(R.map(r=>r.destino_key)).size;
-  const min = R.length ? Math.min(...R.map(r=>r.mejor_precio_millas)) : null;
+  // Sin el filtro, una sola ruta sin precio (mejor_precio_millas en null) hacía
+  // Math.min(null, …) = 0 y el mínimo del tablero se mostraba como "—".
+  const precios = R.map(r=>r.mejor_precio_millas).filter(v=>v!=null);
+  const min = precios.length ? Math.min(...precios) : null;
   host.innerHTML = `
     <div class="stat op"><b>${ops}</b><span>oportunidades</span></div>
     <div class="stat"><b>${rutas}</b><span>rutas activas</span></div>
@@ -700,14 +1239,18 @@ function renderSequia(){
   const L = state.latest;
   $('#sequiaWarn')?.remove();
   if(!L || !L.total_consultadas) return;
-  const con = L.total_rutas, tot = L.total_consultadas;
+  // Cuántas trajeron precio de verdad. Desde el 8-sep-2026 total_rutas cuenta
+  // también las que quedan publicadas con dias vacío (calendario recortado), así
+  // que usarlo acá inflaba la cobertura y el aviso de sequía no salía nunca.
+  const con = (L.resultados || []).filter(conPrecio).length;
+  const tot = L.total_consultadas;
   if(tot < 5 || con/tot > 0.25) return;   // cobertura sana, no avisamos
   const div = document.createElement('div');
   div.id = 'sequiaWarn';
   div.className = 'stalewarn sequia';
   div.innerHTML = `🎫 <b>Smiles está mostrando muy pocos premios</b>: de ${tot} búsquedas, solo ${con} ${con===1?'trajo':'trajeron'} precio en millas.
     No es un problema de la app — Smiles carga y retira asientos con millas todo el tiempo, y cuando los saca no hay nada que mostrar.
-    El radar sigue chequeando 2 veces por día y te avisa apenas vuelvan.`;
+    Radar: ${estadoMotor().txt}.`;
   $('#statStrip').insertAdjacentElement('afterend', div);
 }
 
@@ -715,14 +1258,15 @@ function renderSequia(){
 function filtraResultados(){
   let R = state.latest ? [...state.latest.resultados] : [];
   const f = state.filtro;
-  if(f==='oportunidad') R = R.filter(r=>r.nivel==='oportunidad'||r.nivel==='bueno');
+  if(f==='oportunidad') R = R.filter(r=>!esParcial(r) && (r.nivel==='oportunidad'||r.nivel==='bueno'));
   else if(f==='eeuu') R = R.filter(r=>r.region==='eeuu');
   else if(f==='europa') R = R.filter(r=>r.region==='europa');
   return R;
 }
 
 function nivelLabel(n){
-  return {oportunidad:'🟢 Oportunidad',bueno:'🟢 Buen precio',normal:'⚪ Precio normal',caro:'🔴 Caro'}[n]||n;
+  return {oportunidad:'🟢 Oportunidad',bueno:'🟢 Buen precio',normal:'⚪ Precio normal',caro:'🔴 Caro',
+          parcial:'⏳ Media foto'}[n]||n;
 }
 
 function renderRadar(){
@@ -752,30 +1296,37 @@ function meterHTML(range){
 }
 
 function cardHTML(r,i){
-  const op = r.nivel==='oportunidad';
-  const motivo = r.motivos && r.motivos.length ? `<p class="card__motivo">✦ ${r.motivos[0]}</p>` : '';
+  // Si el calendario vino incompleto no clasificamos: ni "caro" ni oportunidad,
+  // porque con 1 día a la vista cualquier veredicto es mentira.
+  const parcial = esParcial(r);
+  const nivel = parcial ? 'parcial' : r.nivel;
+  const op = r.nivel==='oportunidad' && !parcial;
+  const motivo = (!parcial && r.motivos && r.motivos.length) ? `<p class="card__motivo">✦ ${r.motivos[0]}</p>` : '';
   return `
-  <article class="card lvl-${r.nivel}" style="animation-delay:${i*40}ms">
+  <article class="card lvl-${nivel}" style="animation-delay:${i*40}ms">
     <div class="card__top">
       <div>
         <div class="card__dest"><span class="emoji">${r.destino_emoji}</span> ${r.destino_nombre}</div>
         <div class="card__air">${r.origen}<span class="arw">→</span>${r.aeropuerto} · ${r.aeropuerto_ciudad}</div>
       </div>
-      <span class="semaforo ${r.nivel}">${nivelLabel(r.nivel).replace(/^..\s/,'')}</span>
+      <span class="semaforo ${nivel}">${nivelLabel(nivel).replace(/^\S+\s/,'')}</span>
     </div>
     <div class="card__price">
       <span class="card__miles ${op?'op':''}">${fmtMiles(r.mejor_precio_millas)}</span>
       <span class="card__unit">millas</span>
     </div>
-    <p class="card__when">mejor día: <b>${dateLabel(r.mejor_fecha)}</b> · ${ymLabel(r.ym)}${r.promedio_historico?` · prom. ${fmtMiles(r.promedio_historico)}`:''}</p>
+    <p class="card__when">${ymLabel(r.ym)} · ${diasMinLinea(r)}${(r.promedio_historico&&!parcial)?` · prom. ${fmtMiles(r.promedio_historico)}`:''}</p>
+    ${diasMinHTML(r)}
+    ${parcialHTML(r)}
     ${cashLine(r)}
     ${vueloLine(r)}
     ${motivo}
-    ${meterHTML(r.price_range)}
+    ${parcial?'':meterHTML(r.price_range)}
     <div class="card__actions">
       <button class="btn" data-toggle>Ver el mes</button>
-      <a class="btn btn--go" href="${smilesURL(r)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>
+      ${ctaSmilesHTML(r, 'btn btn--go')}
     </div>
+    <p class="card__sello">${selloHTML(r.consultado || 'radar')}</p>
     <div class="monthcal">${monthCalHTML(r)}</div>
   </article>`;
 }
@@ -802,9 +1353,9 @@ function cashLine(r){
 // Bloque grande de comparación para la ficha del destino
 function comparaBlock(r){
   const c = r && r.cash;
-  if(!c || !c.precio) return '';
+  if(!c || !c.precio || !conPrecio(r)) return '';   // sin millas no hay "millas vs plata"
   return `<div class="block">
-    <h3>Millas vs plata · ${dateLabel(r.mejor_fecha)}</h3>
+    <h3>Millas vs plata · ${ymLabel(r.ym)}</h3>
     <div class="vs">
       <div class="vs__side">
         <div class="vs__k">${fmtMiles(r.mejor_precio_millas)}</div>
@@ -858,10 +1409,11 @@ function vuelosBlock(det){
 
 function monthCalHTML(r){
   const [y,m] = r.ym.split('-').map(Number);
-  const byDate = {}; r.dias.forEach(d=>byDate[d.date]=d);
+  const byDate = {}; (r.dias||[]).forEach(d=>byDate[d.date]=d);
   const first = new Date(y,m-1,1);
   const startDow = (first.getDay()+6)%7; // lunes=0
   const days = new Date(y,m,0).getDate();
+  const minSet = new Set(diasMin(r));   // una vez por calendario, no una por día
   let cells = DOW.map(d=>`<div class="dow">${d}</div>`).join('');
   for(let i=0;i<startDow;i++) cells+=`<div></div>`;
   for(let d=1; d<=days; d++){
@@ -870,20 +1422,19 @@ function monthCalHTML(r){
     if(info){
       const q = info.price_range?`q${info.price_range}`:'';
       const km = Math.round(info.miles/1000);
-      const esBrasil = r.destino_pais==='Brasil';
-      const gol = !esBrasil && info.fuente==='gol' ? ' gol' : '';
-      const golTip = gol ? ' · solo vía GOL (conexión por Brasil)' : '';
-      cells += `<div class="dcell has ${q}${gol}" title="${dateLabel(iso)}: ${fmtMiles(info.miles)} millas${golTip}"><span>${d}</span><span class="dm">${km}k</span></div>`;
+      const min = minSet.has(iso) ? ' esmin' : '';
+      cells += `<a class="dcell has ${q}${min}" href="${smilesOneWayURL(r.origen, r.aeropuerto, iso)}" target="_blank" rel="noopener" title="${dateLabel(iso)}: ${fmtMiles(info.miles)} millas — verificar en Smiles"><span>${d}</span><span class="dm">${km}k</span></a>`;
     } else {
       cells += `<div class="dcell"><span>${d}</span></div>`;
     }
   }
-  const hora = state.latest?.generado ? state.latest.generado.slice(11,16) : '';
+  const s = selloRuta(r);
   const armable = armadorCodes(r.destino_key, r.ym).includes(r.aeropuerto);
   const armBtn = armable ? `<button type="button" class="btn btn--go armlink" style="margin-top:10px;padding:9px 16px" data-dest="${r.destino_key}" data-ym="${r.ym}" data-code="${r.aeropuerto}">🔀 Armar ida y vuelta con estos días</button>` : '';
   return `<div class="monthcal__grid">${cells}</div>
   ${armBtn}
-  <p class="hint" style="margin-top:8px">Precios de la tarifa Club Smiles según el último rastrillaje${hora?` (${hora} hs)`:''}. La disponibilidad se mueve durante el día: puede haber sorpresas para bien o para mal — el precio final siempre lo confirma Smiles al abrir el día. El radar corre 9:00 y 20:00.</p>`;
+  <p class="hint" style="margin-top:8px">Verde = los días al mejor precio. Tocá cualquier día para abrirlo en Smiles. Tarifa Club Smiles según ${s.txt} (${s.hace}); la disponibilidad se mueve durante el día y el precio final lo confirma Smiles al abrir.</p>
+  ${avisoVigencia(s)}`;
 }
 
 /* ---------- VIAJES ---------- */
@@ -896,7 +1447,8 @@ function renderViajes(){
     // mejor precio por destino dentro del viaje
     const porDest = {};
     R.filter(r=>v.destinos.includes(r.destino_key) && v.origenes.includes(r.origen))
-     .forEach(r=>{ if(!porDest[r.destino_key] || r.mejor_precio_millas<porDest[r.destino_key].mejor_precio_millas) porDest[r.destino_key]=r; });
+     .forEach(r=>{ if(!conPrecio(r)) return;
+       if(!porDest[r.destino_key] || r.mejor_precio_millas<porDest[r.destino_key].mejor_precio_millas) porDest[r.destino_key]=r; });
     const cells = Object.values(porDest)
       .sort((a,b)=>a.mejor_precio_millas-b.mejor_precio_millas)
       .map(r=>{
@@ -904,7 +1456,7 @@ function renderViajes(){
         return `<div class="bestcell ${op?'op':''}" data-ruta="${r.ruta}">
           <div class="bestcell__d">${r.destino_emoji} ${r.destino_nombre}</div>
           <div class="bestcell__m ${op?'op':''}">${fmtMiles(r.mejor_precio_millas)}</div>
-          <div class="bestcell__w">millas · ${dateLabel(r.mejor_fecha)}</div>
+          <div class="bestcell__w">millas · ${diasMinTxt(r)}</div>
         </div>`;
       }).join('') || `<p class="empty">Sin datos rastreados aún para este viaje.</p>`;
     return `<div class="viaje">
@@ -963,7 +1515,10 @@ function openDestino(key){
 
   // precios por mes (de lo rastreado)
   const porMes = {};
-  R.forEach(r=>{ const mi=+r.ym.slice(5,7); if(!porMes[mi]||r.mejor_precio_millas<porMes[mi]) porMes[mi]=r.mejor_precio_millas; });
+  R.forEach(r=>{ if(!conPrecio(r)) return;   // sin precio no hay barra que dibujar
+    const mi=+r.ym.slice(5,7); if(!porMes[mi]||r.mejor_precio_millas<porMes[mi]) porMes[mi]=r.mejor_precio_millas; });
+  // la ruta más barata del destino: de ahí salen la comparación y el histórico
+  const mejorR = masBarata(R);
 
   const body = $('#sheetBody');
   body.innerHTML = `
@@ -971,9 +1526,10 @@ function openDestino(key){
     <h2 class="sheet__title">${d.nombre}</h2>
     <p class="sheet__pais">${d.pais} · ${d.aeropuertos.map(a=>a.code).join(' / ')}</p>
     ${bestFound(R)}
+    ${histBlock(mejorR)}
     ${armadorEntradaBlock(key)}
-    ${comparaBlock(R.length ? R.reduce((a,b)=>a.mejor_precio_millas<=b.mejor_precio_millas?a:b) : null)}
-    ${vuelosBlock(R.length ? ((R.reduce((a,b)=>a.mejor_precio_millas<=b.mejor_precio_millas?a:b).detalle) || (R.find(x=>x.detalle)?.detalle) || null) : null)}
+    ${comparaBlock(mejorR)}
+    ${vuelosBlock(mejorR ? (mejorR.detalle || (R.find(x=>x.detalle)?.detalle) || null) : null)}
     ${pricesByMonthBlock(porMes,R)}
     ${climateBlock(clima)}
     ${seasonHint(porMes, clima)}
@@ -984,13 +1540,20 @@ function openDestino(key){
 
 function bestFound(R){
   if(!R.length) return `<div class="block"><p class="hint">Todavía no rastreamos precios para este destino. Agregalo a un viaje o a los destinos vigilados en la config y corré el motor.</p></div>`;
-  const best = R.reduce((a,b)=>a.mejor_precio_millas<=b.mejor_precio_millas?a:b); // <= : mismo desempate que comparaBlock
-  const op = best.nivel==='oportunidad';
+  const best = masBarata(R);   // mismo desempate que comparaBlock, salteando las que no trajeron precio
+  const parcial = esParcial(best);
+  const op = best.nivel==='oportunidad' && !parcial;
+  const s = selloRuta(best);
   return `<div class="block">
     <h3>Mejor precio detectado</h3>
     <div class="card__price"><span class="card__miles ${op?'op':''}">${fmtMiles(best.mejor_precio_millas)}</span><span class="card__unit">millas</span></div>
-    <p class="card__when">${best.origen} → ${best.aeropuerto} · <b>${dateLabel(best.mejor_fecha)}</b></p>
-    <a class="btn btn--go" style="display:inline-block;margin-top:8px;padding:9px 16px" href="${smilesURL(best)}" target="_blank" rel="noopener">Abrir en Smiles ↗</a>
+    <p class="card__when">${best.origen} → ${best.aeropuerto} · ${ymLabel(best.ym)} · ${diasMinLinea(best)}</p>
+    ${diasMinHTML(best)}
+    ${parcialHTML(best)}
+    ${ctaSmilesHTML(best, 'btn btn--go', 'display:inline-block;margin-top:8px;padding:9px 16px')}
+    <p class="card__sello">${selloHTML(best.consultado || 'radar')}</p>
+    ${avisoVigencia(s)}
+    ${paxHint()}
     ${smilesMoneyHint}
   </div>`;
 }
@@ -1219,7 +1782,7 @@ function openEditor(){
       1. Borrá todo el contenido del archivo (tocá adentro, seleccioná todo y borrá).<br>
       2. Pegá lo copiado.<br>
       3. Tocá el botón verde <b>Commit changes</b> (dos veces).<br>
-      El motor usa la nueva config en el próximo rastrillaje (9:00 / 20:00). 🛰️
+      El motor la toma en el próximo barrido. 🛰️
     </div>`;
 
   // chips clickeables
@@ -1300,7 +1863,7 @@ function armadorGrid(dias, seleccionado, tipo){
       if(info){
         const sel = iso===seleccionado ? ` sel-${tipo}`:'';
         const best = info.mi===min?' best':'';
-        cells+=`<button type="button" class="daychip has arm${best}${sel}${info.f==='gol'?' gol':''}" data-tipo="${tipo}" data-d="${iso}" title="${dateLabel(iso)} · ${fmtMiles(info.mi)} millas">
+        cells+=`<button type="button" class="daychip has arm${best}${sel}" data-tipo="${tipo}" data-d="${iso}" title="${dateLabel(iso)} · ${fmtMiles(info.mi)} millas">
           <span>${dd}</span><span class="dm">${Math.round(info.mi/1000)}k</span></button>`;
       } else cells+=`<div class="daycell-empty">${dd}</div>`;
     }
@@ -1336,6 +1899,7 @@ function renderArmador(abrir){
       ${armadorGrid(vueltas, A.vuelta, 'vta')}
     </div>
     <div class="armbar" id="armBar">${armadorBarHTML()}</div>
+    <p class="hint">${selloBloqueHTML(A.dest, A.ym)} — las idas se refrescan en cada barrido; las vueltas se renuevan de a tandas, así que el sello marca la pierna más vieja de este destino-mes.</p>
     <p class="hint">Verde punteado = el día más barato de cada calendario. Los números son miles de millas (63k = 63.000). Tocá un día de cada calendario y abajo se arma el viaje.</p>
   `;
   $$('.daychip.arm',body).forEach(c=>c.addEventListener('click',()=>{
@@ -1373,12 +1937,13 @@ function armadorBarHTML(){
     </div>
     ${a?`<div class="armbar__sug">💡 ${armadoTxt(a)} ≈ <b>${fmtUSD(a.totalEq)}</b> <span class="cash__t">equivalente</span></div>`:''}
     <div class="armbar__btns">
-      <a class="btn btn--go" href="${smilesRoundURL(orig,A.code,iSel.d,vSel.d,d.moneda)}" target="_blank" rel="noopener">✈ Ida y vuelta en Smiles ↗</a>
+      <a class="btn btn--go" href="${smilesRoundURL(orig,A.code,iSel.d,vSel.d,d.moneda)}" target="_blank" rel="noopener">✈ Verificar ida y vuelta en Smiles ↗</a>
       <a class="btn" href="${smilesOneWayURL(orig,A.code,iSel.d,d.moneda)}" target="_blank" rel="noopener">Solo ida ↗</a>
       <a class="btn" href="${smilesOneWayURL(A.code,orig,vSel.d,d.moneda)}" target="_blank" rel="noopener">Solo vuelta ↗</a>
       <a class="btn" href="${googleFlightsURL(orig,A.code,iSel.d,vSel.d)}" target="_blank" rel="noopener">Google Flights ↗</a>
       <a class="btn" href="${despegarDayURL(orig,A.code,iSel.d).replace('/oneway/','/roundtrip/').replace('/'+iSel.d+'/','/'+iSel.d+'/'+vSel.d+'/')}" target="_blank" rel="noopener">Despegar ↗</a>
     </div>
+    ${paxHint()}
     ${smilesMoneyHint}`;
 }
 
@@ -1409,6 +1974,15 @@ function armadorEntradaBlock(destKey){
    Armador y de cada destino. Nada de esa lógica se duplica allá. */
 window.NV = {
   state, cargarDatos, setupSheet, closeSheet, setupLock,
+  // --- API del contrato (las estaciones programan contra esto) ---
+  pasajeros, paxTxt, paxTotal, paxHint,
+  diasMin, diasMinTxt, diasMinHTML, diasMinChips, listaDiasTxt, desdeTxt, diasMinLinea,
+  conPrecio, masBarata, fechaLink, smilesMesURL, ctaSmilesHTML,
+  sello, selloRuta, selloDe, selloHTML, selloTexto, refrescarSellos, avisoVigencia,
+  selloBloque, selloBloqueHTML,
+  estadoMotor, hist, histMovimiento, histBlock, sparkline,
+  esParcial, parcialHTML,
+  refrescar, emitirDatos, arrancarLatido,
   // datos derivados
   bDestinos, vueltasDestino, destinosConVuelta, mesesVuelta,
   calcularCombos, mejorArmado, armadoTxt, cashLeg, cashRefDestino, cpp,
@@ -1416,8 +1990,8 @@ window.NV = {
   // hojas (modales) que ya existen
   openDestino, openArmador, openArmadoSheet, openEditor,
   // helpers de formato
-  fmtMiles, fmtUSD, ymLabel, dateLabel, haceCuanto, durTxt, escTxt,
-  cashTipoTxt, nivelLabel,
+  fmtMiles, fmtUSD, ymLabel, dateLabel, fechaCorta, horaCorta, haceCuanto,
+  durTxt, escTxt, cashTipoTxt, nivelLabel,
   // links
   smilesURL, smilesRoundURL, smilesOneWayURL,
   despegarDayURL, googleFlightsURL, kayakURL, aviasalesDayURL,
