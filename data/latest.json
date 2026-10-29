@@ -1,7 +1,7 @@
 {
-  "generado": "2026-10-29T15:32:39-03:00",
-  "iniciado": "2026-10-29T15:20:01-03:00",
-  "modo": "rapido",
+  "generado": "2026-10-29T17:12:34-03:00",
+  "iniciado": "2026-10-29T17:00:06-03:00",
+  "modo": "completo",
   "estado": "parcial",
   "total_rutas": 34,
   "total_consultadas": 58,
@@ -12,6 +12,109 @@
     "AEP->MDZ 2026-10 (congener=false): HTTP 452"
   ],
   "resultados": [
+    {
+      "ruta": "EZE-GRU-2026-12",
+      "origen": "EZE",
+      "origen_ciudad": "Buenos Aires",
+      "destino_key": "sao_paulo",
+      "destino_nombre": "San Pablo",
+      "destino_pais": "Brasil",
+      "destino_emoji": "🇧🇷",
+      "region": "sudamerica",
+      "aeropuerto": "GRU",
+      "aeropuerto_ciudad": "San Pablo (Guarulhos)",
+      "moneda": "USD",
+      "ym": "2026-12",
+      "consultado": "2026-10-29T17:04:06-03:00",
+      "mejor_precio_millas": 56500,
+      "mejor_fecha": "2026-12-03",
+      "dias_min": [
+        "2026-12-03",
+        "2026-12-08",
+        "2026-12-13"
+      ],
+      "price_range": 2,
+      "quartil_bandas": [
+        {
+          "minPrice": 66500,
+          "maxPrice": 207950
+        },
+        {
+          "minPrice": 207951,
+          "maxPrice": 349400
+        },
+        {
+          "minPrice": 349401,
+          "maxPrice": 490850
+        },
+        {
+          "minPrice": 490851,
+          "maxPrice": 632300
+        }
+      ],
+      "parcial": false,
+      "dias_esperados": 4,
+      "min_declarado": 66500,
+      "nivel": "oportunidad",
+      "motivos": [
+        "un 32% bajo el promedio"
+      ],
+      "promedio_historico": 82651,
+      "dias": [
+        {
+          "date": "2026-12-03",
+          "miles": 56500,
+          "price_range": 2,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2026-12-04",
+          "miles": 182200,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "gol"
+        },
+        {
+          "date": "2026-12-08",
+          "miles": 56500,
+          "price_range": 2,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2026-12-09",
+          "miles": 129800,
+          "price_range": 1,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "gol"
+        },
+        {
+          "date": "2026-12-13",
+          "miles": 56500,
+          "price_range": 2,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        }
+      ],
+      "total_dias_disponibles": 5,
+      "cash": {
+        "precio": 159.0,
+        "moneda": "usd",
+        "fecha": "2026-12-09",
+        "aerolinea": "AC",
+        "escalas": 0,
+        "duracion_min": 160,
+        "link": "https://www.aviasales.com/search/EZE0912GRU1?t=AC17968347001796844300000160EZEGRU_406f078ae3030fbe54df00192b09b102_12825&search_date=27102026&expected_price_uuid=01a17e03-3cf7-8040-a112-cc629d33e8a0&static_fare_key=TY%7CP1%7CH1%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=zo7J_CVISpBUA8GVwU2ZcA&origin_airports=0&destination_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=159",
+        "tipo": "ida",
+        "exacto": true
+      }
+    },
     {
       "ruta": "EZE-MIA-2027-03",
       "origen": "EZE",
@@ -25,7 +128,7 @@
       "aeropuerto_ciudad": "Miami",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-10-29T15:20:09-03:00",
+      "consultado": "2026-10-29T17:00:11-03:00",
       "mejor_precio_millas": 107200,
       "mejor_fecha": "2027-03-01",
       "dias_min": [
@@ -65,7 +168,7 @@
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 122579,
+      "promedio_historico": 122535,
       "dias": [
         {
           "date": "2027-03-01",
@@ -342,7 +445,7 @@
       "aeropuerto_ciudad": "Miami",
       "moneda": "USD",
       "ym": "2027-04",
-      "consultado": "2026-10-29T15:20:13-03:00",
+      "consultado": "2026-10-29T17:00:16-03:00",
       "mejor_precio_millas": 107200,
       "mejor_fecha": "2027-04-07",
       "dias_min": [
@@ -363,7 +466,11 @@
         "2027-04-21",
         "2027-04-22",
         "2027-04-25",
-        "2027-04-26"
+        "2027-04-26",
+        "2027-04-27",
+        "2027-04-28",
+        "2027-04-29",
+        "2027-04-30"
       ],
       "price_range": 1,
       "quartil_bandas": [
@@ -390,9 +497,9 @@
       "nivel": "oportunidad",
       "motivos": [
         "está en el 25% más barato de esta ruta",
-        "un 16% bajo el promedio"
+        "un 15% bajo el promedio"
       ],
-      "promedio_historico": 126891,
+      "promedio_historico": 126833,
       "dias": [
         {
           "date": "2027-04-01",
@@ -604,48 +711,48 @@
         },
         {
           "date": "2027-04-27",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-04-28",
-          "miles": 147600,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-04-29",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-04-30",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         }
       ],
       "total_dias_disponibles": 30,
       "cash": {
-        "precio": 352.0,
+        "precio": 642.0,
         "moneda": "usd",
-        "fecha": "2026-11-16",
-        "aerolinea": "CM",
+        "fecha": "2027-04-16",
+        "aerolinea": "DM",
         "escalas": 1,
-        "duracion_min": 636,
-        "link": "https://www.aviasales.com/search/EZE1611MIA1?t=CM17948202001794855960000716EZEPTYMIA_339904e1bebfd3e8d9fa900065cf5979_28868&search_date=23102026&expected_price_uuid=01a16615-b283-8040-a6d8-d11c3bb021b9&static_fare_key=TY%7CP1%7CH1%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=3OywgEm5CaE2OI7tf4XW1Q&origin_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=352",
-        "tipo": "ida",
-        "exacto": false
+        "duracion_min": 650,
+        "link": "https://www.aviasales.com/search/EZE1604MIA26041?t=DM18079101001807964700000970EZEPUJMIA18087655801808820000000847MIAPUJEZE_86dd59afc9ae19161da42691bd6abfac_52159&search_date=29102026&expected_price_uuid=01a18917-ecf5-8040-22f2-cc0405cde5e2&static_fare_key=TY%7CP1%7CH0%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=3HW9FQ2o2lbi4MjNLrSuqQ&origin_airports=0&destination_airports=1&expected_price_source=share&expected_price_currency=usd&expected_price=642",
+        "tipo": "ida_vuelta",
+        "exacto": true
       }
     },
     {
@@ -661,11 +768,27 @@
       "aeropuerto_ciudad": "Miami",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-10-29T15:20:21-03:00",
+      "consultado": "2026-10-29T17:00:22-03:00",
       "mejor_precio_millas": 107200,
-      "mejor_fecha": "2027-05-17",
+      "mejor_fecha": "2027-05-02",
       "dias_min": [
+        "2027-05-02",
+        "2027-05-03",
+        "2027-05-04",
+        "2027-05-06",
+        "2027-05-07",
+        "2027-05-08",
+        "2027-05-09",
+        "2027-05-10",
+        "2027-05-11",
+        "2027-05-12",
+        "2027-05-13",
+        "2027-05-14",
+        "2027-05-15",
+        "2027-05-16",
         "2027-05-17",
+        "2027-05-18",
+        "2027-05-19",
         "2027-05-21",
         "2027-05-23",
         "2027-05-24",
@@ -697,29 +820,37 @@
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 120463,
+      "promedio_historico": 120424,
       "dias": [
         {
-          "date": "2027-05-02",
-          "miles": 147600,
-          "price_range": 1,
+          "date": "2027-05-01",
+          "miles": 205300,
+          "price_range": 2,
           "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-05-02",
+          "miles": 107200,
+          "price_range": 1,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-03",
-          "miles": 147600,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-04",
-          "miles": 147600,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -733,81 +864,89 @@
         },
         {
           "date": "2027-05-06",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-07",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-08",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-09",
-          "miles": 147600,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-10",
-          "miles": 147600,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-11",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-12",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-13",
-          "miles": 147600,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-14",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-15",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-05-16",
+          "miles": 107200,
+          "price_range": 1,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -821,17 +960,17 @@
         },
         {
           "date": "2027-05-18",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-19",
-          "miles": 177500,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -932,7 +1071,7 @@
           "fuente": "socias"
         }
       ],
-      "total_dias_disponibles": 29,
+      "total_dias_disponibles": 31,
       "cash": {
         "precio": 352.0,
         "moneda": "usd",
@@ -958,7 +1097,7 @@
       "aeropuerto_ciudad": "Orlando",
       "moneda": "USD",
       "ym": "2027-04",
-      "consultado": "2026-10-29T15:21:27-03:00",
+      "consultado": "2026-10-29T17:01:25-03:00",
       "mejor_precio_millas": 111800,
       "mejor_fecha": "2027-04-13",
       "dias_min": [
@@ -973,7 +1112,7 @@
       "motivos": [
         "un 24% bajo el promedio"
       ],
-      "promedio_historico": 147466,
+      "promedio_historico": 147358,
       "dias": [
         {
           "date": "2027-04-01",
@@ -1209,7 +1348,7 @@
         },
         {
           "date": "2027-04-30",
-          "miles": 241800,
+          "miles": 298100,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -1242,7 +1381,7 @@
       "aeropuerto_ciudad": "Nueva York (JFK)",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-10-29T15:28:16-03:00",
+      "consultado": "2026-10-29T17:08:10-03:00",
       "mejor_precio_millas": 130600,
       "mejor_fecha": "2027-03-01",
       "dias_min": [
@@ -1277,7 +1416,7 @@
         "está en el 25% más barato de esta ruta",
         "un 17% bajo el promedio"
       ],
-      "promedio_historico": 157214,
+      "promedio_historico": 157135,
       "dias": [
         {
           "date": "2027-03-01",
@@ -1554,7 +1693,7 @@
       "aeropuerto_ciudad": "Barcelona",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-10-29T15:22:41-03:00",
+      "consultado": "2026-10-29T17:02:41-03:00",
       "mejor_precio_millas": 164600,
       "mejor_fecha": "2027-03-04",
       "dias_min": [
@@ -1573,7 +1712,7 @@
       "motivos": [
         "un 17% bajo el promedio"
       ],
-      "promedio_historico": 197901,
+      "promedio_historico": 197802,
       "dias": [
         {
           "date": "2027-03-01",
@@ -1850,7 +1989,7 @@
       "aeropuerto_ciudad": "Barcelona",
       "moneda": "USD",
       "ym": "2027-04",
-      "consultado": "2026-10-29T15:22:45-03:00",
+      "consultado": "2026-10-29T17:02:46-03:00",
       "mejor_precio_millas": 164600,
       "mejor_fecha": "2027-04-05",
       "dias_min": [
@@ -1865,7 +2004,7 @@
       "motivos": [
         "un 17% bajo el promedio"
       ],
-      "promedio_historico": 197626,
+      "promedio_historico": 197526,
       "dias": [
         {
           "date": "2027-04-01",
@@ -2134,7 +2273,7 @@
       "aeropuerto_ciudad": "Madrid",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-10-29T15:22:27-03:00",
+      "consultado": "2026-10-29T17:02:28-03:00",
       "mejor_precio_millas": 169800,
       "mejor_fecha": "2027-05-17",
       "dias_min": [
@@ -2166,7 +2305,7 @@
       "motivos": [
         "un 17% bajo el promedio"
       ],
-      "promedio_historico": 205499,
+      "promedio_historico": 205394,
       "dias": [
         {
           "date": "2027-05-01",
@@ -2443,7 +2582,7 @@
       "aeropuerto_ciudad": "LaGuardia",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-10-29T15:28:39-03:00",
+      "consultado": "2026-10-29T17:08:33-03:00",
       "mejor_precio_millas": 179600,
       "mejor_fecha": "2027-03-03",
       "dias_min": [
@@ -2461,9 +2600,9 @@
       "min_declarado": null,
       "nivel": "oportunidad",
       "motivos": [
-        "un 21% bajo el promedio"
+        "un 20% bajo el promedio"
       ],
-      "promedio_historico": 226048,
+      "promedio_historico": 225904,
       "dias": [
         {
           "date": "2027-03-01",
@@ -2740,7 +2879,7 @@
       "aeropuerto_ciudad": "Roma Fiumicino",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-10-29T15:28:55-03:00",
+      "consultado": "2026-10-29T17:08:50-03:00",
       "mejor_precio_millas": 192100,
       "mejor_fecha": "2027-05-02",
       "dias_min": [
@@ -2782,7 +2921,7 @@
       "motivos": [
         "un 17% bajo el promedio"
       ],
-      "promedio_historico": 230964,
+      "promedio_historico": 230848,
       "dias": [
         {
           "date": "2027-05-01",
@@ -3059,7 +3198,7 @@
       "aeropuerto_ciudad": "Mendoza",
       "moneda": "ARS",
       "ym": "2027-03",
-      "consultado": "2026-10-29T15:28:11-03:00",
+      "consultado": "2026-10-29T17:08:04-03:00",
       "mejor_precio_millas": 11700,
       "mejor_fecha": "2027-03-08",
       "dias_min": [
@@ -3092,7 +3231,7 @@
       "min_declarado": 44000,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 11160,
+      "promedio_historico": 11162,
       "dias": [
         {
           "date": "2027-03-01",
@@ -3369,7 +3508,7 @@
       "aeropuerto_ciudad": "Miami",
       "moneda": "USD",
       "ym": "2027-06",
-      "consultado": "2026-10-29T15:20:30-03:00",
+      "consultado": "2026-10-29T17:00:30-03:00",
       "mejor_precio_millas": 147600,
       "mejor_fecha": "2027-06-01",
       "dias_min": [
@@ -3409,7 +3548,7 @@
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 150875,
+      "promedio_historico": 150866,
       "dias": [
         {
           "date": "2027-06-01",
@@ -3558,7 +3697,7 @@
       "aeropuerto_ciudad": "Barcelona",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-10-29T15:22:53-03:00",
+      "consultado": "2026-10-29T17:02:54-03:00",
       "mejor_precio_millas": 164600,
       "mejor_fecha": "2027-05-17",
       "dias_min": [
@@ -3571,7 +3710,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 191676,
+      "promedio_historico": 191595,
       "dias": [
         {
           "date": "2027-05-01",
@@ -3848,7 +3987,7 @@
       "aeropuerto_ciudad": "Barcelona",
       "moneda": "USD",
       "ym": "2027-06",
-      "consultado": "2026-10-29T15:22:58-03:00",
+      "consultado": "2026-10-29T17:03:00-03:00",
       "mejor_precio_millas": 164600,
       "mejor_fecha": "2027-06-06",
       "dias_min": [
@@ -3876,7 +4015,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 192055,
+      "promedio_historico": 191972,
       "dias": [
         {
           "date": "2027-06-01",
@@ -4145,7 +4284,7 @@
       "aeropuerto_ciudad": "Orlando",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-10-29T15:21:19-03:00",
+      "consultado": "2026-10-29T17:01:18-03:00",
       "mejor_precio_millas": 171400,
       "mejor_fecha": "2027-03-01",
       "dias_min": [
@@ -4174,7 +4313,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 151453,
+      "promedio_historico": 151512,
       "dias": [
         {
           "date": "2027-03-01",
@@ -4451,7 +4590,7 @@
       "aeropuerto_ciudad": "Orlando",
       "moneda": "USD",
       "ym": "2027-06",
-      "consultado": "2026-10-29T15:21:42-03:00",
+      "consultado": "2026-10-29T17:01:39-03:00",
       "mejor_precio_millas": 179600,
       "mejor_fecha": "2027-06-01",
       "dias_min": [
@@ -4481,7 +4620,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 168184,
+      "promedio_historico": 168219,
       "dias": [
         {
           "date": "2027-06-01",
@@ -4750,7 +4889,7 @@
       "aeropuerto_ciudad": "Madrid",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-10-29T15:22:17-03:00",
+      "consultado": "2026-10-29T17:02:17-03:00",
       "mejor_precio_millas": 191300,
       "mejor_fecha": "2027-03-01",
       "dias_min": [
@@ -4781,7 +4920,7 @@
       "min_declarado": 119500,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 201568,
+      "promedio_historico": 201538,
       "dias": [
         {
           "date": "2027-03-01",
@@ -5058,7 +5197,7 @@
       "aeropuerto_ciudad": "Los Ángeles",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-10-29T15:21:50-03:00",
+      "consultado": "2026-10-29T17:01:50-03:00",
       "mejor_precio_millas": 208100,
       "mejor_fecha": "2027-03-01",
       "dias_min": [
@@ -5095,7 +5234,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 204087,
+      "promedio_historico": 204099,
       "dias": [
         {
           "date": "2027-03-01",
@@ -5372,7 +5511,7 @@
       "aeropuerto_ciudad": "Los Ángeles",
       "moneda": "USD",
       "ym": "2027-04",
-      "consultado": "2026-10-29T15:21:56-03:00",
+      "consultado": "2026-10-29T17:01:54-03:00",
       "mejor_precio_millas": 208100,
       "mejor_fecha": "2027-04-02",
       "dias_min": [
@@ -5405,7 +5544,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 203880,
+      "promedio_historico": 203893,
       "dias": [
         {
           "date": "2027-04-01",
@@ -5674,7 +5813,7 @@
       "aeropuerto_ciudad": "Los Ángeles",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-10-29T15:22:01-03:00",
+      "consultado": "2026-10-29T17:01:59-03:00",
       "mejor_precio_millas": 208100,
       "mejor_fecha": "2027-05-02",
       "dias_min": [
@@ -5706,7 +5845,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 204406,
+      "promedio_historico": 204417,
       "dias": [
         {
           "date": "2027-05-01",
@@ -5983,7 +6122,7 @@
       "aeropuerto_ciudad": "Los Ángeles",
       "moneda": "USD",
       "ym": "2027-06",
-      "consultado": "2026-10-29T15:22:09-03:00",
+      "consultado": "2026-10-29T17:02:08-03:00",
       "mejor_precio_millas": 208100,
       "mejor_fecha": "2027-06-01",
       "dias_min": [
@@ -6011,7 +6150,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 211735,
+      "promedio_historico": 211724,
       "dias": [
         {
           "date": "2027-06-01",
@@ -6280,7 +6419,7 @@
       "aeropuerto_ciudad": "Roma Fiumicino",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-10-29T15:28:50-03:00",
+      "consultado": "2026-10-29T17:08:44-03:00",
       "mejor_precio_millas": 212300,
       "mejor_fecha": "2027-03-15",
       "dias_min": [
@@ -6293,7 +6432,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 245510,
+      "promedio_historico": 245412,
       "dias": [
         {
           "date": "2027-03-01",
@@ -6570,7 +6709,7 @@
       "aeropuerto_ciudad": "LaGuardia",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-10-29T15:28:44-03:00",
+      "consultado": "2026-10-29T17:08:39-03:00",
       "mejor_precio_millas": 274400,
       "mejor_fecha": "2027-05-01",
       "dias_min": [
@@ -6583,7 +6722,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 287721,
+      "promedio_historico": 287681,
       "dias": [
         {
           "date": "2027-05-01",
@@ -6860,7 +6999,7 @@
       "aeropuerto_ciudad": "Mendoza",
       "moneda": "ARS",
       "ym": "2027-02",
-      "consultado": "2026-10-29T15:28:00-03:00",
+      "consultado": "2026-10-29T17:07:52-03:00",
       "mejor_precio_millas": 16800,
       "mejor_fecha": "2027-02-26",
       "dias_min": [
@@ -6894,7 +7033,7 @@
       "motivos": [
         "un 22% sobre el promedio"
       ],
-      "promedio_historico": 13812,
+      "promedio_historico": 13824,
       "dias": [
         {
           "date": "2027-02-26",
@@ -6947,7 +7086,7 @@
       "aeropuerto_ciudad": "Mendoza",
       "moneda": "ARS",
       "ym": "2026-12",
-      "consultado": "2026-10-29T15:27:51-03:00",
+      "consultado": "2026-10-29T17:07:40-03:00",
       "mejor_precio_millas": 32700,
       "mejor_fecha": "2026-12-02",
       "dias_min": [
@@ -6979,7 +7118,7 @@
       "motivos": [
         "un 47% sobre el promedio"
       ],
-      "promedio_historico": 22237,
+      "promedio_historico": 22301,
       "dias": [
         {
           "date": "2026-12-02",
@@ -7012,109 +7151,6 @@
       }
     },
     {
-      "ruta": "EZE-GRU-2026-12",
-      "origen": "EZE",
-      "origen_ciudad": "Buenos Aires",
-      "destino_key": "sao_paulo",
-      "destino_nombre": "San Pablo",
-      "destino_pais": "Brasil",
-      "destino_emoji": "🇧🇷",
-      "region": "sudamerica",
-      "aeropuerto": "GRU",
-      "aeropuerto_ciudad": "San Pablo (Guarulhos)",
-      "moneda": "USD",
-      "ym": "2026-12",
-      "consultado": "2026-10-29T15:24:08-03:00",
-      "mejor_precio_millas": 56500,
-      "mejor_fecha": "2026-12-03",
-      "dias_min": [
-        "2026-12-03",
-        "2026-12-08",
-        "2026-12-13"
-      ],
-      "price_range": 2,
-      "quartil_bandas": [
-        {
-          "minPrice": 66500,
-          "maxPrice": 207950
-        },
-        {
-          "minPrice": 207951,
-          "maxPrice": 349400
-        },
-        {
-          "minPrice": 349401,
-          "maxPrice": 490850
-        },
-        {
-          "minPrice": 490851,
-          "maxPrice": 632300
-        }
-      ],
-      "parcial": true,
-      "dias_esperados": 7,
-      "min_declarado": 66500,
-      "nivel": "normal",
-      "motivos": [
-        "Smiles está mostrando solo 5 días de este mes; su resumen de precios da para 7"
-      ],
-      "promedio_historico": 82651,
-      "dias": [
-        {
-          "date": "2026-12-03",
-          "miles": 56500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-04",
-          "miles": 182200,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "gol"
-        },
-        {
-          "date": "2026-12-08",
-          "miles": 56500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-09",
-          "miles": 129800,
-          "price_range": 1,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "gol"
-        },
-        {
-          "date": "2026-12-13",
-          "miles": 56500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        }
-      ],
-      "total_dias_disponibles": 5,
-      "cash": {
-        "precio": 159.0,
-        "moneda": "usd",
-        "fecha": "2026-12-09",
-        "aerolinea": "AC",
-        "escalas": 0,
-        "duracion_min": 160,
-        "link": "https://www.aviasales.com/search/EZE0912GRU1?t=AC17968347001796844300000160EZEGRU_406f078ae3030fbe54df00192b09b102_12825&search_date=27102026&expected_price_uuid=01a17e03-3cf7-8040-a112-cc629d33e8a0&static_fare_key=TY%7CP1%7CH1%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=zo7J_CVISpBUA8GVwU2ZcA&origin_airports=0&destination_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=159",
-        "tipo": "ida",
-        "exacto": true
-      }
-    },
-    {
       "ruta": "AEP-GRU-2026-12",
       "origen": "AEP",
       "origen_ciudad": "Buenos Aires",
@@ -7127,7 +7163,7 @@
       "aeropuerto_ciudad": "San Pablo (Guarulhos)",
       "moneda": "USD",
       "ym": "2026-12",
-      "consultado": "2026-10-29T15:24:19-03:00",
+      "consultado": "2026-10-29T17:04:16-03:00",
       "mejor_precio_millas": 100200,
       "mejor_fecha": "2026-12-08",
       "dias_min": [
@@ -7161,7 +7197,7 @@
         "está en el 25% más barato de esta ruta",
         "un 52% sobre el promedio"
       ],
-      "promedio_historico": 65720,
+      "promedio_historico": 65943,
       "dias": [
         {
           "date": "2026-12-03",
@@ -7214,7 +7250,7 @@
       "aeropuerto_ciudad": "Río (Galeão)",
       "moneda": "USD",
       "ym": "2026-12",
-      "consultado": "2026-10-29T15:23:49-03:00",
+      "consultado": "2026-10-29T17:03:48-03:00",
       "mejor_precio_millas": 114900,
       "mejor_fecha": "2026-12-02",
       "dias_min": [
@@ -7245,9 +7281,9 @@
       "nivel": "normal",
       "motivos": [
         "está en el 25% más barato de esta ruta",
-        "un 78% sobre el promedio"
+        "un 77% sobre el promedio"
       ],
-      "promedio_historico": 64727,
+      "promedio_historico": 65073,
       "dias": [
         {
           "date": "2026-12-02",
@@ -7284,7 +7320,7 @@
       "aeropuerto_ciudad": "Orlando",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-10-29T15:21:35-03:00",
+      "consultado": "2026-10-29T17:01:32-03:00",
       "mejor_precio_millas": 179600,
       "mejor_fecha": "2027-05-02",
       "dias_min": [
@@ -7324,9 +7360,9 @@
       "min_declarado": null,
       "nivel": "normal",
       "motivos": [
-        "un 25% sobre el promedio"
+        "un 24% sobre el promedio"
       ],
-      "promedio_historico": 144240,
+      "promedio_historico": 144344,
       "dias": [
         {
           "date": "2027-05-01",
@@ -7595,7 +7631,7 @@
       "aeropuerto_ciudad": "Nueva York (JFK)",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-10-29T15:28:23-03:00",
+      "consultado": "2026-10-29T17:08:16-03:00",
       "mejor_precio_millas": 199400,
       "mejor_fecha": "2027-05-11",
       "dias_min": [
@@ -7641,7 +7677,7 @@
         "está en el 25% más barato de esta ruta",
         "un 20% sobre el promedio"
       ],
-      "promedio_historico": 165485,
+      "promedio_historico": 165586,
       "dias": [
         {
           "date": "2027-05-01",
@@ -7918,7 +7954,7 @@
       "aeropuerto_ciudad": "Bariloche",
       "moneda": "ARS",
       "ym": "2026-12",
-      "consultado": "2026-10-29T15:23:19-03:00",
+      "consultado": "2026-10-29T17:03:20-03:00",
       "mejor_precio_millas": 215800,
       "mejor_fecha": "2026-12-03",
       "dias_min": [
@@ -7948,9 +7984,9 @@
       "min_declarado": 47500,
       "nivel": "normal",
       "motivos": [
-        "un 416% sobre el promedio"
+        "un 404% sobre el promedio"
       ],
-      "promedio_historico": 41834,
+      "promedio_historico": 42845,
       "dias": [
         {
           "date": "2026-12-03",
@@ -7963,13 +7999,13 @@
       ],
       "total_dias_disponibles": 1,
       "cash": {
-        "precio": 62.0,
+        "precio": 54.0,
         "moneda": "usd",
-        "fecha": "2026-12-01",
-        "aerolinea": "AR",
+        "fecha": "2026-12-09",
+        "aerolinea": "JA",
         "escalas": 0,
-        "duracion_min": 145,
-        "link": "https://www.aviasales.com/search/AEP0112BRC1?t=AR17961033001796112000000145AEPBRC_27e8c21b7c6e0ebb47fef4c33c0272fd_4995&search_date=27102026&expected_price_uuid=01a17e07-5a54-8040-67e8-1ac34efc79da&static_fare_key=TY%7CP1%7CH0%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=ENwW02XQyDonZf0vSBmBRA&origin_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=62",
+        "duracion_min": 141,
+        "link": "https://www.aviasales.com/search/AEP0912BRC1?t=JA17968383601796846820000141AEPBRC_049f2d8206d5f5baae81d0e1385334cf_4388&search_date=29102026&expected_price_uuid=01a1892d-978e-8040-a237-444db2dc6327&static_fare_key=TY%7CP1%7CH0%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=j3ggs0F3X0kKuix9IUs9sQ&origin_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=54",
         "tipo": "ida",
         "exacto": true
       }
@@ -7987,7 +8023,7 @@
       "aeropuerto_ciudad": "Mendoza",
       "moneda": "ARS",
       "ym": "2026-11",
-      "consultado": "2026-10-29T15:27:42-03:00",
+      "consultado": "2026-10-29T17:07:29-03:00",
       "mejor_precio_millas": 100300,
       "mejor_fecha": "2026-11-19",
       "dias_min": [
@@ -8017,9 +8053,9 @@
       "min_declarado": 44000,
       "nivel": "caro",
       "motivos": [
-        "un 310% sobre el promedio"
+        "un 305% sobre el promedio"
       ],
-      "promedio_historico": 24473,
+      "promedio_historico": 24767,
       "dias": [
         {
           "date": "2026-11-19",
@@ -8056,7 +8092,7 @@
       "aeropuerto_ciudad": "Madrid",
       "moneda": "USD",
       "ym": "2027-06",
-      "consultado": "2026-10-29T15:22:34-03:00",
+      "consultado": "2026-10-29T17:02:34-03:00",
       "mejor_precio_millas": 259800,
       "mejor_fecha": "2027-06-06",
       "dias_min": [
@@ -8088,7 +8124,7 @@
       "motivos": [
         "un 36% sobre el promedio"
       ],
-      "promedio_historico": 190848,
+      "promedio_historico": 191052,
       "dias": [
         {
           "date": "2027-06-01",
@@ -8333,13 +8369,13 @@
       ],
       "total_dias_disponibles": 30,
       "cash": {
-        "precio": 1074.0,
+        "precio": 1032.0,
         "moneda": "usd",
-        "fecha": "2027-06-02",
-        "aerolinea": "PU",
-        "escalas": 0,
-        "duracion_min": 725,
-        "link": "https://www.aviasales.com/search/EZE0206MAD22061?t=PU18119427001812004200000725EZEMAD18137058001813733100000755MADEZE_5d8e809d6d46a400029aa13063fbf65b_87962&search_date=22102026&expected_price_uuid=01a165a8-c6cf-8040-2eb3-00e3f7b00e6e&static_fare_key=TY%7CP1%7CH1%7CL1_1_15%7CCH0%7CR0%7CTBC1&itinerary_key=hSDy2-asXSoX5N8awua2Cg&origin_airports=0&destination_airports=1&expected_price_source=share&expected_price_currency=usd&expected_price=1074",
+        "fecha": "2027-06-22",
+        "aerolinea": "LA",
+        "escalas": 1,
+        "duracion_min": 775,
+        "link": "https://www.aviasales.com/search/EZE2206MAD11081?t=IB18136836001813759500000965EZEGRUMAD18180285001818086400001265MADGRUEZE_5edf24277ff4f0d448704ebb791e849d_83868&search_date=29102026&expected_price_uuid=01a18920-704c-8040-2944-6f70bbde18dd&static_fare_key=TY%7CP0%7CH1%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=6qDwXTjfrO1mv43RQKs7MA&origin_airports=0&destination_airports=1&expected_price_source=share&expected_price_currency=usd&expected_price=1032",
         "tipo": "ida_vuelta",
         "exacto": true
       }
@@ -8357,7 +8393,7 @@
       "aeropuerto_ciudad": "Madrid",
       "moneda": "USD",
       "ym": "2027-04",
-      "consultado": "2026-10-29T15:22:22-03:00",
+      "consultado": "2026-10-29T17:02:22-03:00",
       "mejor_precio_millas": 300800,
       "mejor_fecha": "2027-04-06",
       "dias_min": [
@@ -8392,7 +8428,7 @@
         "está en el 25% más caro de esta ruta",
         "un 45% sobre el promedio"
       ],
-      "promedio_historico": 207295,
+      "promedio_historico": 207571,
       "dias": [
         {
           "date": "2027-04-01",
