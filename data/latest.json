@@ -1,9 +1,9 @@
 {
-  "generado": "2026-11-25T11:15:08-03:00",
-  "iniciado": "2026-11-25T11:00:09-03:00",
-  "modo": "completo",
+  "generado": "2026-11-25T13:34:45-03:00",
+  "iniciado": "2026-11-25T13:20:08-03:00",
+  "modo": "rapido",
   "estado": "parcial",
-  "total_rutas": 34,
+  "total_rutas": 35,
   "total_consultadas": 58,
   "errores": [
     "EZE->MDZ 2026-09 (congener=false): HTTP 452",
@@ -27,178 +27,66 @@
       "aeropuerto_ciudad": "San Pablo (Guarulhos)",
       "moneda": "USD",
       "ym": "2026-12",
-      "consultado": "2026-11-25T11:04:04-03:00",
-      "mejor_precio_millas": 41300,
-      "mejor_fecha": "2026-12-11",
+      "consultado": "2026-11-25T13:24:25-03:00",
+      "mejor_precio_millas": 56500,
+      "mejor_fecha": "2026-12-12",
       "dias_min": [
-        "2026-12-11",
-        "2026-12-13",
-        "2026-12-14",
-        "2026-12-16"
+        "2026-12-12",
+        "2026-12-17",
+        "2026-12-22",
+        "2026-12-31"
       ],
       "price_range": 2,
       "quartil_bandas": [
         {
           "minPrice": 66500,
-          "maxPrice": 183400
+          "maxPrice": 173625
         },
         {
-          "minPrice": 183401,
-          "maxPrice": 300300
+          "minPrice": 173626,
+          "maxPrice": 280750
         },
         {
-          "minPrice": 300301,
-          "maxPrice": 417200
+          "minPrice": 280751,
+          "maxPrice": 387875
         },
         {
-          "minPrice": 417201,
-          "maxPrice": 534100
+          "minPrice": 387876,
+          "maxPrice": 495000
         }
       ],
       "parcial": false,
-      "dias_esperados": 9,
+      "dias_esperados": 7,
       "min_declarado": 66500,
       "nivel": "oportunidad",
       "motivos": [
-        "un 38% bajo el promedio"
+        "un 16% bajo el promedio"
       ],
-      "promedio_historico": 67056,
+      "promedio_historico": 66958,
       "dias": [
-        {
-          "date": "2026-12-02",
-          "miles": 128800,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "gol"
-        },
-        {
-          "date": "2026-12-07",
-          "miles": 120600,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "gol"
-        },
-        {
-          "date": "2026-12-11",
-          "miles": 41300,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
         {
           "date": "2026-12-12",
           "miles": 56500,
           "price_range": 2,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-13",
-          "miles": 41300,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-14",
-          "miles": 41300,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-15",
-          "miles": 71300,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-16",
-          "miles": 41300,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
         },
         {
           "date": "2026-12-17",
           "miles": 56500,
           "price_range": 2,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-18",
-          "miles": 66500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-19",
-          "miles": 66500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-20",
-          "miles": 66500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-21",
-          "miles": 66500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
         },
         {
           "date": "2026-12-22",
           "miles": 56500,
           "price_range": 2,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-23",
-          "miles": 66500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-24",
-          "miles": 71300,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-25",
-          "miles": 66500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
         },
         {
           "date": "2026-12-26",
@@ -244,12 +132,12 @@
           "date": "2026-12-31",
           "miles": 56500,
           "price_range": 2,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "ambas"
         }
       ],
-      "total_dias_disponibles": 23,
+      "total_dias_disponibles": 9,
       "cash": {
         "precio": 178.0,
         "moneda": "usd",
@@ -275,41 +163,43 @@
       "aeropuerto_ciudad": "Miami",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-11-25T11:00:16-03:00",
+      "consultado": "2026-11-25T13:20:13-03:00",
       "mejor_precio_millas": 107200,
-      "mejor_fecha": "2027-03-04",
+      "mejor_fecha": "2027-03-03",
       "dias_min": [
+        "2027-03-03",
         "2027-03-04",
+        "2027-03-10",
         "2027-03-11",
         "2027-03-30"
       ],
       "price_range": 1,
       "quartil_bandas": [
         {
-          "minPrice": 73400,
-          "maxPrice": 220125
+          "minPrice": 71300,
+          "maxPrice": 184825
         },
         {
-          "minPrice": 220126,
-          "maxPrice": 366850
+          "minPrice": 184826,
+          "maxPrice": 298350
         },
         {
-          "minPrice": 366851,
-          "maxPrice": 513575
+          "minPrice": 298351,
+          "maxPrice": 411875
         },
         {
-          "minPrice": 513576,
-          "maxPrice": 660300
+          "minPrice": 411876,
+          "maxPrice": 525400
         }
       ],
       "parcial": false,
       "dias_esperados": null,
-      "min_declarado": 73400,
+      "min_declarado": 71300,
       "nivel": "oportunidad",
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 116124,
+      "promedio_historico": 115992,
       "dias": [
         {
           "date": "2027-03-01",
@@ -329,9 +219,9 @@
         },
         {
           "date": "2027-03-03",
-          "miles": 155900,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -369,7 +259,7 @@
         },
         {
           "date": "2027-03-08",
-          "miles": 155900,
+          "miles": 112000,
           "price_range": 1,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -385,9 +275,9 @@
         },
         {
           "date": "2027-03-10",
-          "miles": 152800,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -409,7 +299,7 @@
         },
         {
           "date": "2027-03-13",
-          "miles": 152800,
+          "miles": 155900,
           "price_range": 1,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -441,7 +331,7 @@
         },
         {
           "date": "2027-03-17",
-          "miles": 155900,
+          "miles": 177800,
           "price_range": 1,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -457,7 +347,7 @@
         },
         {
           "date": "2027-03-19",
-          "miles": 272200,
+          "miles": 268700,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -474,7 +364,7 @@
         {
           "date": "2027-03-21",
           "miles": 193200,
-          "price_range": 1,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -489,8 +379,8 @@
         },
         {
           "date": "2027-03-23",
-          "miles": 155900,
-          "price_range": 1,
+          "miles": 268700,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -530,7 +420,7 @@
         {
           "date": "2027-03-28",
           "miles": 187600,
-          "price_range": 1,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -586,13 +476,17 @@
       "aeropuerto_ciudad": "Miami",
       "moneda": "USD",
       "ym": "2027-04",
-      "consultado": "2026-11-25T11:00:22-03:00",
+      "consultado": "2026-11-25T13:20:19-03:00",
       "mejor_precio_millas": 107200,
       "mejor_fecha": "2027-04-03",
       "dias_min": [
         "2027-04-03",
         "2027-04-04",
+        "2027-04-11",
         "2027-04-13",
+        "2027-04-15",
+        "2027-04-17",
+        "2027-04-21",
         "2027-04-22",
         "2027-04-26",
         "2027-04-28",
@@ -601,30 +495,30 @@
       "price_range": 1,
       "quartil_bandas": [
         {
-          "minPrice": 73400,
-          "maxPrice": 220125
+          "minPrice": 71300,
+          "maxPrice": 184825
         },
         {
-          "minPrice": 220126,
-          "maxPrice": 366850
+          "minPrice": 184826,
+          "maxPrice": 298350
         },
         {
-          "minPrice": 366851,
-          "maxPrice": 513575
+          "minPrice": 298351,
+          "maxPrice": 411875
         },
         {
-          "minPrice": 513576,
-          "maxPrice": 660300
+          "minPrice": 411876,
+          "maxPrice": 525400
         }
       ],
       "parcial": false,
       "dias_esperados": null,
-      "min_declarado": 73400,
+      "min_declarado": 71300,
       "nivel": "oportunidad",
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 119669,
+      "promedio_historico": 119668,
       "dias": [
         {
           "date": "2027-04-01",
@@ -669,7 +563,7 @@
         {
           "date": "2027-04-06",
           "miles": 211800,
-          "price_range": 1,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -700,9 +594,9 @@
         },
         {
           "date": "2027-04-11",
-          "miles": 152800,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -732,9 +626,9 @@
         },
         {
           "date": "2027-04-15",
-          "miles": 152800,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -747,9 +641,17 @@
           "fuente": "socias"
         },
         {
-          "date": "2027-04-18",
-          "miles": 152800,
+          "date": "2027-04-17",
+          "miles": 107200,
           "price_range": 1,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-04-18",
+          "miles": 199400,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -772,9 +674,9 @@
         },
         {
           "date": "2027-04-21",
-          "miles": 155900,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -805,7 +707,7 @@
         {
           "date": "2027-04-25",
           "miles": 199400,
-          "price_range": 1,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -845,13 +747,13 @@
         {
           "date": "2027-04-30",
           "miles": 201000,
-          "price_range": 1,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         }
       ],
-      "total_dias_disponibles": 28,
+      "total_dias_disponibles": 29,
       "cash": {
         "precio": 355.0,
         "moneda": "usd",
@@ -877,50 +779,56 @@
       "aeropuerto_ciudad": "Miami",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-11-25T11:00:31-03:00",
+      "consultado": "2026-11-25T13:20:28-03:00",
       "mejor_precio_millas": 107200,
       "mejor_fecha": "2027-05-02",
       "dias_min": [
         "2027-05-02",
         "2027-05-04",
+        "2027-05-05",
         "2027-05-06",
         "2027-05-10",
         "2027-05-12",
+        "2027-05-14",
+        "2027-05-17",
+        "2027-05-18",
+        "2027-05-19",
         "2027-05-20",
-        "2027-05-23"
+        "2027-05-23",
+        "2027-05-24"
       ],
       "price_range": 1,
       "quartil_bandas": [
         {
-          "minPrice": 73400,
-          "maxPrice": 220125
+          "minPrice": 71300,
+          "maxPrice": 184825
         },
         {
-          "minPrice": 220126,
-          "maxPrice": 366850
+          "minPrice": 184826,
+          "maxPrice": 298350
         },
         {
-          "minPrice": 366851,
-          "maxPrice": 513575
+          "minPrice": 298351,
+          "maxPrice": 411875
         },
         {
-          "minPrice": 513576,
-          "maxPrice": 660300
+          "minPrice": 411876,
+          "maxPrice": 525400
         }
       ],
       "parcial": false,
       "dias_esperados": null,
-      "min_declarado": 73400,
+      "min_declarado": 71300,
       "nivel": "oportunidad",
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 115040,
+      "promedio_historico": 114908,
       "dias": [
         {
           "date": "2027-05-01",
-          "miles": 155900,
-          "price_range": 1,
+          "miles": 268700,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -951,9 +859,9 @@
         },
         {
           "date": "2027-05-05",
-          "miles": 155900,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -967,8 +875,8 @@
         },
         {
           "date": "2027-05-07",
-          "miles": 155900,
-          "price_range": 1,
+          "miles": 268700,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -1014,6 +922,14 @@
           "fuente": "socias"
         },
         {
+          "date": "2027-05-14",
+          "miles": 107200,
+          "price_range": 1,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
           "date": "2027-05-16",
           "miles": 124000,
           "price_range": 1,
@@ -1023,25 +939,25 @@
         },
         {
           "date": "2027-05-17",
-          "miles": 155900,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-18",
-          "miles": 155900,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-19",
-          "miles": 155900,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -1064,7 +980,7 @@
         {
           "date": "2027-05-22",
           "miles": 211800,
-          "price_range": 1,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -1079,9 +995,9 @@
         },
         {
           "date": "2027-05-24",
-          "miles": 155900,
+          "miles": 107200,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -1134,7 +1050,7 @@
           "fuente": "socias"
         }
       ],
-      "total_dias_disponibles": 27,
+      "total_dias_disponibles": 28,
       "cash": {
         "precio": 355.0,
         "moneda": "usd",
@@ -1160,7 +1076,7 @@
       "aeropuerto_ciudad": "Miami",
       "moneda": "USD",
       "ym": "2027-06",
-      "consultado": "2026-11-25T11:00:38-03:00",
+      "consultado": "2026-11-25T13:20:36-03:00",
       "mejor_precio_millas": 107200,
       "mejor_fecha": "2027-06-01",
       "dias_min": [
@@ -1191,25 +1107,25 @@
       "price_range": 1,
       "quartil_bandas": [
         {
-          "minPrice": 73400,
-          "maxPrice": 220125
+          "minPrice": 71300,
+          "maxPrice": 184825
         },
         {
-          "minPrice": 220126,
-          "maxPrice": 366850
+          "minPrice": 184826,
+          "maxPrice": 298350
         },
         {
-          "minPrice": 366851,
-          "maxPrice": 513575
+          "minPrice": 298351,
+          "maxPrice": 411875
         },
         {
-          "minPrice": 513576,
-          "maxPrice": 660300
+          "minPrice": 411876,
+          "maxPrice": 525400
         }
       ],
       "parcial": false,
       "dias_esperados": null,
-      "min_declarado": 73400,
+      "min_declarado": 71300,
       "nivel": "oportunidad",
       "motivos": [
         "está en el 25% más barato de esta ruta",
@@ -1472,6 +1388,300 @@
       }
     },
     {
+      "ruta": "EZE-MCO-2027-03",
+      "origen": "EZE",
+      "origen_ciudad": "Buenos Aires",
+      "destino_key": "miami",
+      "destino_nombre": "Miami y alrededores",
+      "destino_pais": "Estados Unidos",
+      "destino_emoji": "🌴",
+      "region": "eeuu",
+      "aeropuerto": "MCO",
+      "aeropuerto_ciudad": "Orlando",
+      "moneda": "USD",
+      "ym": "2027-03",
+      "consultado": "2026-11-25T13:21:23-03:00",
+      "mejor_precio_millas": 120400,
+      "mejor_fecha": "2027-03-06",
+      "dias_min": [
+        "2027-03-06",
+        "2027-03-07",
+        "2027-03-08"
+      ],
+      "price_range": 2,
+      "quartil_bandas": null,
+      "parcial": false,
+      "dias_esperados": null,
+      "min_declarado": null,
+      "nivel": "oportunidad",
+      "motivos": [
+        "un 22% bajo el promedio"
+      ],
+      "promedio_historico": 155030,
+      "dias": [
+        {
+          "date": "2027-03-01",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-02",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-03",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-04",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-05",
+          "miles": 260100,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-06",
+          "miles": 120400,
+          "price_range": 2,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-07",
+          "miles": 120400,
+          "price_range": 2,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-08",
+          "miles": 120400,
+          "price_range": 2,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-09",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-10",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-11",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-12",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-13",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-14",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-15",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-16",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-17",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-18",
+          "miles": 199400,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-19",
+          "miles": 276000,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-20",
+          "miles": 325300,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-21",
+          "miles": 217100,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-22",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-23",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-24",
+          "miles": 214400,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-25",
+          "miles": 295000,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-26",
+          "miles": 199400,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-27",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-28",
+          "miles": 199400,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-29",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-30",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-31",
+          "miles": 161800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        }
+      ],
+      "total_dias_disponibles": 31,
+      "cash": {
+        "precio": 519.0,
+        "moneda": "usd",
+        "fecha": "2026-12-02",
+        "aerolinea": "CM",
+        "escalas": 1,
+        "duracion_min": 671,
+        "link": "https://www.aviasales.com/search/EZE0212MCO1?t=CM17962026001796250120000912EZEPTYMCO_785dbf1ad5d6b710a470d15881189adb_42777&search_date=19112026&expected_price_uuid=01a1f135-a55e-8040-6988-43678b61c5c1&static_fare_key=TY%7CP1%7CH1%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=YgRI-rRSNiZFgQrNAaq2ZA&origin_airports=0&destination_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=519",
+        "tipo": "ida",
+        "exacto": false
+      }
+    },
+    {
       "ruta": "EZE-JFK-2027-03",
       "origen": "EZE",
       "origen_ciudad": "Buenos Aires",
@@ -1484,7 +1694,7 @@
       "aeropuerto_ciudad": "Nueva York (JFK)",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-11-25T11:09:46-03:00",
+      "consultado": "2026-11-25T13:29:20-03:00",
       "mejor_precio_millas": 130600,
       "mejor_fecha": "2027-03-03",
       "dias_min": [
@@ -1494,7 +1704,8 @@
         "2027-03-11",
         "2027-03-24",
         "2027-03-28",
-        "2027-03-30"
+        "2027-03-30",
+        "2027-03-31"
       ],
       "price_range": 1,
       "quartil_bandas": [
@@ -1522,7 +1733,7 @@
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 150939,
+      "promedio_historico": 150816,
       "dias": [
         {
           "date": "2027-03-01",
@@ -1582,7 +1793,7 @@
         },
         {
           "date": "2027-03-08",
-          "miles": 175100,
+          "miles": 134300,
           "price_range": 1,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -1694,7 +1905,7 @@
         },
         {
           "date": "2027-03-22",
-          "miles": 396000,
+          "miles": 348300,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -1766,9 +1977,9 @@
         },
         {
           "date": "2027-03-31",
-          "miles": 258900,
-          "price_range": 2,
-          "is_lowest": false,
+          "miles": 130600,
+          "price_range": 1,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         }
@@ -1799,16 +2010,25 @@
       "aeropuerto_ciudad": "Nueva York (JFK)",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-11-25T11:09:51-03:00",
+      "consultado": "2026-11-25T13:29:25-03:00",
       "mejor_precio_millas": 130600,
-      "mejor_fecha": "2027-05-03",
+      "mejor_fecha": "2027-05-02",
       "dias_min": [
+        "2027-05-02",
         "2027-05-03",
         "2027-05-05",
+        "2027-05-06",
         "2027-05-09",
+        "2027-05-10",
+        "2027-05-11",
         "2027-05-12",
         "2027-05-15",
-        "2027-05-18"
+        "2027-05-17",
+        "2027-05-18",
+        "2027-05-19",
+        "2027-05-20",
+        "2027-05-23",
+        "2027-05-24"
       ],
       "price_range": 1,
       "quartil_bandas": [
@@ -1849,9 +2069,9 @@
         },
         {
           "date": "2027-05-02",
-          "miles": 258900,
-          "price_range": 2,
-          "is_lowest": false,
+          "miles": 130600,
+          "price_range": 1,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -1881,16 +2101,16 @@
         },
         {
           "date": "2027-05-06",
-          "miles": 175100,
+          "miles": 130600,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-07",
-          "miles": 340300,
-          "price_range": 2,
+          "miles": 134500,
+          "price_range": 1,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -1913,17 +2133,17 @@
         },
         {
           "date": "2027-05-10",
-          "miles": 258900,
-          "price_range": 2,
-          "is_lowest": false,
+          "miles": 130600,
+          "price_range": 1,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-11",
-          "miles": 258900,
-          "price_range": 2,
-          "is_lowest": false,
+          "miles": 130600,
+          "price_range": 1,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -1969,9 +2189,9 @@
         },
         {
           "date": "2027-05-17",
-          "miles": 258900,
-          "price_range": 2,
-          "is_lowest": false,
+          "miles": 130600,
+          "price_range": 1,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -1985,17 +2205,17 @@
         },
         {
           "date": "2027-05-19",
-          "miles": 175100,
+          "miles": 130600,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-20",
-          "miles": 175100,
+          "miles": 130600,
           "price_range": 1,
-          "is_lowest": false,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -2009,25 +2229,25 @@
         },
         {
           "date": "2027-05-22",
-          "miles": 175100,
-          "price_range": 1,
+          "miles": 348300,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-23",
-          "miles": 258900,
-          "price_range": 2,
-          "is_lowest": false,
+          "miles": 130600,
+          "price_range": 1,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-24",
-          "miles": 258900,
-          "price_range": 2,
-          "is_lowest": false,
+          "miles": 130600,
+          "price_range": 1,
+          "is_lowest": true,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -2102,6 +2322,282 @@
       }
     },
     {
+      "ruta": "EZE-LAX-2027-03",
+      "origen": "EZE",
+      "origen_ciudad": "Buenos Aires",
+      "destino_key": "los_angeles",
+      "destino_nombre": "Los Ángeles",
+      "destino_pais": "Estados Unidos",
+      "destino_emoji": "🌉",
+      "region": "eeuu",
+      "aeropuerto": "LAX",
+      "aeropuerto_ciudad": "Los Ángeles",
+      "moneda": "USD",
+      "ym": "2027-03",
+      "consultado": "2026-11-25T13:22:24-03:00",
+      "mejor_precio_millas": 154400,
+      "mejor_fecha": "2027-03-06",
+      "dias_min": [
+        "2027-03-06"
+      ],
+      "price_range": 2,
+      "quartil_bandas": null,
+      "parcial": false,
+      "dias_esperados": null,
+      "min_declarado": null,
+      "nivel": "oportunidad",
+      "motivos": [
+        "un 25% bajo el promedio"
+      ],
+      "promedio_historico": 205827,
+      "dias": [
+        {
+          "date": "2027-03-02",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-03",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-04",
+          "miles": 224100,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-05",
+          "miles": 155200,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-06",
+          "miles": 154400,
+          "price_range": 2,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-07",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-08",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-10",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-11",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-12",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-13",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-14",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-15",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-16",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-17",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-18",
+          "miles": 242200,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-19",
+          "miles": 295800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-20",
+          "miles": 370300,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-21",
+          "miles": 306500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-22",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-23",
+          "miles": 301700,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-24",
+          "miles": 224100,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-25",
+          "miles": 215500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-26",
+          "miles": 292600,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-27",
+          "miles": 332300,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-28",
+          "miles": 325800,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-29",
+          "miles": 215500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-30",
+          "miles": 200500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2027-03-31",
+          "miles": 215500,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        }
+      ],
+      "total_dias_disponibles": 29,
+      "cash": {
+        "precio": 568.0,
+        "moneda": "usd",
+        "fecha": "2026-12-14",
+        "aerolinea": "LA",
+        "escalas": 2,
+        "duracion_min": 1001,
+        "link": "https://www.aviasales.com/search/EZE1412LAX1?t=LA17972508001797334260001691EZEMIADENLAX_627958e88f2558aa40975410c0172df1_46634&search_date=24112026&expected_price_uuid=01a20db7-e033-8030-a5d6-115789741909&static_fare_key=TY%7CP1%7CH0%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=D12NQ1pcw3muDgiYVb6y0g&origin_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=568",
+        "tipo": "ida",
+        "exacto": false
+      }
+    },
+    {
       "ruta": "EZE-LGA-2027-03",
       "origen": "EZE",
       "origen_ciudad": "Buenos Aires",
@@ -2114,7 +2610,7 @@
       "aeropuerto_ciudad": "LaGuardia",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-11-25T11:10:06-03:00",
+      "consultado": "2026-11-25T13:29:40-03:00",
       "mejor_precio_millas": 158100,
       "mejor_fecha": "2027-03-01",
       "dias_min": [
@@ -2138,7 +2634,7 @@
       "motivos": [
         "un 20% bajo el promedio"
       ],
-      "promedio_historico": 197248,
+      "promedio_historico": 196730,
       "dias": [
         {
           "date": "2027-03-01",
@@ -2415,7 +2911,7 @@
       "aeropuerto_ciudad": "LaGuardia",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-11-25T11:10:10-03:00",
+      "consultado": "2026-11-25T13:29:45-03:00",
       "mejor_precio_millas": 158100,
       "mejor_fecha": "2027-05-01",
       "dias_min": [
@@ -2440,7 +2936,7 @@
       "motivos": [
         "un 39% bajo el promedio"
       ],
-      "promedio_historico": 258481,
+      "promedio_historico": 258058,
       "dias": [
         {
           "date": "2027-05-01",
@@ -2717,7 +3213,7 @@
       "aeropuerto_ciudad": "Mendoza",
       "moneda": "ARS",
       "ym": "2027-03",
-      "consultado": "2026-11-25T11:09:39-03:00",
+      "consultado": "2026-11-25T13:29:14-03:00",
       "mejor_precio_millas": 12000,
       "mejor_fecha": "2027-03-02",
       "dias_min": [
@@ -2747,7 +3243,7 @@
       "min_declarado": 45500,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 11267,
+      "promedio_historico": 11269,
       "dias": [
         {
           "date": "2027-03-01",
@@ -3024,7 +3520,7 @@
       "aeropuerto_ciudad": "Mendoza",
       "moneda": "ARS",
       "ym": "2027-02",
-      "consultado": "2026-11-25T11:09:30-03:00",
+      "consultado": "2026-11-25T13:29:03-03:00",
       "mejor_precio_millas": 14500,
       "mejor_fecha": "2027-02-02",
       "dias_min": [
@@ -3057,7 +3553,7 @@
       "min_declarado": 45500,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 13759,
+      "promedio_historico": 13761,
       "dias": [
         {
           "date": "2027-02-01",
@@ -3310,7 +3806,7 @@
       "aeropuerto_ciudad": "Mendoza",
       "moneda": "ARS",
       "ym": "2026-12",
-      "consultado": "2026-11-25T11:09:20-03:00",
+      "consultado": "2026-11-25T13:28:53-03:00",
       "mejor_precio_millas": 20500,
       "mejor_fecha": "2026-12-31",
       "dias_min": [
@@ -3340,7 +3836,7 @@
       "min_declarado": 45500,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 23359,
+      "promedio_historico": 23349,
       "dias": [
         {
           "date": "2026-12-26",
@@ -3405,771 +3901,6 @@
       }
     },
     {
-      "ruta": "EZE-BRC-2026-12",
-      "origen": "EZE",
-      "origen_ciudad": "Buenos Aires",
-      "destino_key": "bariloche",
-      "destino_nombre": "Bariloche",
-      "destino_pais": "Argentina",
-      "destino_emoji": "🏔️",
-      "region": "cabotaje",
-      "aeropuerto": "BRC",
-      "aeropuerto_ciudad": "Bariloche",
-      "moneda": "ARS",
-      "ym": "2026-12",
-      "consultado": "2026-11-25T11:03:11-03:00",
-      "mejor_precio_millas": 22200,
-      "mejor_fecha": "2026-12-11",
-      "dias_min": [
-        "2026-12-11",
-        "2026-12-16"
-      ],
-      "price_range": 2,
-      "quartil_bandas": [
-        {
-          "minPrice": 49900,
-          "maxPrice": 114200
-        },
-        {
-          "minPrice": 114201,
-          "maxPrice": 178500
-        },
-        {
-          "minPrice": 178501,
-          "maxPrice": 242800
-        },
-        {
-          "minPrice": 242801,
-          "maxPrice": 307100
-        }
-      ],
-      "parcial": false,
-      "dias_esperados": null,
-      "min_declarado": 49900,
-      "nivel": "bueno",
-      "motivos": [],
-      "promedio_historico": 25362,
-      "dias": [
-        {
-          "date": "2026-12-11",
-          "miles": 22200,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-12",
-          "miles": 53500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-13",
-          "miles": 53500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-14",
-          "miles": 68300,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-15",
-          "miles": 53500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-16",
-          "miles": 22200,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-17",
-          "miles": 53500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-18",
-          "miles": 79200,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-19",
-          "miles": 112100,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-20",
-          "miles": 72000,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-21",
-          "miles": 152600,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-22",
-          "miles": 112100,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-23",
-          "miles": 86700,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-24",
-          "miles": 53500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-25",
-          "miles": 152600,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-26",
-          "miles": 208400,
-          "price_range": 3,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-28",
-          "miles": 278700,
-          "price_range": 4,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-29",
-          "miles": 152600,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-30",
-          "miles": 86700,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        },
-        {
-          "date": "2026-12-31",
-          "miles": 68300,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "ambas"
-        }
-      ],
-      "total_dias_disponibles": 20,
-      "cash": {
-        "precio": 71.0,
-        "moneda": "usd",
-        "fecha": "2026-12-15",
-        "aerolinea": "AR",
-        "escalas": 0,
-        "duracion_min": 145,
-        "link": "https://www.aviasales.com/search/EZE1512BRC1?t=AR17973099001797318600000145EZEBRC_8b71680b5669a8eda822b122b8359e70_5846&search_date=21112026&expected_price_uuid=01a1fe22-e136-8040-2140-363f92b61e4c&static_fare_key=TY%7CP1%7CH0%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=KvR4Jh5hROyEmYlObD--ig&origin_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=71",
-        "tipo": "ida",
-        "exacto": true
-      }
-    },
-    {
-      "ruta": "AEP-GIG-2026-12",
-      "origen": "AEP",
-      "origen_ciudad": "Buenos Aires",
-      "destino_key": "rio",
-      "destino_nombre": "Río de Janeiro",
-      "destino_pais": "Brasil",
-      "destino_emoji": "🏝️",
-      "region": "sudamerica",
-      "aeropuerto": "GIG",
-      "aeropuerto_ciudad": "Río (Galeão)",
-      "moneda": "USD",
-      "ym": "2026-12",
-      "consultado": "2026-11-25T11:03:46-03:00",
-      "mejor_precio_millas": 66000,
-      "mejor_fecha": "2026-12-11",
-      "dias_min": [
-        "2026-12-11",
-        "2026-12-12",
-        "2026-12-18",
-        "2026-12-20",
-        "2026-12-21"
-      ],
-      "price_range": 1,
-      "quartil_bandas": [
-        {
-          "minPrice": 64900,
-          "maxPrice": 228525
-        },
-        {
-          "minPrice": 228526,
-          "maxPrice": 392150
-        },
-        {
-          "minPrice": 392151,
-          "maxPrice": 555775
-        },
-        {
-          "minPrice": 555776,
-          "maxPrice": 719400
-        }
-      ],
-      "parcial": false,
-      "dias_esperados": null,
-      "min_declarado": 64900,
-      "nivel": "bueno",
-      "motivos": [
-        "está en el 25% más barato de esta ruta"
-      ],
-      "promedio_historico": 65645,
-      "dias": [
-        {
-          "date": "2026-12-11",
-          "miles": 66000,
-          "price_range": 1,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-12",
-          "miles": 66000,
-          "price_range": 1,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-13",
-          "miles": 94400,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-14",
-          "miles": 81500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-15",
-          "miles": 81500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-16",
-          "miles": 81500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-17",
-          "miles": 94400,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-18",
-          "miles": 66000,
-          "price_range": 1,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-19",
-          "miles": 106100,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-20",
-          "miles": 66000,
-          "price_range": 1,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-21",
-          "miles": 66000,
-          "price_range": 1,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-22",
-          "miles": 113600,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-23",
-          "miles": 113600,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-24",
-          "miles": 113600,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-25",
-          "miles": 133500,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-26",
-          "miles": 183300,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-27",
-          "miles": 166700,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-28",
-          "miles": 183300,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-29",
-          "miles": 236900,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-30",
-          "miles": 196700,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2026-12-31",
-          "miles": 183300,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        }
-      ],
-      "total_dias_disponibles": 21,
-      "cash": {
-        "precio": 210.0,
-        "moneda": "usd",
-        "fecha": "2026-12-12",
-        "aerolinea": "AR",
-        "escalas": 0,
-        "duracion_min": 175,
-        "link": "https://www.aviasales.com/search/AEP1212GIG1?t=AR17970966001797107100000175AEPGIG_73163c2e494512e1e10881f9cd796c79_17289&search_date=25112026&expected_price_uuid=01a21232-9c25-8030-66e2-b1490aa39fdf&static_fare_key=TY%7CP0%7CH1%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=fx5h61JudvRHMODhDunBUQ&origin_airports=0&destination_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=210",
-        "tipo": "ida",
-        "exacto": true
-      }
-    },
-    {
-      "ruta": "EZE-MCO-2027-03",
-      "origen": "EZE",
-      "origen_ciudad": "Buenos Aires",
-      "destino_key": "miami",
-      "destino_nombre": "Miami y alrededores",
-      "destino_pais": "Estados Unidos",
-      "destino_emoji": "🌴",
-      "region": "eeuu",
-      "aeropuerto": "MCO",
-      "aeropuerto_ciudad": "Orlando",
-      "moneda": "USD",
-      "ym": "2027-03",
-      "consultado": "2026-11-25T11:01:24-03:00",
-      "mejor_precio_millas": 161800,
-      "mejor_fecha": "2027-03-01",
-      "dias_min": [
-        "2027-03-01",
-        "2027-03-02",
-        "2027-03-03",
-        "2027-03-04",
-        "2027-03-05",
-        "2027-03-06",
-        "2027-03-07",
-        "2027-03-08",
-        "2027-03-09",
-        "2027-03-10",
-        "2027-03-11",
-        "2027-03-12",
-        "2027-03-13",
-        "2027-03-14",
-        "2027-03-15",
-        "2027-03-16",
-        "2027-03-17",
-        "2027-03-22",
-        "2027-03-23",
-        "2027-03-27",
-        "2027-03-29",
-        "2027-03-30",
-        "2027-03-31"
-      ],
-      "price_range": 2,
-      "quartil_bandas": null,
-      "parcial": false,
-      "dias_esperados": null,
-      "min_declarado": null,
-      "nivel": "bueno",
-      "motivos": [],
-      "promedio_historico": 155041,
-      "dias": [
-        {
-          "date": "2027-03-01",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-02",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-03",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-04",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-05",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-06",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-07",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-08",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-09",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-10",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-11",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-12",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-13",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-14",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-15",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-16",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-17",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-18",
-          "miles": 199400,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-19",
-          "miles": 276000,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-20",
-          "miles": 325300,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-21",
-          "miles": 217100,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-22",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-23",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-24",
-          "miles": 214400,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-25",
-          "miles": 295000,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-26",
-          "miles": 199400,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-27",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-28",
-          "miles": 199400,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-29",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-30",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-31",
-          "miles": 161800,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        }
-      ],
-      "total_dias_disponibles": 31,
-      "cash": {
-        "precio": 519.0,
-        "moneda": "usd",
-        "fecha": "2026-12-02",
-        "aerolinea": "CM",
-        "escalas": 1,
-        "duracion_min": 671,
-        "link": "https://www.aviasales.com/search/EZE0212MCO1?t=CM17962026001796250120000912EZEPTYMCO_785dbf1ad5d6b710a470d15881189adb_42777&search_date=19112026&expected_price_uuid=01a1f135-a55e-8040-6988-43678b61c5c1&static_fare_key=TY%7CP1%7CH1%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=YgRI-rRSNiZFgQrNAaq2ZA&origin_airports=0&destination_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=519",
-        "tipo": "ida",
-        "exacto": false
-      }
-    },
-    {
       "ruta": "EZE-MCO-2027-04",
       "origen": "EZE",
       "origen_ciudad": "Buenos Aires",
@@ -4182,7 +3913,7 @@
       "aeropuerto_ciudad": "Orlando",
       "moneda": "USD",
       "ym": "2027-04",
-      "consultado": "2026-11-25T11:01:32-03:00",
+      "consultado": "2026-11-25T13:22:03-03:00",
       "mejor_precio_millas": 161800,
       "mejor_fecha": "2027-04-03",
       "dias_min": [
@@ -4209,7 +3940,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 148149,
+      "promedio_historico": 148138,
       "dias": [
         {
           "date": "2027-04-01",
@@ -4478,7 +4209,7 @@
       "aeropuerto_ciudad": "Orlando",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-11-25T11:01:39-03:00",
+      "consultado": "2026-11-25T13:22:11-03:00",
       "mejor_precio_millas": 161800,
       "mejor_fecha": "2027-05-02",
       "dias_min": [
@@ -4517,7 +4248,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 144085,
+      "promedio_historico": 144209,
       "dias": [
         {
           "date": "2027-05-01",
@@ -4794,7 +4525,7 @@
       "aeropuerto_ciudad": "Orlando",
       "moneda": "USD",
       "ym": "2027-06",
-      "consultado": "2026-11-25T11:01:47-03:00",
+      "consultado": "2026-11-25T13:22:17-03:00",
       "mejor_precio_millas": 161800,
       "mejor_fecha": "2027-06-01",
       "dias_min": [
@@ -4824,7 +4555,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 171046,
+      "promedio_historico": 171036,
       "dias": [
         {
           "date": "2027-06-01",
@@ -5093,7 +4824,7 @@
       "aeropuerto_ciudad": "Madrid",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-11-25T11:02:35-03:00",
+      "consultado": "2026-11-25T13:22:58-03:00",
       "mejor_precio_millas": 175800,
       "mejor_fecha": "2027-05-29",
       "dias_min": [
@@ -5126,12 +4857,12 @@
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 178687,
+      "promedio_historico": 178420,
       "dias": [
         {
           "date": "2027-05-01",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 419800,
+          "price_range": 3,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -5146,7 +4877,7 @@
         },
         {
           "date": "2027-05-03",
-          "miles": 393800,
+          "miles": 348300,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -5154,8 +4885,8 @@
         },
         {
           "date": "2027-05-04",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 419800,
+          "price_range": 3,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -5178,8 +4909,8 @@
         },
         {
           "date": "2027-05-07",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 404800,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -5242,16 +4973,16 @@
         },
         {
           "date": "2027-05-15",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 419800,
+          "price_range": 3,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-16",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 471900,
+          "price_range": 3,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -5274,48 +5005,48 @@
         },
         {
           "date": "2027-05-19",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 366300,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-20",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 317300,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-21",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 423700,
+          "price_range": 3,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-22",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 317300,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-23",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 368800,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-24",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 317300,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -5403,7 +5134,7 @@
       "aeropuerto_ciudad": "Madrid",
       "moneda": "USD",
       "ym": "2027-06",
-      "consultado": "2026-11-25T11:02:40-03:00",
+      "consultado": "2026-11-25T13:23:02-03:00",
       "mejor_precio_millas": 175800,
       "mejor_fecha": "2027-06-04",
       "dias_min": [
@@ -5452,7 +5183,7 @@
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 169782,
+      "promedio_historico": 169734,
       "dias": [
         {
           "date": "2027-06-01",
@@ -5721,7 +5452,7 @@
       "aeropuerto_ciudad": "Barcelona",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-11-25T11:02:45-03:00",
+      "consultado": "2026-11-25T13:23:06-03:00",
       "mejor_precio_millas": 175800,
       "mejor_fecha": "2027-03-07",
       "dias_min": [
@@ -5736,7 +5467,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 165439,
+      "promedio_historico": 164893,
       "dias": [
         {
           "date": "2027-03-01",
@@ -6013,7 +5744,7 @@
       "aeropuerto_ciudad": "Barcelona",
       "moneda": "USD",
       "ym": "2027-04",
-      "consultado": "2026-11-25T11:02:50-03:00",
+      "consultado": "2026-11-25T13:23:11-03:00",
       "mejor_precio_millas": 175800,
       "mejor_fecha": "2027-04-22",
       "dias_min": [
@@ -6027,7 +5758,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 173734,
+      "promedio_historico": 173188,
       "dias": [
         {
           "date": "2027-04-01",
@@ -6296,7 +6027,7 @@
       "aeropuerto_ciudad": "Barcelona",
       "moneda": "USD",
       "ym": "2027-06",
-      "consultado": "2026-11-25T11:03:00-03:00",
+      "consultado": "2026-11-25T13:23:22-03:00",
       "mejor_precio_millas": 175800,
       "mejor_fecha": "2027-06-05",
       "dias_min": [
@@ -6325,7 +6056,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 168284,
+      "promedio_historico": 167738,
       "dias": [
         {
           "date": "2027-06-01",
@@ -6594,7 +6325,7 @@
       "aeropuerto_ciudad": "Madrid",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-11-25T11:02:24-03:00",
+      "consultado": "2026-11-25T13:22:48-03:00",
       "mejor_precio_millas": 191300,
       "mejor_fecha": "2027-03-03",
       "dias_min": [
@@ -6627,7 +6358,7 @@
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 179540,
+      "promedio_historico": 179136,
       "dias": [
         {
           "date": "2027-03-01",
@@ -6711,16 +6442,16 @@
         },
         {
           "date": "2027-03-11",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 368800,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-03-12",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 368800,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -6759,8 +6490,8 @@
         },
         {
           "date": "2027-03-17",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 368800,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -6799,7 +6530,7 @@
         },
         {
           "date": "2027-03-22",
-          "miles": 368800,
+          "miles": 393800,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -6839,8 +6570,8 @@
         },
         {
           "date": "2027-03-27",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 471900,
+          "price_range": 3,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -6904,7 +6635,7 @@
       "aeropuerto_ciudad": "Madrid",
       "moneda": "USD",
       "ym": "2027-04",
-      "consultado": "2026-11-25T11:02:29-03:00",
+      "consultado": "2026-11-25T13:22:54-03:00",
       "mejor_precio_millas": 191300,
       "mejor_fecha": "2027-04-07",
       "dias_min": [
@@ -6936,12 +6667,12 @@
       "motivos": [
         "está en el 25% más barato de esta ruta"
       ],
-      "promedio_historico": 192538,
+      "promedio_historico": 192173,
       "dias": [
         {
           "date": "2027-04-01",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 341900,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -7004,8 +6735,8 @@
         },
         {
           "date": "2027-04-09",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 341900,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -7100,8 +6831,8 @@
         },
         {
           "date": "2027-04-21",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 366300,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -7140,8 +6871,8 @@
         },
         {
           "date": "2027-04-26",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 419800,
+          "price_range": 3,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -7164,16 +6895,16 @@
         },
         {
           "date": "2027-04-29",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 372500,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-04-30",
-          "miles": 192900,
-          "price_range": 1,
+          "miles": 429000,
+          "price_range": 3,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
@@ -7205,7 +6936,7 @@
       "aeropuerto_ciudad": "Barcelona",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-11-25T11:02:54-03:00",
+      "consultado": "2026-11-25T13:23:17-03:00",
       "mejor_precio_millas": 192900,
       "mejor_fecha": "2027-05-01",
       "dias_min": [
@@ -7214,9 +6945,6 @@
         "2027-05-03",
         "2027-05-04",
         "2027-05-05",
-        "2027-05-06",
-        "2027-05-07",
-        "2027-05-08",
         "2027-05-09",
         "2027-05-10",
         "2027-05-11",
@@ -7248,7 +6976,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 170326,
+      "promedio_historico": 169870,
       "dias": [
         {
           "date": "2027-05-01",
@@ -7292,7 +7020,7 @@
         },
         {
           "date": "2027-05-06",
-          "miles": 192900,
+          "miles": 198600,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -7300,7 +7028,7 @@
         },
         {
           "date": "2027-05-07",
-          "miles": 192900,
+          "miles": 406100,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -7308,7 +7036,7 @@
         },
         {
           "date": "2027-05-08",
-          "miles": 192900,
+          "miles": 406100,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -7525,19 +7253,14 @@
       "aeropuerto_ciudad": "Roma Fiumicino",
       "moneda": "USD",
       "ym": "2027-03",
-      "consultado": "2026-11-25T11:10:16-03:00",
+      "consultado": "2026-11-25T13:29:50-03:00",
       "mejor_precio_millas": 198800,
       "mejor_fecha": "2027-03-02",
       "dias_min": [
         "2027-03-02",
-        "2027-03-04",
         "2027-03-07",
         "2027-03-13",
-        "2027-03-21",
-        "2027-03-24",
-        "2027-03-28",
-        "2027-03-29",
-        "2027-03-30"
+        "2027-03-24"
       ],
       "price_range": 2,
       "quartil_bandas": null,
@@ -7546,7 +7269,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 214055,
+      "promedio_historico": 213530,
       "dias": [
         {
           "date": "2027-03-01",
@@ -7574,15 +7297,15 @@
         },
         {
           "date": "2027-03-04",
-          "miles": 198800,
+          "miles": 431400,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-03-05",
-          "miles": 219700,
+          "miles": 491700,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -7670,7 +7393,7 @@
         },
         {
           "date": "2027-03-16",
-          "miles": 219700,
+          "miles": 431400,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -7702,7 +7425,7 @@
         },
         {
           "date": "2027-03-20",
-          "miles": 287300,
+          "miles": 595900,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -7710,9 +7433,9 @@
         },
         {
           "date": "2027-03-21",
-          "miles": 198800,
+          "miles": 491700,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -7766,25 +7489,25 @@
         },
         {
           "date": "2027-03-28",
-          "miles": 198800,
+          "miles": 498900,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-03-29",
-          "miles": 198800,
+          "miles": 498900,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-03-30",
-          "miles": 198800,
+          "miles": 374400,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -7823,7 +7546,7 @@
       "aeropuerto_ciudad": "Roma Fiumicino",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-11-25T11:10:20-03:00",
+      "consultado": "2026-11-25T13:29:55-03:00",
       "mejor_precio_millas": 198800,
       "mejor_fecha": "2027-05-01",
       "dias_min": [
@@ -7832,16 +7555,9 @@
         "2027-05-03",
         "2027-05-06",
         "2027-05-10",
-        "2027-05-12",
-        "2027-05-14",
         "2027-05-15",
         "2027-05-16",
-        "2027-05-19",
         "2027-05-20",
-        "2027-05-21",
-        "2027-05-22",
-        "2027-05-23",
-        "2027-05-24",
         "2027-05-25",
         "2027-05-26",
         "2027-05-27",
@@ -7857,7 +7573,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 195556,
+      "promedio_historico": 195031,
       "dias": [
         {
           "date": "2027-05-01",
@@ -7917,7 +7633,7 @@
         },
         {
           "date": "2027-05-08",
-          "miles": 240100,
+          "miles": 556100,
           "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
@@ -7949,9 +7665,9 @@
         },
         {
           "date": "2027-05-12",
-          "miles": 198800,
+          "miles": 498900,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -7965,9 +7681,9 @@
         },
         {
           "date": "2027-05-14",
-          "miles": 198800,
+          "miles": 498900,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -8005,9 +7721,9 @@
         },
         {
           "date": "2027-05-19",
-          "miles": 198800,
+          "miles": 491700,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -8021,33 +7737,33 @@
         },
         {
           "date": "2027-05-21",
-          "miles": 198800,
+          "miles": 455300,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-22",
-          "miles": 198800,
+          "miles": 498900,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-23",
-          "miles": 198800,
+          "miles": 455300,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
         {
           "date": "2027-05-24",
-          "miles": 198800,
+          "miles": 394600,
           "price_range": 2,
-          "is_lowest": true,
+          "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "socias"
         },
@@ -8122,295 +7838,6 @@
       }
     },
     {
-      "ruta": "EZE-LAX-2027-03",
-      "origen": "EZE",
-      "origen_ciudad": "Buenos Aires",
-      "destino_key": "los_angeles",
-      "destino_nombre": "Los Ángeles",
-      "destino_pais": "Estados Unidos",
-      "destino_emoji": "🌉",
-      "region": "eeuu",
-      "aeropuerto": "LAX",
-      "aeropuerto_ciudad": "Los Ángeles",
-      "moneda": "USD",
-      "ym": "2027-03",
-      "consultado": "2026-11-25T11:01:54-03:00",
-      "mejor_precio_millas": 200500,
-      "mejor_fecha": "2027-03-02",
-      "dias_min": [
-        "2027-03-02",
-        "2027-03-03",
-        "2027-03-05",
-        "2027-03-06",
-        "2027-03-07",
-        "2027-03-08",
-        "2027-03-10",
-        "2027-03-11",
-        "2027-03-12",
-        "2027-03-13",
-        "2027-03-14",
-        "2027-03-15",
-        "2027-03-16",
-        "2027-03-17",
-        "2027-03-22",
-        "2027-03-30"
-      ],
-      "price_range": 2,
-      "quartil_bandas": null,
-      "parcial": false,
-      "dias_esperados": null,
-      "min_declarado": null,
-      "nivel": "bueno",
-      "motivos": [],
-      "promedio_historico": 205840,
-      "dias": [
-        {
-          "date": "2027-03-02",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-03",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-04",
-          "miles": 224100,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-05",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-06",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-07",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-08",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-10",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-11",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-12",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-13",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-14",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-15",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-16",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-17",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-18",
-          "miles": 242200,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-19",
-          "miles": 295800,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-20",
-          "miles": 370300,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-21",
-          "miles": 306500,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-22",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-23",
-          "miles": 301700,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-24",
-          "miles": 224100,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-25",
-          "miles": 215500,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-26",
-          "miles": 292600,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-27",
-          "miles": 332300,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-28",
-          "miles": 325800,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-29",
-          "miles": 215500,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-30",
-          "miles": 200500,
-          "price_range": 2,
-          "is_lowest": true,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        },
-        {
-          "date": "2027-03-31",
-          "miles": 215500,
-          "price_range": 2,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "socias"
-        }
-      ],
-      "total_dias_disponibles": 29,
-      "cash": {
-        "precio": 568.0,
-        "moneda": "usd",
-        "fecha": "2026-12-14",
-        "aerolinea": "LA",
-        "escalas": 2,
-        "duracion_min": 1001,
-        "link": "https://www.aviasales.com/search/EZE1412LAX1?t=LA17972508001797334260001691EZEMIADENLAX_627958e88f2558aa40975410c0172df1_46634&search_date=24112026&expected_price_uuid=01a20db7-e033-8030-a5d6-115789741909&static_fare_key=TY%7CP1%7CH0%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=D12NQ1pcw3muDgiYVb6y0g&origin_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=568",
-        "tipo": "ida",
-        "exacto": false
-      }
-    },
-    {
       "ruta": "EZE-LAX-2027-04",
       "origen": "EZE",
       "origen_ciudad": "Buenos Aires",
@@ -8423,7 +7850,7 @@
       "aeropuerto_ciudad": "Los Ángeles",
       "moneda": "USD",
       "ym": "2027-04",
-      "consultado": "2026-11-25T11:02:02-03:00",
+      "consultado": "2026-11-25T13:22:32-03:00",
       "mejor_precio_millas": 200500,
       "mejor_fecha": "2027-04-13",
       "dias_min": [
@@ -8440,7 +7867,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 208554,
+      "promedio_historico": 208540,
       "dias": [
         {
           "date": "2027-04-01",
@@ -8709,7 +8136,7 @@
       "aeropuerto_ciudad": "Los Ángeles",
       "moneda": "USD",
       "ym": "2027-05",
-      "consultado": "2026-11-25T11:02:07-03:00",
+      "consultado": "2026-11-25T13:22:36-03:00",
       "mejor_precio_millas": 200500,
       "mejor_fecha": "2027-05-03",
       "dias_min": [
@@ -8735,7 +8162,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 209724,
+      "promedio_historico": 209710,
       "dias": [
         {
           "date": "2027-05-01",
@@ -9012,7 +8439,7 @@
       "aeropuerto_ciudad": "Los Ángeles",
       "moneda": "USD",
       "ym": "2027-06",
-      "consultado": "2026-11-25T11:02:16-03:00",
+      "consultado": "2026-11-25T13:22:41-03:00",
       "mejor_precio_millas": 200500,
       "mejor_fecha": "2027-06-07",
       "dias_min": [
@@ -9028,7 +8455,7 @@
       "min_declarado": null,
       "nivel": "bueno",
       "motivos": [],
-      "promedio_historico": 215558,
+      "promedio_historico": 215544,
       "dias": [
         {
           "date": "2027-06-01",
@@ -9297,11 +8724,10 @@
       "aeropuerto_ciudad": "San Pablo (Guarulhos)",
       "moneda": "USD",
       "ym": "2026-12",
-      "consultado": "2026-11-25T11:04:14-03:00",
+      "consultado": "2026-11-25T13:24:36-03:00",
       "mejor_precio_millas": 35600,
-      "mejor_fecha": "2026-12-07",
+      "mejor_fecha": "2026-12-17",
       "dias_min": [
-        "2026-12-07",
         "2026-12-17",
         "2026-12-22",
         "2026-12-31"
@@ -9310,19 +8736,19 @@
       "quartil_bandas": [
         {
           "minPrice": 61800,
-          "maxPrice": 241850
+          "maxPrice": 198400
         },
         {
-          "minPrice": 241851,
-          "maxPrice": 421900
+          "minPrice": 198401,
+          "maxPrice": 335000
         },
         {
-          "minPrice": 421901,
-          "maxPrice": 601950
+          "minPrice": 335001,
+          "maxPrice": 471600
         },
         {
-          "minPrice": 601951,
-          "maxPrice": 782000
+          "minPrice": 471601,
+          "maxPrice": 608200
         }
       ],
       "parcial": true,
@@ -9330,18 +8756,10 @@
       "min_declarado": 33900,
       "nivel": "normal",
       "motivos": [
-        "Smiles está mostrando solo 10 días de este mes; su resumen de precios da para 31"
+        "Smiles está mostrando solo 9 días de este mes; su resumen de precios da para 31"
       ],
       "promedio_historico": 58615,
       "dias": [
-        {
-          "date": "2026-12-07",
-          "miles": 35600,
-          "price_range": 1,
-          "is_lowest": false,
-          "fare_type": "SMILES_CLUB",
-          "fuente": "gol"
-        },
         {
           "date": "2026-12-12",
           "miles": 38800,
@@ -9415,7 +8833,7 @@
           "fuente": "ambas"
         }
       ],
-      "total_dias_disponibles": 10,
+      "total_dias_disponibles": 9,
       "cash": {
         "precio": 199.0,
         "moneda": "usd",
@@ -9441,7 +8859,7 @@
       "aeropuerto_ciudad": "Bariloche",
       "moneda": "ARS",
       "ym": "2026-12",
-      "consultado": "2026-11-25T11:03:19-03:00",
+      "consultado": "2026-11-25T13:23:42-03:00",
       "mejor_precio_millas": 64000,
       "mejor_fecha": "2026-12-15",
       "dias_min": [
@@ -9451,19 +8869,19 @@
       "quartil_bandas": [
         {
           "minPrice": 49900,
-          "maxPrice": 251375
+          "maxPrice": 107950
         },
         {
-          "minPrice": 251376,
-          "maxPrice": 452850
+          "minPrice": 107951,
+          "maxPrice": 166000
         },
         {
-          "minPrice": 452851,
-          "maxPrice": 654325
+          "minPrice": 166001,
+          "maxPrice": 224050
         },
         {
-          "minPrice": 654326,
-          "maxPrice": 855800
+          "minPrice": 224051,
+          "maxPrice": 282100
         }
       ],
       "parcial": false,
@@ -9474,7 +8892,7 @@
         "está en el 25% más barato de esta ruta",
         "un 31% sobre el promedio"
       ],
-      "promedio_historico": 48960,
+      "promedio_historico": 49014,
       "dias": [
         {
           "date": "2026-12-14",
@@ -9511,7 +8929,7 @@
         {
           "date": "2026-12-26",
           "miles": 208400,
-          "price_range": 1,
+          "price_range": 3,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "ambas"
@@ -9519,7 +8937,7 @@
         {
           "date": "2026-12-27",
           "miles": 751800,
-          "price_range": 4,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "ambas"
@@ -9527,7 +8945,7 @@
         {
           "date": "2026-12-28",
           "miles": 208400,
-          "price_range": 1,
+          "price_range": 3,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "ambas"
@@ -9535,7 +8953,7 @@
         {
           "date": "2026-12-29",
           "miles": 162400,
-          "price_range": 1,
+          "price_range": 2,
           "is_lowest": false,
           "fare_type": "SMILES_CLUB",
           "fuente": "ambas"
@@ -9566,6 +8984,292 @@
         "escalas": 0,
         "duracion_min": 145,
         "link": "https://www.aviasales.com/search/AEP0912BRC1?t=AR17967942001796802900000145AEPBRC_ea79db147d3dd314a6f6bbb89daf8bb3_5885&search_date=25112026&expected_price_uuid=01a21033-d8d0-8040-ad89-b552f7cdbd4b&static_fare_key=TY%7CP1%7CH1%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=i1W3i9xBqfVLhp6H7NY2GQ&origin_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=72",
+        "tipo": "ida",
+        "exacto": true
+      }
+    },
+    {
+      "ruta": "EZE-BRC-2026-12",
+      "origen": "EZE",
+      "origen_ciudad": "Buenos Aires",
+      "destino_key": "bariloche",
+      "destino_nombre": "Bariloche",
+      "destino_pais": "Argentina",
+      "destino_emoji": "🏔️",
+      "region": "cabotaje",
+      "aeropuerto": "BRC",
+      "aeropuerto_ciudad": "Bariloche",
+      "moneda": "ARS",
+      "ym": "2026-12",
+      "consultado": "2026-11-25T13:23:33-03:00",
+      "mejor_precio_millas": 68300,
+      "mejor_fecha": "2026-12-31",
+      "dias_min": [
+        "2026-12-31"
+      ],
+      "price_range": 1,
+      "quartil_bandas": [
+        {
+          "minPrice": 49900,
+          "maxPrice": 114200
+        },
+        {
+          "minPrice": 114201,
+          "maxPrice": 178500
+        },
+        {
+          "minPrice": 178501,
+          "maxPrice": 242800
+        },
+        {
+          "minPrice": 242801,
+          "maxPrice": 307100
+        }
+      ],
+      "parcial": false,
+      "dias_esperados": null,
+      "min_declarado": 49900,
+      "nivel": "normal",
+      "motivos": [
+        "está en el 25% más barato de esta ruta",
+        "un 169% sobre el promedio"
+      ],
+      "promedio_historico": 25349,
+      "dias": [
+        {
+          "date": "2026-12-26",
+          "miles": 208400,
+          "price_range": 3,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "ambas"
+        },
+        {
+          "date": "2026-12-28",
+          "miles": 278700,
+          "price_range": 4,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "ambas"
+        },
+        {
+          "date": "2026-12-29",
+          "miles": 152600,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "ambas"
+        },
+        {
+          "date": "2026-12-30",
+          "miles": 86700,
+          "price_range": 1,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "ambas"
+        },
+        {
+          "date": "2026-12-31",
+          "miles": 68300,
+          "price_range": 1,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "ambas"
+        }
+      ],
+      "total_dias_disponibles": 5,
+      "cash": {
+        "precio": 71.0,
+        "moneda": "usd",
+        "fecha": "2026-12-15",
+        "aerolinea": "AR",
+        "escalas": 0,
+        "duracion_min": 145,
+        "link": "https://www.aviasales.com/search/EZE1512BRC1?t=AR17973099001797318600000145EZEBRC_8b71680b5669a8eda822b122b8359e70_5846&search_date=21112026&expected_price_uuid=01a1fe22-e136-8040-2140-363f92b61e4c&static_fare_key=TY%7CP1%7CH0%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=KvR4Jh5hROyEmYlObD--ig&origin_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=71",
+        "tipo": "ida",
+        "exacto": true
+      }
+    },
+    {
+      "ruta": "AEP-GIG-2026-12",
+      "origen": "AEP",
+      "origen_ciudad": "Buenos Aires",
+      "destino_key": "rio",
+      "destino_nombre": "Río de Janeiro",
+      "destino_pais": "Brasil",
+      "destino_emoji": "🏝️",
+      "region": "sudamerica",
+      "aeropuerto": "GIG",
+      "aeropuerto_ciudad": "Río (Galeão)",
+      "moneda": "USD",
+      "ym": "2026-12",
+      "consultado": "2026-11-25T13:24:06-03:00",
+      "mejor_precio_millas": 166700,
+      "mejor_fecha": "2026-12-27",
+      "dias_min": [
+        "2026-12-27"
+      ],
+      "price_range": 1,
+      "quartil_bandas": [
+        {
+          "minPrice": 64900,
+          "maxPrice": 219375
+        },
+        {
+          "minPrice": 219376,
+          "maxPrice": 373850
+        },
+        {
+          "minPrice": 373851,
+          "maxPrice": 528325
+        },
+        {
+          "minPrice": 528326,
+          "maxPrice": 682800
+        }
+      ],
+      "parcial": false,
+      "dias_esperados": null,
+      "min_declarado": 64900,
+      "nivel": "normal",
+      "motivos": [
+        "está en el 25% más barato de esta ruta",
+        "un 154% sobre el promedio"
+      ],
+      "promedio_historico": 65647,
+      "dias": [
+        {
+          "date": "2026-12-26",
+          "miles": 183300,
+          "price_range": 1,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2026-12-27",
+          "miles": 166700,
+          "price_range": 1,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2026-12-28",
+          "miles": 183300,
+          "price_range": 1,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2026-12-29",
+          "miles": 236900,
+          "price_range": 2,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2026-12-30",
+          "miles": 196700,
+          "price_range": 1,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        },
+        {
+          "date": "2026-12-31",
+          "miles": 183300,
+          "price_range": 1,
+          "is_lowest": false,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "socias"
+        }
+      ],
+      "total_dias_disponibles": 6,
+      "cash": {
+        "precio": 210.0,
+        "moneda": "usd",
+        "fecha": "2026-12-12",
+        "aerolinea": "AR",
+        "escalas": 0,
+        "duracion_min": 175,
+        "link": "https://www.aviasales.com/search/AEP1212GIG1?t=AR17970966001797107100000175AEPGIG_73163c2e494512e1e10881f9cd796c79_17289&search_date=25112026&expected_price_uuid=01a21232-9c25-8030-66e2-b1490aa39fdf&static_fare_key=TY%7CP0%7CH1%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=fx5h61JudvRHMODhDunBUQ&origin_airports=0&destination_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=210",
+        "tipo": "ida",
+        "exacto": true
+      }
+    },
+    {
+      "ruta": "EZE-FLN-2026-12",
+      "origen": "EZE",
+      "origen_ciudad": "Buenos Aires",
+      "destino_key": "florianopolis",
+      "destino_nombre": "Florianópolis",
+      "destino_pais": "Brasil",
+      "destino_emoji": "🏄",
+      "region": "sudamerica",
+      "aeropuerto": "FLN",
+      "aeropuerto_ciudad": "Florianópolis",
+      "moneda": "USD",
+      "ym": "2026-12",
+      "consultado": "2026-11-25T13:24:46-03:00",
+      "mejor_precio_millas": 238100,
+      "mejor_fecha": "2026-12-27",
+      "dias_min": [
+        "2026-12-27"
+      ],
+      "price_range": 1,
+      "quartil_bandas": [
+        {
+          "minPrice": 238100,
+          "maxPrice": 238100,
+          "count": 1
+        },
+        {
+          "minPrice": 238101,
+          "maxPrice": 238100,
+          "count": 0
+        },
+        {
+          "minPrice": 238101,
+          "maxPrice": 238100,
+          "count": 0
+        },
+        {
+          "minPrice": 238101,
+          "maxPrice": 238100,
+          "count": 0
+        }
+      ],
+      "parcial": false,
+      "dias_esperados": 1,
+      "min_declarado": 238100,
+      "nivel": "normal",
+      "motivos": [
+        "está en el 25% más barato de esta ruta",
+        "un 188% sobre el promedio"
+      ],
+      "promedio_historico": 82782,
+      "dias": [
+        {
+          "date": "2026-12-27",
+          "miles": 238100,
+          "price_range": 1,
+          "is_lowest": true,
+          "fare_type": "SMILES_CLUB",
+          "fuente": "gol"
+        }
+      ],
+      "total_dias_disponibles": 1,
+      "cash": {
+        "precio": 163.0,
+        "moneda": "usd",
+        "fecha": "2026-12-14",
+        "aerolinea": "G3",
+        "escalas": 0,
+        "duracion_min": 120,
+        "link": "https://www.aviasales.com/search/EZE1412FLN1?t=G317972178001797225000000120EZEFLN_c5bf7affeda35aa1d8cd50277e134da8_13377&search_date=24112026&expected_price_uuid=01a20f8c-58e6-8040-ad78-7e9d32026c7e&static_fare_key=TY%7CP1%7CH0%7CL0%7CCH0%7CR0%7CTBC0&itinerary_key=_NmkKkj5UjkFvyVKoJylXw&origin_airports=0&expected_price_source=share&expected_price_currency=usd&expected_price=163",
         "tipo": "ida",
         "exacto": true
       }
